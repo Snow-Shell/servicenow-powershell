@@ -1,4 +1,4 @@
-# servicenow-powershell
+# servicenow-powershell [![GitHub release](https://img.shields.io/github/release/Toukakoukan/servicenow-powershell.svg)](releases/latest) [![GitHub license](https://img.shields.io/github/license/Toukakoukan/servicenow-powershell.svg)](blob/master/LICENSE) ![Test Coverage](https://img.shields.io/badge/test%20coverage-86%25-yellowgreen.svg)
 This PowerShell module provides a series of cmdlets for interacting with the [ServiceNow REST API](http://wiki.servicenow.com/index.php?title=REST_API), performed by wrapping `Invoke-RestMethod` for the API calls.  
 **IMPORTANT:** Neither this module, nor its creator are in any way affiliated with ServiceNow.
 
@@ -6,7 +6,7 @@ This PowerShell module provides a series of cmdlets for interacting with the [Se
 Requires PowerShell 3.0 or above as this is when `Invoke-RestMethod` was introduced.
 
 ## Usage
-Simply extract the .psm1 and .psd1 files to your PowerShell profile directory (i.e. the `Modules` directory under wherever `$profile` points to in your PS console) and run:  
+Download the [latest release](releases/latest) and  extract the .psm1 and .psd1 files to your PowerShell profile directory (i.e. the `Modules` directory under wherever `$profile` points to in your PS console) and run:  
 `Import-Module ServiceNow-Module`  
 Once you've done this, all the cmdlets will be at your disposal, you can see a full list using `Get-Command -Module ServiceNow-Module`.
 
@@ -27,7 +27,6 @@ Get-ServiceNowIncident -MatchContains @{short_description='PowerShell'}
 * New-ServiceNowQuery
 * New-ServiceNowTableEntry
 * Remove-ServiceNowAuth
-* Remove-ServiceNowTableEntry
 * Set-ServiceNowAuth
 * Test-ServiceNowAuthIsSet
 
