@@ -1,4 +1,5 @@
-# servicenow-powershell [![GitHub release](https://img.shields.io/github/release/Toukakoukan/servicenow-powershell.svg)](releases/latest) [![GitHub license](https://img.shields.io/github/license/Toukakoukan/servicenow-powershell.svg)](blob/master/LICENSE) ![Test Coverage](https://img.shields.io/badge/test%20coverage-86%25-yellowgreen.svg)
+# servicenow-powershell  
+[![GitHub release](https://img.shields.io/github/release/Toukakoukan/servicenow-powershell.svg)](releases/latest) [![GitHub license](https://img.shields.io/github/license/Toukakoukan/servicenow-powershell.svg)](blob/master/LICENSE) ![Test Coverage](https://img.shields.io/badge/test%20coverage-86%25-yellowgreen.svg)  
 This PowerShell module provides a series of cmdlets for interacting with the [ServiceNow REST API](http://wiki.servicenow.com/index.php?title=REST_API), performed by wrapping `Invoke-RestMethod` for the API calls.  
 **IMPORTANT:** Neither this module, nor its creator are in any way affiliated with ServiceNow.
 
