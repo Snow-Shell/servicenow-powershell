@@ -18,9 +18,18 @@ Get-ServiceNowIncident -MatchContains @{short_description='PowerShell'}
 ```
 
 ## Cmdlets  
+* Get-ServiceNowConfigurationItem
 * Get-ServiceNowIncident
 * Get-ServiceNowTable
+* Get-ServiceNowUser
+* Get-ServiceNowUserGroup
+* New-ServiceNowIncident
+* New-ServiceNowQuery
+* New-ServiceNowTableEntry
+* Remove-ServiceNowAuth
+* Remove-ServiceNowTableEntry
 * Set-ServiceNowAuth
+* Test-ServiceNowAuthIsSet
 
 ## Tests
 This module comes with [Pester](https://github.com/pester/Pester/) tests for unit testing.
