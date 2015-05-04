@@ -83,7 +83,7 @@ FunctionsToExport = '*'
 # PrivateData = ''
 
 # HelpInfo URI of this module
-# HelpInfoURI = 'https://github.com/Toukakoukan/servicenow-powershell'
+# HelpInfoURI = 'https://github.com/Sam-Martin/servicenow-powershell'
 
 # Default prefix for commands exported from this module. Override the default prefix using Import-Module -Prefix.
 # DefaultCommandPrefix = ''
