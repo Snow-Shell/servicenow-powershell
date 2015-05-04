@@ -1,5 +1,5 @@
 $here = Split-Path -Parent $MyInvocation.MyCommand.Path
-$DefaultsFile = "$here\ServiceNow-Module.Pester.Defaults.json"
+$DefaultsFile = "$here\PSServiceNow.Pester.Defaults.json"
 
 # Load defaults from file (merging into $global:ServiceNowPesterTestDefaults
 if(Test-Path $DefaultsFile){
@@ -23,8 +23,8 @@ if(Test-Path $DefaultsFile){
 }
 
 # Load the module (unload it first in case we've made changes since loading it previously)
-Remove-Module ServiceNow-Module -ErrorAction SilentlyContinue
-Import-Module $here\ServiceNow-Module.psd1   
+Remove-Module PSServiceNow -ErrorAction SilentlyContinue
+Import-Module $here\PSServiceNow.psd1   
 
 Describe "ServiceNow-Module" {
     

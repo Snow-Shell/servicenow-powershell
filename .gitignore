@@ -1,1 +1,3 @@
 ServiceNow-Module.Pester.Defaults.json
+*.zip
+PSServiceNow.Pester.Defaults.json
