@@ -1,5 +1,5 @@
 # PSServiceNow  
-[![GitHub release](https://img.shields.io/github/release/Sam-Martin/servicenow-powershell.svg)](https://github.com/Sam-Martin/servicenow-powershell/releases/latest) [![GitHub license](https://img.shields.io/github/license/Sam-Martin/servicenow-powershell.svg)](LICENSE) ![Test Coverage](https://img.shields.io/badge/coverage-86%25-yellowgreen.svg)  
+[![GitHub release](https://img.shields.io/github/release/Sam-Martin/servicenow-powershell.svg)](https://github.com/Sam-Martin/servicenow-powershell/releases/latest) [![GitHub license](https://img.shields.io/github/license/Sam-Martin/servicenow-powershell.svg)](LICENSE) ![Test Coverage](https://img.shields.io/badge/coverage-87%25-yellowgreen.svg)  
 This PowerShell module provides a series of cmdlets for interacting with the [ServiceNow REST API](http://wiki.servicenow.com/index.php?title=REST_API), performed by wrapping `Invoke-RestMethod` for the API calls.  
 **IMPORTANT:** Neither this module, nor its creator are in any way affiliated with ServiceNow.
 
@@ -19,6 +19,7 @@ Get-ServiceNowIncident -MatchContains @{short_description='PowerShell'}
 ```
 
 ## Cmdlets  
+* Get-ServiceNowChangeRequest
 * Get-ServiceNowConfigurationItem
 * Get-ServiceNowIncident
 * Get-ServiceNowTable
@@ -28,6 +29,7 @@ Get-ServiceNowIncident -MatchContains @{short_description='PowerShell'}
 * New-ServiceNowQuery
 * New-ServiceNowTableEntry
 * Remove-ServiceNowAuth
+* Remove-ServiceNowTableEntry
 * Set-ServiceNowAuth
 * Test-ServiceNowAuthIsSet
 

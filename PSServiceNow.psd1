@@ -12,7 +12,7 @@
 RootModule = 'PSServiceNow.psm1'
 
 # Version number of this module.
-ModuleVersion = '0.1.1'
+ModuleVersion = '0.1.2'
 
 # ID used to uniquely identify this module
 GUID = 'b90d67da-f8d0-4406-ad74-89d169cd0633'
@@ -60,14 +60,15 @@ Copyright = '(c) 2015 Sam. All rights reserved.'
 # TypesToProcess = @()
 
 # Format files (.ps1xml) to be loaded when importing this module
-# FormatsToProcess = @()
+FormatsToProcess = @('PSServiceNow.format.ps1xml')
 
 # Modules to import as nested modules of the module specified in RootModule/ModuleToProcess
 NestedModules = @(
 	'PSServiceNow-Tables.psm1',
 	'PSServiceNow-Incidents.psm1',
 	'PSServiceNow-Users.psm1',
-	'PSServiceNow-ConfigurationManagement.psm1'
+	'PSServiceNow-ConfigurationManagement.psm1',
+	'PSServiceNow-Changes.psm1'
 )
 
 # Functions to export from this module

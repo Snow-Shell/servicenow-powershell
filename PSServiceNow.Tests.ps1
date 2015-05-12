@@ -18,6 +18,7 @@ if(Test-Path $DefaultsFile){
         ServiceNowURL = 'testingurl.service-now.com'
         TestCategory = 'Internal'
         TestUserGroup = 'e9e9a2406f4c35001855fa0dba3ee4f3'
+        TestUser = "7a4b573a6f3725001855fa0dba3ee485"
     } | ConvertTo-Json | Set-Content $DefaultsFile
     return;
 }
@@ -65,5 +66,9 @@ Describe "ServiceNow-Module" {
     It "Get-ServiceNowConfigurationItem works" {
         # There should be one or more configuration items returned
         (Get-ServiceNowConfigurationItem).Count -gt 0 | Should Match $true
+    }
+
+    It "Get-ServiceNowChangeRequest works" {
+        (Get-ServiceNowChangeRequest).Count -gt 0 | Should Match $true
     }
 }
