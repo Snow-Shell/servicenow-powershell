@@ -145,9 +145,12 @@ function New-ServiceNowTableEntry{
     
     $Body = $Values | ConvertTo-Json;
 
+    #Convert to UTF8 array to support special chars such as the danish "æ","ø","å"
+    $utf8Bytes = [System.Text.Encoding]::UTf8.GetBytes($Body)
+
     # Fire and return
     $Uri = $ServiceNowURL + "/table/$Table"
-    return (Invoke-RestMethod -Uri $uri -Method Post -Credential $ServiceNowCredential -Body $Body -ContentType "application/json" -UseBasicParsing).result
+    return (Invoke-RestMethod -Uri $uri -Method Post -Credential $ServiceNowCredential -Body $utf8Bytes -ContentType "application/json" -UseBasicParsing).result
 }
 
 <#

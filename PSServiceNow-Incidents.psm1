@@ -167,6 +167,13 @@ function New-ServiceNowIncident{
         [parameter(ParameterSetName='SetGlobalAuth')]
         [string]$ConfigurationItem,
 
+        # custom fields as hashtable 
+        [parameter(mandatory=$false)]
+        [parameter(ParameterSetName='SpecifyConnectionFields')]
+        [parameter(ParameterSetName='UseConnectionObject')]
+        [parameter(ParameterSetName='SetGlobalAuth')]
+        [hashtable]$CustomFields,
+
         # Credential used to authenticate to ServiceNow  
         [Parameter(ParameterSetName='SpecifyConnectionFields', Mandatory=$True)]
         [ValidateNotNullOrEmpty()]
@@ -198,6 +205,10 @@ function New-ServiceNowIncident{
         'cmdb_ci' = $ConfigurationItem
     }
     
+    if($CustomFields)
+    {
+        $Values += $CustomFields 
+    }
     
     if ($Connection -ne $null)
     {
