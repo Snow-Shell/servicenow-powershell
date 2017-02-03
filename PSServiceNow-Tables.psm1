@@ -75,8 +75,6 @@ function Get-ServiceNowTable
         $Body.sysparm_query = $Query
     }
     
-    $Body
-
     # Fire and return
     $Uri = $ServiceNowURL + "/table/$Table"
 
@@ -145,7 +143,7 @@ function New-ServiceNowTableEntry{
     
     $Body = $Values | ConvertTo-Json;
 
-    #Convert to UTF8 array to support special chars such as the danish "æ","ø","å"
+    #Convert to UTF8 array to support special chars such as the danish "ï¿½","ï¿½","ï¿½"
     $utf8Bytes = [System.Text.Encoding]::UTf8.GetBytes($Body)
 
     # Fire and return
