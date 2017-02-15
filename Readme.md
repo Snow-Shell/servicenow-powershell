@@ -18,6 +18,12 @@ Set-ServiceNowAuth
 Get-ServiceNowIncident -MatchContains @{short_description='PowerShell'} 
 ```
 
+### Example - Retrieving an Incident Containing the Word 'PowerShell' with Automation
+```
+Import-Module PSServiceNow
+Get-ServiceNowIncident -MatchContains @{short_description='PowerShell'} -ServiceNowCredential $PSCredential -ServiceNowURL $ServiceNowURL
+```
+
 ## Cmdlets  
 * Get-ServiceNowChangeRequest
 * Get-ServiceNowConfigurationItem
