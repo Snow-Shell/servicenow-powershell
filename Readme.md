@@ -18,6 +18,17 @@ Set-ServiceNowAuth
 Get-ServiceNowIncident -MatchContains @{short_description='PowerShell'} 
 ```
 
+### Example - Retrieving an Incident Containing the Word 'PowerShell' While Passing Authentication
+```
+Import-Module PSServiceNow
+Get-ServiceNowIncident -MatchContains @{short_description='PowerShell'} -ServiceNowCredential $PSCredential -ServiceNowURL $ServiceNowURL
+```
+
+### Azure Connection Object (Automation Integration Module Support)
+The module can use the `Connection` parameter in conjunction with the included `PSServiceNow-Automation.json` file for use as an Azure automation integration module.  Details of the process is available at [Authoring Integration Modules for Azure Automation](https://azure.microsoft.com/en-us/blog/authoring-integration-modules-for-azure-automation).  
+
+The `Connection` parameter accepts a hashtable object that requires a username, password, and ServiceNowURL.
+
 ## Cmdlets  
 * Get-ServiceNowChangeRequest
 * Get-ServiceNowConfigurationItem
