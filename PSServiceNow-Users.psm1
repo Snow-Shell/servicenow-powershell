@@ -89,7 +89,7 @@ function Get-ServiceNowUserGroup{
 
     # Set the default property set for the table view
     $DefaultProperties = @('name', 'email', 'sys_id')
-    $DefaultDisplayPropertySet = New-Object System.Management.Automation.PSPropertySet(‘DefaultDisplayPropertySet’,[string[]]$DefaultProperties)
+    $DefaultDisplayPropertySet = New-Object System.Management.Automation.PSPropertySet('DefaultDisplayPropertySet',[string[]]$DefaultProperties)
     $PSStandardMembers = [System.Management.Automation.PSMemberInfo[]]@($DefaultDisplayPropertySet)
     $Result | Add-Member MemberSet PSStandardMembers $PSStandardMembers
     return $result
@@ -181,7 +181,7 @@ function Get-ServiceNowUser{
 
     # Set the default property set for the table view
     $DefaultProperties = @('name', 'email', 'sys_id')
-    $DefaultDisplayPropertySet = New-Object System.Management.Automation.PSPropertySet(‘DefaultDisplayPropertySet’,[string[]]$DefaultProperties)
+    $DefaultDisplayPropertySet = New-Object System.Management.Automation.PSPropertySet('DefaultDisplayPropertySet',[string[]]$DefaultProperties)
     $PSStandardMembers = [System.Management.Automation.PSMemberInfo[]]@($DefaultDisplayPropertySet)
     $Result | Add-Member MemberSet PSStandardMembers $PSStandardMembers
     return $result
