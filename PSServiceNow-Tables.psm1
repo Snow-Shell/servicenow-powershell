@@ -156,7 +156,7 @@ function New-ServiceNowTableEntry{
     Untested
 #>
 function Remove-ServiceNowTableEntry{
-    [CmdletBinding(ConfirmImpact='High')]
+[CmdletBinding(ConfirmImpact='High')]
     Param(
         # sys_id of the entry we're deleting
         [parameter(mandatory=$true)]
@@ -191,58 +191,7 @@ function Remove-ServiceNowTableEntry{
         $Connection
     )
 
-    #Get credential and ServiceNow REST URL
-    if ($Connection -ne $null) 
-    { 
-        $ConnectionInfo = Get-ConnectionInfo -Connection $Connection
-    }
-    elseif ($ServiceNowCredential -ne $null -and $ServiceNowURL -ne $null) 
-    {
-        $ConnectionInfo = Get-ConnectionInfo -ServiceNowCredential $ServiceNowCredential -ServiceNowURL $ServiceNowURL
-    }
-    else 
-    {
-        $ConnectionInfo = Get-ConnectionInfo -UseGlobalAuth $true
-    }
-    
-   
-    # Fire and return
-    $Uri = $ConnectionInfo["URL"] + "/table/$Table/$SysID"
-    return (Invoke-RestMethod -Uri $uri -Method Delete -Credential $ConnectionInfo["Credential"] -Body $Body -ContentType "application/json" -UseBasicParsing).result
-}
-
-
-function Get-ConnectionInfo 
-{
-   [OutputType([HashTable])]
-    param (
-        # Credential used to authenticate to ServiceNow  
-        [Parameter(ParameterSetName='SpecifyConnectionFields', Mandatory=$True)]
-        [ValidateNotNullOrEmpty()]
-        [PSCredential]
-        $ServiceNowCredential, 
-
-        # The URL for the ServiceNow instance being used  
-        [Parameter(ParameterSetName='SpecifyConnectionFields', Mandatory=$True)]
-        [ValidateNotNullOrEmpty()]
-        [string]
-        $ServiceNowURL, 
-
-        #Azure Automation Connection object containing username, password, and URL for the ServiceNow instance
-        [Parameter(ParameterSetName='UseConnectionObject', Mandatory=$True)] 
-        [ValidateNotNullOrEmpty()]
-        [Hashtable]
-        $Connection,
-        
-        [Parameter(ParameterSetName='SetGlobalAuth', Mandatory=$True)] 
-        [ValidateNotNullOrEmpty()]
-        [Bool]
-        $UseGlobalAuth
-
-    )
- 
-
-    #Get credential and ServiceNow REST URL
+	#Get credential and ServiceNow REST URL
     if ($Connection -ne $null)
     {
         $SecurePassword = ConvertTo-SecureString $Connection.Password -AsPlainText -Force
@@ -264,9 +213,7 @@ function Get-ConnectionInfo
         throw "Exception:  You must do one of the following to authenticate: `n 1. Call the Set-ServiceNowAuth cmdlet `n 2. Pass in an Azure Automation connection object `n 3. Pass in an endpoint and credential"
     }
 
-    $Connectioninfo = @{}
-    $ConnectionInfo.Add("Credential", $ServiceNowCredential)
-    $Connectioninfo.Add("URL", $ServiceNowURL)
-
-    return $Connectioninfo
+    # Fire and return
+    $Uri = $ServiceNowURL + "/table/$Table/$SysID"
+    return (Invoke-RestMethod -Uri $uri -Method Delete -Credential $ServiceNowCredential -Body $Body -ContentType "application/json").result
 }
