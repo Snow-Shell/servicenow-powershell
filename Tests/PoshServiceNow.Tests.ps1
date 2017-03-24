@@ -1,10 +1,21 @@
-$here = Split-Path -Parent $MyInvocation.MyCommand.Path
-$DefaultsFile = "$here\PSServiceNow.Pester.Defaults.json"
+<#
+$moduleRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
+$ModuleName = "PoshServiceNow"
+#>
 
-# Load defaults from file (merging into $global:ServiceNowPesterTestDefaults
+$projectRoot = Resolve-Path "$PSScriptRoot\.."
+$moduleRoot = Split-Path (Resolve-Path "$projectRoot\*\*.psd1")
+$moduleName = Split-Path $moduleRoot -Leaf
+$DefaultsFile = Join-Path $projectRoot "Tests\$($ModuleName).Pester.Defaults.json"
+
+# Load defaults from file (merging into $global:ServiceNowPesterTestDefaults)
 if(Test-Path $DefaultsFile){
     $defaults = if($global:ServiceNowPesterTestDefaults){$global:ServiceNowPesterTestDefaults}else{@{}};
-    (Get-Content $DefaultsFile | Out-String | ConvertFrom-Json).psobject.properties | %{$defaults."$($_.Name)" = $_.Value}
+    (Get-Content $DefaultsFile | Out-String | ConvertFrom-Json).psobject.properties | ForEach-Object {
+        $defaults."$($_.Name)" = $_.Value
+    }
+
+    $defaults.Creds = (Get-MDSCredentials User)
     
     # Prompt for credentials
     $defaults.Creds = if($defaults.Creds){$defaults.Creds}else{Get-Credential}
@@ -20,12 +31,12 @@ if(Test-Path $DefaultsFile){
         TestUserGroup = 'e9e9a2406f4c35001855fa0dba3ee4f3'
         TestUser = "7a4b573a6f3725001855fa0dba3ee485"
     } | ConvertTo-Json | Set-Content $DefaultsFile
-    return;
+    return
 }
 
 # Load the module (unload it first in case we've made changes since loading it previously)
-Remove-Module PSServiceNow -ErrorAction SilentlyContinue
-Import-Module $here\PSServiceNow.psd1   
+Remove-Module $ModuleName -ErrorAction SilentlyContinue
+Import-Module (Join-Path $moduleRoot "$moduleName.psm1") -Force
 
 Describe "ServiceNow-Module" {
         
