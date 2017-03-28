@@ -15,6 +15,11 @@ if(Test-Path $DefaultsFile){
         $defaults."$($_.Name)" = $_.Value
     }
 
+    ###########################
+    #
+    #Cheating here with the credentials
+    #
+    ###########################
     $defaults.Creds = (Get-MDSCredentials User)
     
     # Prompt for credentials
@@ -22,7 +27,7 @@ if(Test-Path $DefaultsFile){
 
     $global:ServiceNowPesterTestDefaults = $defaults
 }else{
-    Write-Error "$DefaultsFile does not exist. Created example file. Please populate with your values";
+    Write-Error "$DefaultsFile does not exist. Created example file. Please populate with your values"
     
     # Write example file
    @{

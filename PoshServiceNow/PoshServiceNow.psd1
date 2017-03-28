@@ -12,7 +12,7 @@
 RootModule = 'PoshServiceNow.psm1'
 
 # Version number of this module.
-ModuleVersion = '0.1.18.0'
+ModuleVersion = '0.1.34'
 
 # ID used to uniquely identify this module
 GUID = 'b90d67da-f8d0-4406-ad74-89d169cd0633'
@@ -84,6 +84,22 @@ FunctionsToExport = @('Get-ServiceNowChangeRequest','Get-ServiceNowConfiguration
 # DefaultCommandPrefix = ''
 
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
