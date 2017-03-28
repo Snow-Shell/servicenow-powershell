@@ -24,7 +24,8 @@ ForEach ($Module in $Modules) {
      Import-Module $Module
 }
 
-Set-BuildEnvironment
+$Path = (Resolve-Path $PSScriptRoot\..).Path
+Set-BuildEnvironment -Path $Path
 
-Invoke-psake -buildFile .\psake.ps1 -taskList $Task -nologo
+Invoke-psake -buildFile $PSScriptRoot\psake.ps1 -taskList $Task -nologo
 exit ( [int]( -not $psake.build_success ) )
