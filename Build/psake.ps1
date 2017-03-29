@@ -30,15 +30,15 @@ Task Init {
     "`n"
 }
 
-<#
+
 Task Analyze -Depends Init {
-    $saResults = Invoke-ScriptAnalyzer -Path $script -Severity @('Error', 'Warning') -Recurse -Verbose:$false
+    $saResults = Invoke-ScriptAnalyzer -Path $Env:BHPSModulePath -Severity @('Error', 'Warning') -Recurse -Verbose:$false
     if ($saResults) {
         $saResults | Format-Table  
-        Write-Error -Message 'One or more Script Analyzer errors/warnings where found. Build cannot continue!'        
+        #Write-Error -Message 'One or more Script Analyzer errors/warnings where found. Build cannot continue!'        
     }
 }
-#>
+
 
 Task UnitTests -Depends Init {
     $lines
