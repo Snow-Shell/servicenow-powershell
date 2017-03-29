@@ -45,8 +45,20 @@ Import-Module (Join-Path $moduleRoot "$moduleName.psm1") -Force
 
 Describe "ServiceNow-Module" {
     
+    If (Test-ServiceNowAuthisSet) {
+        Remove-ServiceNowAuth
+    }
+
+    It "Test-ServiceNowAuthIsSet not set" {
+        Test-ServiceNowAuthIsSet | Should be $false
+    }
+
     It "Set-ServiceNowAuth works" {
         Set-ServiceNowAuth -url $defaults.ServiceNowURL -Credentials $defaults.Creds | Should be $true
+    }
+
+    It "Test-ServiceNowAuthIsSet set" {
+        Test-ServiceNowAuthIsSet | Should be $true
     }
 
     It "New-ServiceNowIncident (and by extension New-ServiceNowTableEntry) works" {
@@ -86,5 +98,9 @@ Describe "ServiceNow-Module" {
 
     It "Get-ServiceNowChangeRequest works" {
         (Get-ServiceNowChangeRequest).Count -gt 0 | Should Match $true
+    }
+
+    It "Remove-ServiceNowAuth works" {
+        Remove-ServiceNowAuth | Should be $true
     }
 }
