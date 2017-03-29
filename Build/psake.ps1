@@ -58,8 +58,10 @@ Task Test -Depends UnitTests  {
 
     # Gather test results. Store them in a variable and file
     $TestFilePath = Join-Path $ProjectRoot $TestFile
-    $CodeCoverage = Join-Path $Env:BHPSModulePath "$($Env:BHProjectName).psm1"
-    $Script:TestResults = Invoke-Pester -Path $ProjectRoot\Tests -CodeCoverage $CodeCoverage -PassThru -OutputFormat NUnitXml -OutputFile $TestFilePath -Tag Build
+    $CodeFiles = Get-ChildItem $Env:BHPSModulePath -Recurse -Include "*.psm1","*.ps1"
+    $CodeCoverage = New-Object System.Collections.ArrayList
+    $CodeCoverage.AddRange($CodeFiles.FullName)
+    $Script:TestResults = Invoke-Pester -Path $ProjectRoot\Tests -CodeCoverage $CodeCoverage -PassThru -OutputFormat NUnitXml -OutputFile $TestFilePath
 
     # In Appveyor?  Upload our tests! #Abstract this into a function? 
     If($ENV:BHBuildSystem -eq 'AppVeyor')
