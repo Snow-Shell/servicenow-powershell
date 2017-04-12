@@ -139,44 +139,20 @@ Task MakePackage -Depends Build,Test {
 
     function New-MakePackage{
         param(
-            [string[]]$PackageFilePatternExclusions,
             [string]$PackageName,
+            [string]$PackagePath,
             [string]$ModuleName
         )
-        <#
-        @($FilePatternExclusions | ForEach-Object{"MAKE.zip" -match $_}).contains($true)
 
-        $FilesToInclude = Get-ChildItem -Path $Env:BHPSModulePath -Recurse | Where-Object {
-            $File=$_
-            !($PackageFilePatternExclusions | ForEach-Object{$File.Name -match $_}).contains($true)
-        }
-
-        # Create temporary folder and copy the files we want into it
-        $TempFolder = Join-Path $ProjectRoot "Temp"
-        New-Item $TempFolder -ItemType Container -Force | Out-Null
-        $FilesToInclude | ForEach-Object {Copy-Item -Path $_.FullName -Destination $TempFolder\$_ -Force}
-        #>
-        # Create a zip based on that folder (overwriting it if it already exists)
-        $ZipFile = "$ProjectRoot\$PackageName"
+        $ZipFile = "$PackagePath\$PackageName"
         Remove-Item $ZipFile -Force -ErrorAction SilentlyContinue | Out-Null
-        ZipFiles $ZipFile $Env:BHPSModulePath
+        ZipFiles $ZipFile $ModuleName
     }
 
-    <#
-    $PackageFilePatternExclusions = @(
-        "MAKE\.ps1",
-        ".+\.zip",
-        ".+\.md"
-        ".+\.Tests\.ps1",
-        "\.gitignore",
-        "LICENSE",
-        ".+\.Pester.Defaults.json"
-    )
-    #>
     # Update/Create the package
     $PackageName = "$($Env:BHProjectName)-v$($Script:version).zip"
     "Creating package $PackageName"
-    New-MakePackage -PackageName $PackageName -ModuleName $ModuleName
+    New-MakePackage -PackageName $PackageName -PackagePath $ProjectRoot -ModuleName $Env:BHPSModulePath
 
     "`n"
 }
