@@ -28,7 +28,7 @@ Remove-Module PSServiceNow -ErrorAction SilentlyContinue
 Import-Module $here\PSServiceNow.psd1   
 
 Describe "ServiceNow-Module" {
-    
+        
     It "Set-ServiceNowAuth works" {
         Set-ServiceNowAuth -url $defaults.ServiceNowURL -Credentials $defaults.Creds | Should be $true
     }
@@ -40,7 +40,7 @@ Describe "ServiceNow-Module" {
             -Comment "Comment" -ConfigurationItem $defaults.TestConfigurationItem `
             -Caller $defaults.TestUser `
 
-        $TestTicket.short_description | Should be "Testing with Pester"
+        $TestTicket.short_description | Should be "Testing with Pester"               
     }
 
     It "Get-ServiceNowTable works" {
@@ -53,7 +53,29 @@ Describe "ServiceNow-Module" {
         (Get-ServiceNowIncident).Count -gt 0 | Should Match $true
     }
 
-    It "Get-ServiceNowUserGroup works" {
+    It "Update-ServiceNowIncident works" {        
+         $TestTicket = New-ServiceNowIncident -ShortDescription "Testing Ticket Update with Pester" `
+            -Description "Long description" -AssignmentGroup $defaults.TestUserGroup `
+            -Category $defaults.TestCategory -SubCategory $Defaults.TestSubcategory `
+            -Comment "Comment" -ConfigurationItem $defaults.TestConfigurationItem `
+            -Caller $defaults.TestUser `
+        
+        $TestTicket.short_description | Should be "Testing Ticket Update with Pester"    
+                
+        $Values = 
+        @{
+            'short_description' = 'Ticket Updated with Pester'
+            'description' = 'Even Longer Description'            
+        }                
+        
+        Update-ServiceNowIncident -SysId $TestTicket.sys_id -Values $Values
+
+        $TestTicket = Get-ServiceNowIncident -MatchExact @{sys_id=$TestTicket.sys_id}
+        $TestTicket.short_description | Should be "Ticket Updated with Pester"    
+        $TestTicket.description | Should be "Even Longer Description"    
+    }
+
+    It "Get-ServiceNowUserGroup works" {        
         # There should be one or more user groups returned
         (Get-ServiceNowUserGroup).Count -gt 0 | Should Match $true
     }
@@ -68,7 +90,7 @@ Describe "ServiceNow-Module" {
         (Get-ServiceNowConfigurationItem).Count -gt 0 | Should Match $true
     }
 
-    It "Get-ServiceNowChangeRequest works" {
+    It "Get-ServiceNowChangeRequest works" {     
         (Get-ServiceNowChangeRequest).Count -gt 0 | Should Match $true
     }
 }
