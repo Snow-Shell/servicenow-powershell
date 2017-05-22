@@ -10,11 +10,11 @@ function New-ServiceNowQuery{
 
     param(
         # Machine name of the field to order by
-        [parameter(mandatory=$true)]
+        [parameter(mandatory=$false)]
         [string]$OrderBy='opened_at',
         
         # Direction of ordering (Desc/Asc)
-        [parameter(mandatory=$true)]
+        [parameter(mandatory=$false)]
         [ValidateSet("Desc", "Asc")]
         [string]$OrderDirection='Desc',
         
