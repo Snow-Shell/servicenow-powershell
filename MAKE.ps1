@@ -66,7 +66,7 @@ $PackageFilePatternExclusions = @(
 
 $here = Split-Path -Parent $MyInvocation.MyCommand.Path
 
-$Version = "0.1.12"
+$Version = "0.1.13"
 $ModuleName = "PSServiceNow"
 $PackageName = "$ModuleName-v$($version).zip";
 
