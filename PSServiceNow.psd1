@@ -27,7 +27,7 @@ CompanyName = 'None'
 Copyright = '(c) 2015 Sam. All rights reserved.'
 
 # Description of the functionality provided by this module
-# Description = 'This module provides cmdlets allowing you to retrieve information from your ServiceNow instance`s rest API'
+Description = 'This module provides cmdlets allowing you to retrieve information from your ServiceNow instance`s rest API'
 
 # Minimum version of the Windows PowerShell engine required by this module
 # PowerShellVersion = '3.0'
@@ -86,7 +86,7 @@ PrivateData = @{
     PSData = @{
 
         # Tags applied to this module. These help with module discovery in online galleries.
-         Tags = @('Azure','Automation','ServiceNow')
+         Tags = @('Azure','Automation','ServiceNow','PSModule')
 
         # A URL to the license for this module.
          LicenseUri = 'https://github.com/Sam-Martin/servicenow-powershell/blob/master/LICENSE'
