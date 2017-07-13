@@ -58,7 +58,6 @@
                        <TableColumnItem>
                         <PropertyName>opened_at</PropertyName>
                      </TableColumnItem>
-
                   </TableColumnItems>
                </TableRowEntry>
             </TableRowEntries>
