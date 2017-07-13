@@ -15,17 +15,16 @@ $Modules = @("Psake", "PSDeploy","BuildHelpers","PSScriptAnalyzer", "Pester")
 
 ForEach ($Module in $Modules) {
     If (-not (Get-Module -Name $Module -ListAvailable)) {
-            Switch ($Module) {
-                Pester  {Install-Module $Module -Force -SkipPublisherCheck}
-                Default {Install-Module $Module -Force}
-            }
-           
+        Switch ($Module) {
+            Pester  {Install-Module $Module -Force -SkipPublisherCheck}
+            Default {Install-Module $Module -Force}
+        }
     }
-     Import-Module $Module
+    Import-Module $Module
 }
 
 $Path = (Resolve-Path $PSScriptRoot\..).Path
 Set-BuildEnvironment -Path $Path
 
 Invoke-psake -buildFile $PSScriptRoot\psake.ps1 -taskList $Task -nologo
-exit ( [int]( -not $psake.build_success ) )
+exit ([int](-not $psake.build_success))
