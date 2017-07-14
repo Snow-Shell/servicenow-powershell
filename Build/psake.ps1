@@ -32,7 +32,7 @@ Task Init {
 
 
 Task Analyze -Depends Init {
-    $saResults = Invoke-ScriptAnalyzer -Path $Env:BHPSModulePath -Severity @('Error', 'Warning') -Recurse -Verbose:$false
+    $saResults = Invoke-ScriptAnalyzer -Path $ENV:BHModulePath -Severity @('Error', 'Warning') -Recurse -Verbose:$false
     if ($saResults) {
         $saResults | Format-Table  
         #Write-Error -Message 'One or more Script Analyzer errors/warnings where found. Build cannot continue!'        
@@ -58,7 +58,7 @@ Task Test -Depends UnitTests  {
 
     # Gather test results. Store them in a variable and file
     $TestFilePath = Join-Path $ProjectRoot $TestFile
-    $CodeFiles = Get-ChildItem $Env:BHPSModulePath -Recurse -Include "*.psm1","*.ps1"
+    $CodeFiles = Get-ChildItem $ENV:BHModulePath -Recurse -Include "*.psm1","*.ps1"
     $CodeCoverage = New-Object System.Collections.ArrayList
     $CodeCoverage.AddRange($CodeFiles.FullName)
     $Script:TestResults = Invoke-Pester -Path $ProjectRoot\Tests -CodeCoverage $CodeCoverage -PassThru -OutputFormat NUnitXml -OutputFile $TestFilePath
@@ -89,7 +89,7 @@ Task Test -Depends UnitTests  {
 Task Build -Depends Test {
     $lines
 
-    $functions = Get-ChildItem "$env:BHPSModulePath\Public\*.ps1" | 
+    $functions = Get-ChildItem "$ENV:BHModulePath\Public\*.ps1" | 
             Where-Object{ $_.name -notmatch 'Tests'} |
             Select-Object -ExpandProperty basename      
 
@@ -114,8 +114,18 @@ Task Build -Depends Test {
             [int]$CodeCoverage=0,
             [string]$TextFilePath="$Env:BHProjectPath\Readme.md"
         )
+
+        $BadgeColor = Switch ($CodeCoverage) {
+            100                     {"brightgreen"}
+            {95..99 -contains $_}   {"green"}
+            {85..94 -contains $_}   {"yellowgreengreen"}
+            {75..84 -contains $_}   {"yellow"}
+            {65..74 -contains $_}   {"orange"}
+            default                 {"red"}
+        }
+
         $ReadmeContent = Get-Content $TextFilePath
-        $ReadmeContent = $ReadmeContent | ForEach-Object {$_-replace "!\[Test Coverage\].+\)", "![Test Coverage](https://img.shields.io/badge/coverage-$CodeCoverage%25-yellowgreen.svg)"}
+        $ReadmeContent = $ReadmeContent | ForEach-Object {$_-replace "!\[Test Coverage\].+\)", "![Test Coverage](https://img.shields.io/badge/coverage-$CodeCoverage%25-$BadgeColor.svg)"}
         Set-Content -Path $TextFilePath -Value $ReadmeContent
     }
 
@@ -152,7 +162,7 @@ Task MakePackage -Depends Build,Test {
     # Update/Create the package
     $PackageName = "$($Env:BHProjectName)-v$($Script:version).zip"
     "Creating package $PackageName"
-    New-MakePackage -PackageName $PackageName -PackagePath $ProjectRoot -ModuleName $Env:BHPSModulePath
+    New-MakePackage -PackageName $PackageName -PackagePath $ProjectRoot -ModuleName $ENV:BHModulePath
 
     "`n"
 }
