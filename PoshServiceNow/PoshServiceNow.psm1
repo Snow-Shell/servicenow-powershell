@@ -15,7 +15,7 @@ foreach($Folder in @('Private', 'Public'))
 
         # dot source each file
         $Files | Where-Object{ $_.name -NotLike '*.Tests.ps1'} | 
-            ForEach-Object {Write-Verbose $_.basename; . ([scriptblock]::Create([io.file]::ReadAllText($PSItem)))}
+            ForEach-Object {Write-Verbose $_.basename; . ([scriptblock]::Create([io.file]::ReadAllText($PSItem.FullName)))}
     }
 }
 
