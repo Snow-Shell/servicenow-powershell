@@ -15,13 +15,6 @@ if(Test-Path $DefaultsFile){
         $defaults."$($_.Name)" = $_.Value
     }
 
-    ###########################
-    #
-    #Cheating here with the credentials
-    #
-    ###########################
-    $defaults.Creds = (Get-MDSCredential User)
-    
     # Prompt for credentials
     $defaults.Creds = if($defaults.Creds){$defaults.Creds}else{Get-Credential}
 
