@@ -1,8 +1,3 @@
-<#
-$moduleRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
-$ModuleName = "PoshServiceNow"
-#>
-
 $projectRoot = Resolve-Path "$PSScriptRoot\.."
 $moduleRoot = Split-Path (Resolve-Path "$projectRoot\*\*.psd1")
 $moduleName = Split-Path $moduleRoot -Leaf
