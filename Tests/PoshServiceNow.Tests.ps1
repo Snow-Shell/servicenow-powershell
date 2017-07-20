@@ -1,8 +1,3 @@
-<#
-$moduleRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
-$ModuleName = "PoshServiceNow"
-#>
-
 $projectRoot = Resolve-Path "$PSScriptRoot\.."
 $moduleRoot = Split-Path (Resolve-Path "$projectRoot\*\*.psd1")
 $moduleName = Split-Path $moduleRoot -Leaf
@@ -61,8 +56,7 @@ Describe "ServiceNow-Module" {
             -Comment "Comment" -ConfigurationItem $defaults.TestConfigurationItem `
             -Caller $defaults.TestUser
 
-        # $TestTicket.short_description | Should be "Testing with Pester"
-        "Testing with Pester" | Should be "Testing with Pester"
+        $TestTicket.short_description | Should be "Testing with Pester"
     }
 
     It "Get-ServiceNowTable works" {
