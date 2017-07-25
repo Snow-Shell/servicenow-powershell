@@ -1,17 +1,21 @@
-$here = Split-Path -Parent $MyInvocation.MyCommand.Path
-$DefaultsFile = "$here\PSServiceNow.Pester.Defaults.json"
+$projectRoot = Resolve-Path "$PSScriptRoot\.."
+$moduleRoot = Split-Path (Resolve-Path "$projectRoot\*\*.psd1")
+$moduleName = Split-Path $moduleRoot -Leaf
+$DefaultsFile = Join-Path $projectRoot "Tests\$($ModuleName).Pester.Defaults.json"
 
-# Load defaults from file (merging into $global:ServiceNowPesterTestDefaults
+# Load defaults from file (merging into $global:ServiceNowPesterTestDefaults)
 if(Test-Path $DefaultsFile){
     $defaults = if($global:ServiceNowPesterTestDefaults){$global:ServiceNowPesterTestDefaults}else{@{}};
-    (Get-Content $DefaultsFile | Out-String | ConvertFrom-Json).psobject.properties | %{$defaults."$($_.Name)" = $_.Value}
-    
+    (Get-Content $DefaultsFile | Out-String | ConvertFrom-Json).psobject.properties | ForEach-Object {
+        $defaults."$($_.Name)" = $_.Value
+    }
+
     # Prompt for credentials
     $defaults.Creds = if($defaults.Creds){$defaults.Creds}else{Get-Credential}
 
     $global:ServiceNowPesterTestDefaults = $defaults
 }else{
-    Write-Error "$DefaultsFile does not exist. Created example file. Please populate with your values";
+    Write-Error "$DefaultsFile does not exist. Created example file. Please populate with your values"
     
     # Write example file
    @{
@@ -20,17 +24,28 @@ if(Test-Path $DefaultsFile){
         TestUserGroup = 'e9e9a2406f4c35001855fa0dba3ee4f3'
         TestUser = "7a4b573a6f3725001855fa0dba3ee485"
     } | ConvertTo-Json | Set-Content $DefaultsFile
-    return;
+    return
 }
 
 # Load the module (unload it first in case we've made changes since loading it previously)
-Remove-Module PSServiceNow -ErrorAction SilentlyContinue
-Import-Module $here\PSServiceNow.psd1   
+Remove-Module $ModuleName -ErrorAction SilentlyContinue
+Import-Module (Join-Path $moduleRoot "$moduleName.psd1") -Force
 
 Describe "ServiceNow-Module" {
-        
+    If (Test-ServiceNowAuthisSet) {
+        Remove-ServiceNowAuth
+    }
+
+    It "Test-ServiceNowAuthIsSet not set" {
+        Test-ServiceNowAuthIsSet | Should be $false
+    }
+
     It "Set-ServiceNowAuth works" {
         Set-ServiceNowAuth -url $defaults.ServiceNowURL -Credentials $defaults.Creds | Should be $true
+    }
+
+    It "Test-ServiceNowAuthIsSet set" {
+        Test-ServiceNowAuthIsSet | Should be $true
     }
 
     It "New-ServiceNowIncident (and by extension New-ServiceNowTableEntry) works" {
@@ -38,7 +53,7 @@ Describe "ServiceNow-Module" {
             -Description "Long description" -AssignmentGroup $defaults.TestUserGroup `
             -Category $defaults.TestCategory -SubCategory $Defaults.TestSubcategory `
             -Comment "Comment" -ConfigurationItem $defaults.TestConfigurationItem `
-            -Caller $defaults.TestUser `
+            -Caller $defaults.TestUser
 
         $TestTicket.short_description | Should be "Testing with Pester"               
     }
@@ -92,5 +107,9 @@ Describe "ServiceNow-Module" {
 
     It "Get-ServiceNowChangeRequest works" {     
         (Get-ServiceNowChangeRequest).Count -gt 0 | Should Match $true
+    }
+
+    It "Remove-ServiceNowAuth works" {
+        Remove-ServiceNowAuth | Should be $true
     }
 }

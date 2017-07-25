@@ -1,5 +1,5 @@
-# PSServiceNow  
-[![GitHub release](https://img.shields.io/github/release/Sam-Martin/servicenow-powershell.svg)](https://github.com/Sam-Martin/servicenow-powershell/releases/latest) [![GitHub license](https://img.shields.io/github/license/Sam-Martin/servicenow-powershell.svg)](LICENSE) ![Test Coverage](https://img.shields.io/badge/coverage-68%25-yellowgreen.svg)  
+# PoshServiceNow  
+[![GitHub release](https://img.shields.io/github/release/Sam-Martin/servicenow-powershell.svg)](https://github.com/Sam-Martin/servicenow-powershell/releases/latest) [![GitHub license](https://img.shields.io/github/license/Sam-Martin/servicenow-powershell.svg)](LICENSE) ![Test Coverage](https://img.shields.io/badge/coverage-74%25-orange.svg)  
 This PowerShell module provides a series of cmdlets for interacting with the [ServiceNow REST API](http://wiki.servicenow.com/index.php?title=REST_API), performed by wrapping `Invoke-RestMethod` for the API calls.  
 **IMPORTANT:** Neither this module nor its creator are in any way affiliated with ServiceNow.
 
@@ -8,19 +8,19 @@ Requires PowerShell 3.0 or above as this is when `Invoke-RestMethod` was introdu
 
 ## Usage
 Download the [latest release](https://github.com/Sam-Martin/servicenow-powershell/releases/latest) and  extract the .psm1 and .psd1 files to your PowerShell profile directory (i.e. the `Modules` directory under wherever `$profile` points to in your PS console) and run:  
-`Import-Module PSServiceNow`  
-Once you've done this, all the cmdlets will be at your disposal, you can see a full list using `Get-Command -Module PSServiceNow`.
+`Import-Module PoshServiceNow`  
+Once you've done this, all the cmdlets will be at your disposal, you can see a full list using `Get-Command -Module PoshServiceNow`.
 
 ### Example - Retrieving an Incident Containing the Word 'PowerShell'
 ```
-Import-Module PSServiceNow
+Import-Module PoshServiceNow
 Set-ServiceNowAuth 
 Get-ServiceNowIncident -MatchContains @{short_description='PowerShell'} 
 ```
 
 ### Example - Retrieving an Incident Containing the Word 'PowerShell' While Passing Authentication
 ```
-Import-Module PSServiceNow
+Import-Module PoshServiceNow
 Get-ServiceNowIncident -MatchContains @{short_description='PowerShell'} -ServiceNowCredential $PSCredential -ServiceNowURL $ServiceNowURL
 ```
 
@@ -31,7 +31,7 @@ Update-ServiceNowIncident -SysID $Incident.Sys_ID -Values @{comments='Updated vi
 ```
 
 ### Azure Connection Object (Automation Integration Module Support)
-The module can use the `Connection` parameter in conjunction with the included `PSServiceNow-Automation.json` file for use as an Azure automation integration module.  Details of the process is available at [Authoring Integration Modules for Azure Automation](https://azure.microsoft.com/en-us/blog/authoring-integration-modules-for-azure-automation).  
+The module can use the `Connection` parameter in conjunction with the included `PoshServiceNow-Automation.json` file for use as an Azure automation integration module.  Details of the process is available at [Authoring Integration Modules for Azure Automation](https://azure.microsoft.com/en-us/blog/authoring-integration-modules-for-azure-automation).  
 
 The `Connection` parameter accepts a hashtable object that requires a username, password, and ServiceNowURL.
 
