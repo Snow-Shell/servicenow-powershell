@@ -49,13 +49,21 @@ Describe "ServiceNow-Module" {
     }
 
     It "New-ServiceNowIncident (and by extension New-ServiceNowTableEntry) works" {
-        $TestTicket = New-ServiceNowIncident -ShortDescription "Testing with Pester" `
-            -Description "Long description" -AssignmentGroup $defaults.TestUserGroup `
-            -Category $defaults.TestCategory -SubCategory $Defaults.TestSubcategory `
-            -Comment "Comment" -ConfigurationItem $defaults.TestConfigurationItem `
-            -Caller $defaults.TestUser
+        $ShortDescription = "Testing Ticket Creation with Pester"
+        $newServiceNowIncidentSplat = @{
+            Caller              = $Defaults.TestUser
+            ShortDescription    = $ShortDescription
+            Description         = "Long description"
+            AssignmentGroup     = $Defaults.TestUserGroup
+            Comment             = "Comment"
+            Category            = $Defaults.TestCategory
+            SubCategory         = $Defaults.TestSubcategory
+            ConfigurationItem   = $Defaults.TestConfigurationItem
 
-        $TestTicket.short_description | Should be "Testing with Pester"               
+        }      
+        $TestTicket = New-ServiceNowIncident @newServiceNowIncidentSplat
+
+        $TestTicket.short_description | Should be $ShortDescription             
     }
 
     It "Get-ServiceNowTable works" {
@@ -68,20 +76,28 @@ Describe "ServiceNow-Module" {
         (Get-ServiceNowIncident).Count -gt 0 | Should Match $true
     }
 
-    It "Update-ServiceNowIncident works" {        
-         $TestTicket = New-ServiceNowIncident -ShortDescription "Testing Ticket Update with Pester" `
-            -Description "Long description" -AssignmentGroup $defaults.TestUserGroup `
-            -Category $defaults.TestCategory -SubCategory $Defaults.TestSubcategory `
-            -Comment "Comment" -ConfigurationItem $defaults.TestConfigurationItem `
-            -Caller $defaults.TestUser `
+    It "Update-ServiceNowIncident works" {
+        $ShortDescription = "Testing Ticket Update with Pester"
+        $newServiceNowIncidentSplat = @{
+            Caller              = $Defaults.TestUser
+            ShortDescription    = $ShortDescription
+            Description         = "Long description"
+            AssignmentGroup     = $Defaults.TestUserGroup
+            Comment             = "Comment"
+            Category            = $Defaults.TestCategory
+            SubCategory         = $Defaults.TestSubcategory
+            ConfigurationItem   = $Defaults.TestConfigurationItem
+
+        }      
+        $TestTicket = New-ServiceNowIncident @newServiceNowIncidentSplat
         
-        $TestTicket.short_description | Should be "Testing Ticket Update with Pester"    
+        $TestTicket.short_description | Should be $ShortDescription   
                 
         $Values = 
         @{
             'short_description' = 'Ticket Updated with Pester'
             'description' = 'Even Longer Description'            
-        }                
+        }
         
         Update-ServiceNowIncident -SysId $TestTicket.sys_id -Values $Values
 

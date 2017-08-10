@@ -2,9 +2,9 @@
 <Configuration>
    <ViewDefinitions>
       <View>
-         <Name>PoshServiceNow.ChangeRequest</Name>
+         <Name>ServiceNow.ChangeRequest</Name>
          <ViewSelectedBy>
-            <TypeName>PoshServiceNow.ChangeRequest</TypeName>
+            <TypeName>ServiceNow.ChangeRequest</TypeName>
          </ViewSelectedBy>
          <TableControl>
             <TableHeaders>

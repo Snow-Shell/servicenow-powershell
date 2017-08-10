@@ -1,0 +1,32 @@
+{
+    "ConnectionFields": [
+        {
+            "IsEncrypted": false,
+            "IsOptional": false,
+            "Name": "Username",
+            "TypeName": "System.String"
+        },
+        {
+            "IsEncrypted": true,
+            "IsOptional": false,
+            "Name": "Password",
+            "TypeName": "System.String"
+        },
+        {
+            "IsEncrypted": false,
+            "IsOptional": false,
+            "Name": "ServiceNowUri",
+            "TypeName": "System.String"
+        },
+        {
+            "IsEncrypted": false,
+            "IsOptional": true,
+            "Name": "APIVersion",
+            "TypeName": "System.String"
+        }
+
+    ],
+
+    "ConnectionTypeName": "ServiceNow",
+    "IntegrationModuleName": "ServiceNow"
+}
