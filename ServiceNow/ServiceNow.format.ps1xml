@@ -2,9 +2,9 @@
 <Configuration>
    <ViewDefinitions>
       <View>
-         <Name>PSServiceNow.ChangeRequest</Name>
+         <Name>ServiceNow.ChangeRequest</Name>
          <ViewSelectedBy>
-            <TypeName>PSServiceNow.ChangeRequest</TypeName>
+            <TypeName>ServiceNow.ChangeRequest</TypeName>
          </ViewSelectedBy>
          <TableControl>
             <TableHeaders>
@@ -58,7 +58,6 @@
                        <TableColumnItem>
                         <PropertyName>opened_at</PropertyName>
                      </TableColumnItem>
-
                   </TableColumnItems>
                </TableRowEntry>
             </TableRowEntries>
