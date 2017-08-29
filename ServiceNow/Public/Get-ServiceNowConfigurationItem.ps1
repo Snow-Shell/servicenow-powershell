@@ -60,23 +60,36 @@ function Get-ServiceNowConfigurationItem {
         $Connection
     )
 
-    $Query = New-ServiceNowQuery -OrderBy $OrderBy -OrderDirection $OrderDirection -MatchExact $MatchExact -MatchContains $MatchContains
+    # Query Splat
+    $newServiceNowQuerySplat = @{
+        OrderBy         = $OrderBy
+        MatchExact      = $MatchExact
+        OrderDirection  = $OrderDirection
+        MatchContains   = $MatchContains
+    }
+    $Query = New-ServiceNowQuery @newServiceNowQuerySplat
     
-    if ($Connection -ne $null) {    
-        $result = Get-ServiceNowTable -Table 'cmdb_ci' -Query $Query -Limit $Limit -DisplayValues $DisplayValues -Connection $Connection
-    }
-    elseif ($ServiceNowCredential -ne $null -and $ServiceNowURL -ne $null) {
-        $result = Get-ServiceNowTable -Table 'cmdb_ci' -Query $Query -Limit $Limit -DisplayValues $DisplayValues -ServiceNowCredential $ServiceNowCredential -ServiceNowURL $ServiceNowURL
-    }
-    else {
-        $result = Get-ServiceNowTable -Table 'cmdb_ci' -Query $Query -Limit $Limit -DisplayValues $DisplayValues
+    # Table Splat
+    $getServiceNowTableSplat = @{
+        Table           = 'cmdb_ci'
+        Query           = $Query
+        Limit           = $Limit
+        DisplayValues   = $DisplayValues
     }
 
+    # Update the Table Splat if the parameters have values
+    if ($null -ne $PSBoundParameters.Connection)
+    {     
+        $getServiceNowTableSplat.Add('Connection',$Connection)
+    }
+    elseif ($null -ne $PSBoundParameters.ServiceNowCredential -and $null -ne $PSBoundParameters.ServiceNowURL) 
+    {
+         $getServiceNowTableSplat.Add('ServiceNowCredential',$ServiceNowCredential)
+         $getServiceNowTableSplat.Add('ServiceNowURL',$ServiceNowURL)
+    }
 
-    # Set the default property set for the table view
-    $DefaultProperties = @('name', 'category', 'subcategory')
-    $DefaultDisplayPropertySet = New-Object System.Management.Automation.PSPropertySet('DefaultDisplayPropertySet',[string[]]$DefaultProperties)
-    $PSStandardMembers = [System.Management.Automation.PSMemberInfo[]]@($DefaultDisplayPropertySet)
-    $Result | Add-Member MemberSet PSStandardMembers $PSStandardMembers
-    return $result
+    # Perform query and return each object in the format.ps1xml format
+    $Result = Get-ServiceNowTable @getServiceNowTableSplat
+    $Result | ForEach-Object{$_.PSObject.TypeNames.Insert(0,"ServiceNow.ConfigurationItem")}
+    $Result
 }

@@ -40,22 +40,21 @@ function Get-ServiceNowTable
         [string]
         $ServiceNowURL, 
 
-        #Azure Automation Connection object containing username, password, and URL for the ServiceNow instance
+        # Azure Automation Connection object containing username, password, and URL for the ServiceNow instance
         [Parameter(ParameterSetName='UseConnectionObject', Mandatory=$True)] 
         [ValidateNotNullOrEmpty()]
         [Hashtable]
         $Connection
     )
 
-    #Get credential and ServiceNow REST URL
-    if ($Connection -ne $null)
+    # Get credential and ServiceNow REST URL
+    if ($null -ne $Connection)
     {
         $SecurePassword = ConvertTo-SecureString $Connection.Password -AsPlainText -Force
         $ServiceNowCredential = New-Object System.Management.Automation.PSCredential ($Connection.Username, $SecurePassword)
         $ServiceNowURL = 'https://' + $Connection.ServiceNowUri + '/api/now/v1'
-        
     } 
-    elseif ($ServiceNowCredential -ne $null -and $ServiceNowURL -ne $null)
+    elseif ($null -ne $ServiceNowCredential -and $null -ne $ServiceNowURL)
     {
         $ServiceNowURL = 'https://' + $ServiceNowURL + '/api/now/v1'
     }
@@ -64,7 +63,7 @@ function Get-ServiceNowTable
         $ServiceNowCredential = $Global:ServiceNowCredentials
         $ServiceNowURL = $global:ServiceNowRESTURL
     } 
-    else 
+    else
     {
         throw "Exception:  You must do one of the following to authenticate: `n 1. Call the Set-ServiceNowAuth cmdlet `n 2. Pass in an Azure Automation connection object `n 3. Pass in an endpoint and credential"
     }
@@ -75,8 +74,20 @@ function Get-ServiceNowTable
         $Body.sysparm_query = $Query
     }
     
-    # Fire and return
+    # Perform table query and capture results
     $Uri = $ServiceNowURL + "/table/$Table"
+    $Result = (Invoke-RestMethod -Uri $Uri -Credential $ServiceNowCredential -Body $Body -ContentType "application/json").Result
 
-    return (Invoke-RestMethod -Uri $Uri -Credential $ServiceNowCredential -Body $Body -ContentType "application/json").result
+    # Convert specific fields to DateTime format
+    $ConvertToDateField = @('closed_at','expected_start','follow_up','opened_at','sys_created_on','sys_updated_on','work_end','work_start')
+	ForEach ($SNResult in $Result) {
+		ForEach ($Property in $ConvertToDateField) {
+			If (-not [string]::IsNullOrEmpty($SNResult.$Property)) {
+				$SNResult.$Property = [datetime]$SNResult.$Property
+			}
+		}
+    }
+
+    # Return the results
+    $Result
 }
