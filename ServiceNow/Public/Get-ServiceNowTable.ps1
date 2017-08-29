@@ -4,37 +4,39 @@ function Get-ServiceNowTable
     Param
     (
         # Name of the table we're querying (e.g. incidents)
-        [parameter(ParameterSetName='SpecifyConnectionFields', mandatory=$false)]
+        [parameter(Mandatory)]
+        [parameter(ParameterSetName='SpecifyConnectionFields')]
         [parameter(ParameterSetName='UseConnectionObject')]
         [parameter(ParameterSetName='SetGlobalAuth')]
+        [ValidateNotNullOrEmpty()]
         [string]$Table,
         
         # sysparm_query param in the format of a ServiceNow encoded query string (see http://wiki.servicenow.com/index.php?title=Encoded_Query_Strings)
-        [parameter(ParameterSetName='SpecifyConnectionFields', mandatory=$false)]
+        [parameter(ParameterSetName='SpecifyConnectionFields')]
         [parameter(ParameterSetName='UseConnectionObject')]
         [parameter(ParameterSetName='SetGlobalAuth')]
         [string]$Query,
 
         # Maximum number of records to return
-        [parameter(ParameterSetName='SpecifyConnectionFields', mandatory=$false)]
+        [parameter(ParameterSetName='SpecifyConnectionFields')]
         [parameter(ParameterSetName='UseConnectionObject')]
         [parameter(ParameterSetName='SetGlobalAuth')]
         [int]$Limit=10,
 
         # Whether or not to show human readable display values instead of machine values
-        [parameter(ParameterSetName='SpecifyConnectionFields', mandatory=$false)]
+        [parameter(ParameterSetName='SpecifyConnectionFields')]
         [parameter(ParameterSetName='UseConnectionObject')]
         [parameter(ParameterSetName='SetGlobalAuth')]
-        [ValidateSet("true","false", "all")]
+        [ValidateSet("true","false","all")]
         [string]$DisplayValues='false',
         
         # Credential used to authenticate to ServiceNow  
-        [Parameter(ParameterSetName='SpecifyConnectionFields', Mandatory=$True)]
+        [Parameter(ParameterSetName='SpecifyConnectionFields')]
         [ValidateNotNullOrEmpty()]
         [PSCredential]
         $ServiceNowCredential, 
 
-        # The URL for the ServiceNow instance being used  
+        # The URL for the ServiceNow instance being used
         [Parameter(ParameterSetName='SpecifyConnectionFields', Mandatory=$True)]
         [ValidateNotNullOrEmpty()]
         [string]
