@@ -14,32 +14,36 @@ function Update-ServiceNowIncident {
          # Credential used to authenticate to ServiceNow  
         [Parameter(ParameterSetName='SpecifyConnectionFields', Mandatory=$True)]
         [ValidateNotNullOrEmpty()]
-        [PSCredential]
-        $ServiceNowCredential, 
+        [PSCredential]$ServiceNowCredential, 
 
         # The URL for the ServiceNow instance being used (eg: instancename.service-now.com)
         [Parameter(ParameterSetName='SpecifyConnectionFields', Mandatory=$True)]
         [ValidateNotNullOrEmpty()]
-        [string]
-        $ServiceNowURL, 
+        [string]$ServiceNowURL, 
 
         #Azure Automation Connection object containing username, password, and URL for the ServiceNow instance
         [Parameter(ParameterSetName='UseConnectionObject', Mandatory=$True)] 
         [ValidateNotNullOrEmpty()]
-        [Hashtable]
-        $Connection
+        [Hashtable]$Connection
     )                      
 
-    if ($Connection -ne $null)
-    {
-       Update-ServiceNowTableEntry -Table 'incident' -Values $Values -Connection $Connection -SysId $SysId 
+    $updateServiceNowTableEntrySplat = @{
+        SysId = $SysId
+        Table = 'incident'
+        Values = $Values
     }
-    elseif ($ServiceNowCredential -ne $null -and $ServiceNowURL -ne $null) 
-    {
-       Update-ServiceNowTableEntry -Table 'incident' -Values $Values -ServiceNowCredential $ServiceNowCredential -ServiceNowURL $ServiceNowURL -SysId $SysId 
+    
+    # Update the splat if the parameters have values
+    if ($null -ne $PSBoundParameters.Connection)
+    {     
+        $updateServiceNowTableEntrySplat.Add('Connection',$Connection)
     }
-    else 
+    elseif ($null -ne $PSBoundParameters.ServiceNowCredential -and $null -ne $PSBoundParameters.ServiceNowURL) 
     {
-       Update-ServiceNowTableEntry -Table 'incident' -Values $Values -SysId $SysId   
-    }     
+         $updateServiceNowTableEntrySplat.Add('ServiceNowCredential',$ServiceNowCredential)
+         $updateServiceNowTableEntrySplat.Add('ServiceNowURL',$ServiceNowURL)
+    }
+       
+    Update-ServiceNowTableEntry @updateServiceNowTableEntrySplat
 }
+
