@@ -7,6 +7,13 @@ function Get-ServiceNowConfigurationItem {
         [parameter(ParameterSetName='SetGlobalAuth')]
         [string]$OrderBy='name',
         
+        # Table name of the ServiceNow table
+        [parameter(mandatory=$false)]
+        [parameter(ParameterSetName='SpecifyConnectionFields')]
+        [parameter(ParameterSetName='UseConnectionObject')]
+        [parameter(ParameterSetName='SetGlobalAuth')]
+        [string]$Table='cmdb_ci',
+        
         # Direction of ordering (Desc/Asc)
         [parameter(mandatory=$false)]
         [parameter(ParameterSetName='SpecifyConnectionFields')]
@@ -63,19 +70,19 @@ function Get-ServiceNowConfigurationItem {
     $Query = New-ServiceNowQuery -OrderBy $OrderBy -OrderDirection $OrderDirection -MatchExact $MatchExact -MatchContains $MatchContains
     
     if ($Connection -ne $null) {    
-        $result = Get-ServiceNowTable -Table 'cmdb_ci' -Query $Query -Limit $Limit -DisplayValues $DisplayValues -Connection $Connection
+        $result = Get-ServiceNowTable -Table $Table -Query $Query -Limit $Limit -DisplayValues $DisplayValues -Connection $Connection
     }
     elseif ($ServiceNowCredential -ne $null -and $ServiceNowURL -ne $null) {
-        $result = Get-ServiceNowTable -Table 'cmdb_ci' -Query $Query -Limit $Limit -DisplayValues $DisplayValues -ServiceNowCredential $ServiceNowCredential -ServiceNowURL $ServiceNowURL
+        $result = Get-ServiceNowTable -Table $Table -Query $Query -Limit $Limit -DisplayValues $DisplayValues -ServiceNowCredential $ServiceNowCredential -ServiceNowURL $ServiceNowURL
     }
     else {
-        $result = Get-ServiceNowTable -Table 'cmdb_ci' -Query $Query -Limit $Limit -DisplayValues $DisplayValues
+        $result = Get-ServiceNowTable -Table $Table -Query $Query -Limit $Limit -DisplayValues $DisplayValues
     }
 
 
     # Set the default property set for the table view
     $DefaultProperties = @('name', 'category', 'subcategory')
-    $DefaultDisplayPropertySet = New-Object System.Management.Automation.PSPropertySet(‘DefaultDisplayPropertySet’,[string[]]$DefaultProperties)
+    $DefaultDisplayPropertySet = New-Object System.Management.Automation.PSPropertySet(â€˜DefaultDisplayPropertySetâ€™,[string[]]$DefaultProperties)
     $PSStandardMembers = [System.Management.Automation.PSMemberInfo[]]@($DefaultDisplayPropertySet)
     $Result | Add-Member MemberSet PSStandardMembers $PSStandardMembers
     return $result
