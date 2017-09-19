@@ -60,20 +60,36 @@ function Get-ServiceNowChangeRequest {
         $Connection
     )
     
-    $private:Query = New-ServiceNowQuery -OrderBy $private:OrderBy -OrderDirection $private:OrderDirection -MatchExact $private:MatchExact -MatchContains $private:MatchContains
+    # Query Splat
+    $newServiceNowQuerySplat = @{
+        OrderBy         = $OrderBy
+        MatchExact      = $MatchExact
+        OrderDirection  = $OrderDirection
+        MatchContains   = $MatchContains
+    }
+    $Query = New-ServiceNowQuery @newServiceNowQuerySplat
     
-
-    if ($Connection -ne $null) {
-        $private:result = Get-ServiceNowTable -Table 'change_request' -Query $private:Query -Limit $private:Limit -DisplayValues $private:DisplayValues -Connection $Connection
-    }
-    elseif ($ServiceNowCredential -ne $null -and $ServiceNowURL -ne $null) {
-        $private:result = Get-ServiceNowTable -Table 'change_request' -Query $private:Query -Limit $private:Limit -DisplayValues $private:DisplayValues -ServiceNowCredential $ServiceNowCredential -ServiceNowURL $ServiceNowURL 
-    }
-    else {
-        $private:result = Get-ServiceNowTable -Table 'change_request' -Query $private:Query -Limit $private:Limit -DisplayValues $private:DisplayValues 
+    # Table Splat
+    $getServiceNowTableSplat = @{
+        Table           = 'change_request'
+        Query           = $Query
+        Limit           = $Limit
+        DisplayValues   = $DisplayValues
     }
 
-    # Add the custom type to the change request to enable a view
-    $private:result | ForEach-Object {$_.psobject.TypeNames.Insert(0, "ServiceNow.ChangeRequest")}
-    return $private:result
+    # Update the Table Splat if the parameters have values
+    if ($null -ne $PSBoundParameters.Connection)
+    {     
+        $getServiceNowTableSplat.Add('Connection',$Connection)
+    }
+    elseif ($null -ne $PSBoundParameters.ServiceNowCredential -and $null -ne $PSBoundParameters.ServiceNowURL) 
+    {
+         $getServiceNowTableSplat.Add('ServiceNowCredential',$ServiceNowCredential)
+         $getServiceNowTableSplat.Add('ServiceNowURL',$ServiceNowURL)
+    }
+
+    # Perform query and return each object in the format.ps1xml format
+    $Result = Get-ServiceNowTable @getServiceNowTableSplat
+    $Result | ForEach-Object{$_.PSObject.TypeNames.Insert(0,"ServiceNow.ChangeRequest")}
+    $Result
 }

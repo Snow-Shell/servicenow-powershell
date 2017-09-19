@@ -63,25 +63,36 @@ function Get-ServiceNowUser{
         $Connection
     )
 
-    $Query = New-ServiceNowQuery -OrderBy $OrderBy -OrderDirection $OrderDirection -MatchExact $MatchExact -MatchContains $MatchContains
-     
-    if ($Connection -ne $null)
-    {   
-        $result = Get-ServiceNowTable -Table 'sys_user' -Query $Query -Limit $Limit -DisplayValues $DisplayValues -Connection $Connection 
+    # Query Splat
+    $newServiceNowQuerySplat = @{
+        OrderBy = $OrderBy
+        OrderDirection = $OrderDirection
+        MatchExact = $MatchExact
+        MatchContains = $MatchContains
     }
-    elseif ($ServiceNowCredential -ne $null -and $ServiceNowURL -ne $null) 
-    {
-        $result = Get-ServiceNowTable -Table 'sys_user' -Query $Query -Limit $Limit -DisplayValues $DisplayValues -ServiceNowCredential $ServiceNowCredential -ServiceNowURL $ServiceNowURL 
+    $Query = New-ServiceNowQuery @newServiceNowQuerySplat
+
+    # Table Splat 
+    $getServiceNowTableSplat = @{
+        Table = 'sys_user'
+        Query = $Query
+        Limit = $Limit
+        DisplayValues = $DisplayValues
     }
-    else
+    
+    # Update the splat if the parameters have values
+    if ($null -ne $PSBoundParameters.Connection)
+    {     
+        $getServiceNowTableSplat.Add('Connection',$Connection)
+    }
+    elseif ($null -ne $PSBoundParameters.ServiceNowCredential -and $null -ne $PSBoundParameters.ServiceNowURL) 
     {
-        $result = Get-ServiceNowTable -Table 'sys_user' -Query $Query -Limit $Limit -DisplayValues $DisplayValues 
+         $getServiceNowTableSplat.Add('ServiceNowCredential',$ServiceNowCredential)
+         $getServiceNowTableSplat.Add('ServiceNowURL',$ServiceNowURL)
     }
 
-    # Set the default property set for the table view
-    $DefaultProperties = @('name', 'email', 'sys_id')
-    $DefaultDisplayPropertySet = New-Object System.Management.Automation.PSPropertySet('DefaultDisplayPropertySet',[string[]]$DefaultProperties)
-    $PSStandardMembers = [System.Management.Automation.PSMemberInfo[]]@($DefaultDisplayPropertySet)
-    $Result | Add-Member MemberSet PSStandardMembers $PSStandardMembers
-    return $result
+    # Perform query and return each object in the format.ps1xml format
+    $Result = Get-ServiceNowTable @getServiceNowTableSplat
+    $Result | ForEach-Object{$_.PSObject.TypeNames.Insert(0,"ServiceNow.UserAndUserGroup")}
+    $Result
 }
