@@ -6,9 +6,11 @@ This PowerShell module provides a series of cmdlets for interacting with the [Se
 
 **IMPORTANT:** Neither this module nor its creator are in any way affiliated with ServiceNow.
 
-## Version 2 Overview
+## Version 1
 
-The module has been renamed from PSServiceNow to ServiceNow for version 2.  This change moves us away from the reserved "PS" prefix.  In addition to the name change the following high level changes have been made:
+The module has been renamed from PSServiceNow to ServiceNow for version 1.  This change moves us away from the reserved "PS" prefix.  Since the name change is a major change for the user base and the project was never incremented to v1 we've taken the opportunity to label it such.
+
+In addition to the name change the following high level changes have been made:
 
 Back End:
 
@@ -17,14 +19,14 @@ Back End:
 * Pester testing has been expanded to cover more scenarios.
 * Improved code formatting, removed aliases, fixed file encoding.
 
-The gains are marginal in some aspects, but may allow for better management in the future including setting the stage for the ability to use AppVeyor & PSDeploy.
+The gains are marginal in some aspects, but intended to allow for better management in the future.
 
 Front End:
 
 * The following fields are now returned in the DateTime format instead of string:  'closed_at','expected_start','follow_up','opened_at','sys_created_on','sys_updated_on','work_end','work_start'
 * The formatting of returned data has been updated across all the `Get` functions except `Get-ServiceNowTable`.  This means you'll see a handful of default properties returned and can use `Format-List` or `Select-Object` to view all other properties associated with the object.
 
-Thse changes should improve your ability to filter on the right, especially by DateTime, as well as return more information in general.
+These changes should improve your ability to filter on the right, especially by DateTime, as well as return more information in general.
 
 ## Requirements
 
@@ -35,6 +37,14 @@ Requires PowerShell 3.0 or above as this is when `Invoke-RestMethod` was introdu
 Download the [latest release](https://github.com/Sam-Martin/servicenow-powershell/releases/latest) and  extract the .psm1 and .psd1 files to your PowerShell profile directory (i.e. the `Modules` directory under wherever `$profile` points to in your PS console) and run:
 `Import-Module ServiceNow`
 Once you've done this, all the cmdlets will be at your disposal, you can see a full list using `Get-Command -Module ServiceNow`.
+
+### Example - Using Set-ServiceNowAuth
+
+```PowerShell
+Set-ServiceNowAuth -url InstanceName -Credentials (Get-Credential)
+```
+
+The URL should be the instance name portion of the FQDN for your instance.  For if you browse to `myinstance.service-now.com` the URL required for the module is `myinstance`.
 
 ### Example - Retrieving an Incident Containing the Word 'PowerShell'
 
