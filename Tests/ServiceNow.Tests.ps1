@@ -5,7 +5,8 @@ $DefaultsFile = Join-Path $projectRoot "Tests\$($ModuleName).Pester.Defaults.jso
 
 # Load defaults from file (merging into $global:ServiceNowPesterTestDefaults)
 if(Test-Path $DefaultsFile){
-    $defaults = if($global:ServiceNowPesterTestDefaults){$global:ServiceNowPesterTestDefaults}else{@{}};
+    $defaults = @{}
+    # Add properties to the defaults hash
     (Get-Content $DefaultsFile | Out-String | ConvertFrom-Json).psobject.properties | ForEach-Object {
         $defaults."$($_.Name)" = $_.Value
     }
@@ -15,8 +16,6 @@ if(Test-Path $DefaultsFile){
 
     $global:ServiceNowPesterTestDefaults = $defaults
 }else{
-    Write-Error "$DefaultsFile does not exist. Created example file. Please populate with your values"
-    
     # Write example file
    @{
         ServiceNowURL = 'testingurl.service-now.com'
@@ -24,7 +23,8 @@ if(Test-Path $DefaultsFile){
         TestUserGroup = 'e9e9a2406f4c35001855fa0dba3ee4f3'
         TestUser = "7a4b573a6f3725001855fa0dba3ee485"
     } | ConvertTo-Json | Set-Content $DefaultsFile
-    return
+    Write-Error "$DefaultsFile does not exist. Created example file. Please populate with your values"
+    Return
 }
 
 # Load the module (unload it first in case we've made changes since loading it previously)
@@ -33,19 +33,19 @@ Import-Module (Join-Path $moduleRoot "$moduleName.psd1") -Force
 
 Describe "ServiceNow-Module" {
     If (Test-ServiceNowAuthisSet) {
-        Remove-ServiceNowAuth
+        Remove-ServiceNowAuth | Should -Be $True
     }
 
     It "Test-ServiceNowAuthIsSet not set" {
-        Test-ServiceNowAuthIsSet | Should be $false
+        Test-ServiceNowAuthIsSet | Should -Be $false
     }
 
     It "Set-ServiceNowAuth works" {
-        Set-ServiceNowAuth -url $defaults.ServiceNowURL -Credentials $defaults.Creds | Should be $true
+        Set-ServiceNowAuth -url $defaults.ServiceNowURL -Credentials $defaults.Creds | Should -Be $true
     }
 
     It "Test-ServiceNowAuthIsSet set" {
-        Test-ServiceNowAuthIsSet | Should be $true
+        Test-ServiceNowAuthIsSet | Should -Be $true
     }
 
     It "New-ServiceNowIncident (and by extension New-ServiceNowTableEntry) works" {
@@ -58,22 +58,21 @@ Describe "ServiceNow-Module" {
             Comment             = "Comment"
             Category            = $Defaults.TestCategory
             SubCategory         = $Defaults.TestSubcategory
-            ConfigurationItem   = $Defaults.TestConfigurationItem
-
-        }      
+            ConfigurationItem   = $Defaults.TestConfigurationIte
+        }
         $TestTicket = New-ServiceNowIncident @newServiceNowIncidentSplat
 
-        $TestTicket.short_description | Should be $ShortDescription             
+        $TestTicket.short_description | Should -Be $ShortDescription
     }
 
     It "Get-ServiceNowTable works" {
         # There should be one or more incidents returned
-        (Get-ServiceNowTable -Table 'incident' -Query 'ORDERBYDESCopened_at').Count -gt 0  | Should Match $true
+        (Get-ServiceNowTable -Table 'incident' -Query 'ORDERBYDESCopened_at').Count -gt 0  | Should -Match $true
     }
 
     It "Get-ServiceNowIncident works" {
         # There should be one or more incidents returned
-        (Get-ServiceNowIncident).Count -gt 0 | Should Match $true
+        (Get-ServiceNowIncident).Count -gt 0 | Should -Match $true
     }
 
     It "Update-ServiceNowIncident works" {
@@ -88,41 +87,41 @@ Describe "ServiceNow-Module" {
             SubCategory         = $Defaults.TestSubcategory
             ConfigurationItem   = $Defaults.TestConfigurationItem
 
-        }      
+        }
         $TestTicket = New-ServiceNowIncident @newServiceNowIncidentSplat
-        
-        $TestTicket.short_description | Should be $ShortDescription   
-                
-        $Values = 
+
+        $TestTicket.short_description | Should -Be $ShortDescription
+
+        $Values =
         @{
             'short_description' = 'Ticket Updated with Pester'
-            'description' = 'Even Longer Description'            
+            'description' = 'Even Longer Description'
         }
-        
+
         Update-ServiceNowIncident -SysId $TestTicket.sys_id -Values $Values
 
         $TestTicket = Get-ServiceNowIncident -MatchExact @{sys_id=$TestTicket.sys_id}
-        $TestTicket.short_description | Should be "Ticket Updated with Pester"    
-        $TestTicket.description | Should be "Even Longer Description"    
+        $TestTicket.short_description | Should -Be "Ticket Updated with Pester"
+        $TestTicket.description | Should -Be "Even Longer Description"
     }
 
-    It "Get-ServiceNowUserGroup works" {        
+    It "Get-ServiceNowUserGroup works" {
         # There should be one or more user groups returned
-        (Get-ServiceNowUserGroup).Count -gt 0 | Should Match $true
+        (Get-ServiceNowUserGroup).Count -gt 0 | Should -Match $true
     }
 
     It "Get-ServiceNowUser works" {
         # There should be one or more user groups returned
-        (Get-ServiceNowUser).Count -gt 0 | Should Match $true
+        (Get-ServiceNowUser).Count -gt 0 | Should -Match $true
     }
 
     It "Get-ServiceNowConfigurationItem works" {
         # There should be one or more configuration items returned
-        (Get-ServiceNowConfigurationItem).Count -gt 0 | Should Match $true
+        (Get-ServiceNowConfigurationItem).Count -gt 0 | Should -Match $true
     }
 
-    It "Get-ServiceNowChangeRequest works" {     
-        (Get-ServiceNowChangeRequest).Count -gt 0 | Should Match $true
+    It "Get-ServiceNowChangeRequest works" {
+        (Get-ServiceNowChangeRequest).Count -gt 0 | Should -Match $true
     }
 
     It "Remove-ServiceNowAuth works" {
