@@ -41,10 +41,10 @@ Once you've done this, all the cmdlets will be at your disposal, you can see a f
 ### Example - Using Set-ServiceNowAuth
 
 ```PowerShell
-Set-ServiceNowAuth -url InstanceName -Credentials (Get-Credential)
+Set-ServiceNowAuth -url InstanceName.service-now.com -Credentials (Get-Credential)
 ```
 
-The URL should be the instance name portion of the FQDN for your instance.  For if you browse to `myinstance.service-now.com` the URL required for the module is `myinstance`.
+The URL should be the instance name portion of the FQDN for your instance.  For if you browse to `https://myinstance.service-now.com` the URL required for the module is `myinstance.service-now.com`.
 
 ### Example - Retrieving an Incident Containing the Word 'PowerShell'
 
