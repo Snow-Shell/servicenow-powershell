@@ -1,3 +1,2 @@
-ServiceNow-Module.Pester.Defaults.json
+*.Pester.Defaults.json
 *.zip
-ServiceNow.Pester.Defaults.json
