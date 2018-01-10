@@ -1,11 +1,11 @@
-function Get-ServiceNowConfigurationItem {
+function Get-ServiceNowIncident{
     param(
         # Machine name of the field to order by
         [parameter(mandatory=$false)]
         [parameter(ParameterSetName='SpecifyConnectionFields')]
         [parameter(ParameterSetName='UseConnectionObject')]
         [parameter(ParameterSetName='SetGlobalAuth')]
-        [string]$OrderBy='name',
+        [string]$OrderBy='opened_at',
         
         # Direction of ordering (Desc/Asc)
         [parameter(mandatory=$false)]
@@ -44,39 +44,55 @@ function Get-ServiceNowConfigurationItem {
         [ValidateSet("true","false", "all")]
         [string]$DisplayValues='true',
 
+        # Credential used to authenticate to ServiceNow  
         [Parameter(ParameterSetName='SpecifyConnectionFields', Mandatory=$True)]
         [ValidateNotNullOrEmpty()]
         [PSCredential]
         $ServiceNowCredential, 
 
+        # The URL for the ServiceNow instance being used  
         [Parameter(ParameterSetName='SpecifyConnectionFields', Mandatory=$True)]
         [ValidateNotNullOrEmpty()]
         [string]
         $ServiceNowURL, 
 
+        #Azure Automation Connection object containing username, password, and URL for the ServiceNow instance
         [Parameter(ParameterSetName='UseConnectionObject', Mandatory=$True)] 
         [ValidateNotNullOrEmpty()]
         [Hashtable]
         $Connection
     )
 
-    $Query = New-ServiceNowQuery -OrderBy $OrderBy -OrderDirection $OrderDirection -MatchExact $MatchExact -MatchContains $MatchContains
+    # Query Splat
+    $newServiceNowQuerySplat = @{
+        OrderBy = $OrderBy
+        OrderDirection = $OrderDirection
+        MatchExact = $MatchExact
+        MatchContains = $MatchContains
+    }
+    $Query = New-ServiceNowQuery @newServiceNowQuerySplat
+
+    # Table Splat 
+    $getServiceNowTableSplat = @{
+        Table = 'incident'
+        Query = $Query
+        Limit = $Limit
+        DisplayValues = $DisplayValues
+    }
     
-    if ($Connection -ne $null) {    
-        $result = Get-ServiceNowTable -Table 'cmdb_ci' -Query $Query -Limit $Limit -DisplayValues $DisplayValues -Connection $Connection
+    # Update the splat if the parameters have values
+    if ($null -ne $PSBoundParameters.Connection)
+    {     
+        $getServiceNowTableSplat.Add('Connection',$Connection)
     }
-    elseif ($ServiceNowCredential -ne $null -and $ServiceNowURL -ne $null) {
-        $result = Get-ServiceNowTable -Table 'cmdb_ci' -Query $Query -Limit $Limit -DisplayValues $DisplayValues -ServiceNowCredential $ServiceNowCredential -ServiceNowURL $ServiceNowURL
-    }
-    else {
-        $result = Get-ServiceNowTable -Table 'cmdb_ci' -Query $Query -Limit $Limit -DisplayValues $DisplayValues
+    elseif ($null -ne $PSBoundParameters.ServiceNowCredential -and $null -ne $PSBoundParameters.ServiceNowURL) 
+    {
+         $getServiceNowTableSplat.Add('ServiceNowCredential',$ServiceNowCredential)
+         $getServiceNowTableSplat.Add('ServiceNowURL',$ServiceNowURL)
     }
 
-
-    # Set the default property set for the table view
-    $DefaultProperties = @('name', 'category', 'subcategory')
-    $DefaultDisplayPropertySet = New-Object System.Management.Automation.PSPropertySet(‘DefaultDisplayPropertySet’,[string[]]$DefaultProperties)
-    $PSStandardMembers = [System.Management.Automation.PSMemberInfo[]]@($DefaultDisplayPropertySet)
-    $Result | Add-Member MemberSet PSStandardMembers $PSStandardMembers
-    return $result
+    # Perform query and return each object in the format.ps1xml format
+    $Result = Get-ServiceNowTable @getServiceNowTableSplat
+    $Result | ForEach-Object{$_.PSObject.TypeNames.Insert(0,"ServiceNow.Incident")}
+    $Result
 }

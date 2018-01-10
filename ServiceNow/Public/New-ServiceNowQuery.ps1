@@ -1,11 +1,3 @@
-function Test-ServiceNowAuthIsSet{
-    if($Global:ServiceNowCredentials){
-        return $true;
-    }else{
-        return $false;
-    }   
-}
-
 function New-ServiceNowQuery{
 
     param(
@@ -50,31 +42,4 @@ function New-ServiceNowQuery{
     }
 
     return $Query
-}
-
-function Set-ServiceNowAuth{
-    param(
-        [parameter(mandatory=$true)]
-        [string]$url,
-        
-        [parameter(mandatory=$true)]
-        [System.Management.Automation.PSCredential]$Credentials
-    )
-    $Global:ServiceNowURL = 'https://' + $url
-    $Global:ServiceNowRESTURL = $ServiceNowURL + '/api/now/v1'
-    $Global:ServiceNowCredentials = $credentials
-    return $true;
-}
-
-<#
-.SYNOPSIS
-    Cleans up the variables containing your authentication information from your PowerShell session
-#>
-function Remove-ServiceNowAuth{
-   
-    Remove-Variable -Name ServiceNowURL -Scope Global
-    Remove-Variable -Name ServiceNowRESTURL -Scope Global
-    Remove-Variable -Name ServiceNowCredentials -Scope Global
-
-    return $true;
 }
