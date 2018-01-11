@@ -85,7 +85,12 @@ function Get-ServiceNowTable
 	ForEach ($SNResult in $Result) {
 		ForEach ($Property in $ConvertToDateField) {
 			If (-not [string]::IsNullOrEmpty($SNResult.$Property)) {
-				$SNResult.$Property = [datetime]$SNResult.$Property
+				# Extract the default Date/Time formatting from the local computer's "Culture" settings, and then create the format to use when parsing the date/time from Service-Now
+                		$CultureDateTimeFormat = (Get-Culture).DateTimeFormat
+                		$DateFormat = $CultureDateTimeFormat.ShortDatePattern
+                		$TimeFormat = $CultureDateTimeFormat.LongTimePattern
+                		$DateTimeFormat = "$DateFormat $TimeFormat"
+                		$SNResult.$Property = [DateTime]::ParseExact($($SNResult.$Property), $DateTimeFormat, [System.Globalization.DateTimeFormatInfo]::InvariantInfo, [System.Globalization.DateTimeStyles]::None)
 			}
 		}
     }
