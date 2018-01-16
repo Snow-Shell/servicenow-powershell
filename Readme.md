@@ -23,7 +23,7 @@ The gains are marginal in some aspects, but intended to allow for better managem
 
 Front End:
 
-* The following fields are now returned in the DateTime format instead of string:  'closed_at','expected_start','follow_up','opened_at','sys_created_on','sys_updated_on','work_end','work_start'
+* The following fields are now returned in the DateTime format instead of string:  'closed_at','expected_start','follow_up','opened_at','sys_created_on','sys_updated_on','work_end','work_start'  [v1.0.1 Update: This process now attempts to format the property as DateTime based off your local culture settings, a universal `yyyy-MM-dd HH:mm:ss` format, and finally leaves the property as a string if those two convert attempts fail].
 * The formatting of returned data has been updated across all the `Get` functions except `Get-ServiceNowTable`.  This means you'll see a handful of default properties returned and can use `Format-List` or `Select-Object` to view all other properties associated with the object.
 
 These changes should improve your ability to filter on the right, especially by DateTime, as well as return more information in general.
