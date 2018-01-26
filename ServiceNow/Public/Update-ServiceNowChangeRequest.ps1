@@ -5,7 +5,7 @@
 function Update-ServiceNowChangeRequest
 {
     Param(
-        # sys_id of the caller of the incident (user Get-ServiceNowUser to retrieve this)
+        # sys_id of the caller of the incident (use Get-ServiceNowUser to retrieve this)
         [parameter(Mandatory=$true)]        
         [parameter(ParameterSetName='SpecifyConnectionFields')]
         [parameter(ParameterSetName='UseConnectionObject')]
