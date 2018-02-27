@@ -36,13 +36,13 @@ function Get-ServiceNowIncident{
         [parameter(ParameterSetName='SetGlobalAuth')]
         [hashtable]$MatchContains=@{},
 
-        # Whether or not to show human readable display values instead of machine values
+        # Whether to return manipulated display values rather than actual database values.
         [parameter(mandatory=$false)]
         [parameter(ParameterSetName='SpecifyConnectionFields')]
         [parameter(ParameterSetName='UseConnectionObject')]
         [parameter(ParameterSetName='SetGlobalAuth')]
         [ValidateSet("true","false", "all")]
-        [string]$DisplayValues='true',
+        [string]$DisplayValues='false',
 
         # Credential used to authenticate to ServiceNow  
         [Parameter(ParameterSetName='SpecifyConnectionFields', Mandatory=$True)]
