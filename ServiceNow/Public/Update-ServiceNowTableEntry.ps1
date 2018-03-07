@@ -25,7 +25,7 @@ function Update-ServiceNowTableEntry{
         [ValidateNotNullOrEmpty()]
         [string]$ServiceNowURL, 
 
-        #Azure Automation Connection object containing username, password, and URL for the ServiceNow instance
+        # Azure Automation Connection object containing username, password, and URL for the ServiceNow instance
         [Parameter(ParameterSetName='UseConnectionObject', Mandatory=$True)] 
         [ValidateNotNullOrEmpty()]
         [Hashtable]$Connection,
@@ -38,7 +38,7 @@ function Update-ServiceNowTableEntry{
         [hashtable]$Values
     )
 
-	#Get credential and ServiceNow REST URL
+	# Get credential and ServiceNow REST URL
     if ($Connection -ne $null)
     {
         $SecurePassword = ConvertTo-SecureString $Connection.Password -AsPlainText -Force
@@ -62,7 +62,7 @@ function Update-ServiceNowTableEntry{
   
     $Body = $Values | ConvertTo-Json
     
-    #Convert to UTF8 array to support special chars such as the danish "�","�","�"
+    # Convert to UTF8 array to support special chars such as the danish "�","�","�"
     $utf8Bytes = [System.Text.Encoding]::UTf8.GetBytes($Body)
 
     # Fire and return
