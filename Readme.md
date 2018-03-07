@@ -1,6 +1,6 @@
 # ServiceNow
 
-[![GitHub release](https://img.shields.io/github/release/Sam-Martin/servicenow-powershell.svg)](https://github.com/Sam-Martin/servicenow-powershell/releases/latest) [![GitHub license](https://img.shields.io/github/license/Sam-Martin/servicenow-powershell.svg)](LICENSE) ![Test Coverage](https://img.shields.io/badge/coverage-73%25-orange.svg)
+[![GitHub release](https://img.shields.io/github/release/Sam-Martin/servicenow-powershell.svg)](https://github.com/Sam-Martin/servicenow-powershell/releases/latest) [![GitHub license](https://img.shields.io/github/license/Sam-Martin/servicenow-powershell.svg)](LICENSE) ![Test Coverage](https://img.shields.io/badge/coverage-74%25-orange.svg)
 
 This PowerShell module provides a series of cmdlets for interacting with the [ServiceNow REST API](http://wiki.servicenow.com/index.php?title=REST_API), performed by wrapping `Invoke-RestMethod` for the API calls.
 
@@ -44,7 +44,7 @@ Once you've done this, all the cmdlets will be at your disposal, you can see a f
 Set-ServiceNowAuth -url InstanceName.service-now.com -Credentials (Get-Credential)
 ```
 
-The URL should be the instance name portion of the FQDN for your instance.  For if you browse to `https://myinstance.service-now.com` the URL required for the module is `myinstance.service-now.com`.
+The URL should be the instance name portion of the FQDN for your instance.  For if you browse to `https://yourinstance.service-now.com` the URL required for the module is `yourinstance.service-now.com`.
 
 ### Example - Retrieving an Incident Containing the Word 'PowerShell'
 
