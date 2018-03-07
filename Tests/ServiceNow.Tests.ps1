@@ -75,6 +75,11 @@ Describe "ServiceNow-Module" {
         (Get-ServiceNowIncident).Count -gt 0 | Should -Match $true
     }
 
+    It "Get-ServiceNowRequest works" {
+        # There should be one or more incidents returned
+        (Get-ServiceNowRequest).Count -gt 0 | Should -Match $true
+    }
+
     It "Update-ServiceNowIncident works" {
         $ShortDescription = "Testing Ticket Update with Pester"
         $newServiceNowIncidentSplat = @{
