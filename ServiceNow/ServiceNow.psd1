@@ -12,7 +12,7 @@
 RootModule = 'ServiceNow.psm1'
 
 # Version number of this module.
-ModuleVersion = '1.0.1'
+ModuleVersion = '1.1.0'
 
 # ID used to uniquely identify this module
 GUID = 'b90d67da-f8d0-4406-ad74-89d169cd0633'
@@ -66,7 +66,7 @@ FormatsToProcess = @('ServiceNow.format.ps1xml')
 NestedModules = @()
 
 # Functions to export from this module
-FunctionsToExport = @('Get-ServiceNowChangeRequest','Get-ServiceNowConfigurationItem','Get-ServiceNowIncident','Get-ServiceNowTable','Get-ServiceNowUser','Get-ServiceNowUserGroup','New-ServiceNowIncident','New-ServiceNowQuery','New-ServiceNowTableEntry','Remove-ServiceNowAuth','Remove-ServiceNowTableEntry','Set-ServiceNowAuth','Test-ServiceNowAuthIsSet','Update-ServiceNowChangeRequest','Update-ServiceNowIncident','Update-ServiceNowTableEntry')
+FunctionsToExport = @('Get-ServiceNowChangeRequest','Get-ServiceNowConfigurationItem','Get-ServiceNowIncident','Get-ServiceNowRequest','Get-ServiceNowTable','Get-ServiceNowUser','Get-ServiceNowUserGroup','New-ServiceNowIncident','New-ServiceNowQuery','New-ServiceNowTableEntry','Remove-ServiceNowAuth','Remove-ServiceNowTableEntry','Set-ServiceNowAuth','Test-ServiceNowAuthIsSet','Update-ServiceNowChangeRequest','Update-ServiceNowIncident','Update-ServiceNowTableEntry')
 
 # List of all modules packaged with this module
 # ModuleList = @()
