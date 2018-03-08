@@ -67,12 +67,17 @@ Describe "ServiceNow-Module" {
 
     It "Get-ServiceNowTable works" {
         # There should be one or more incidents returned
-        (Get-ServiceNowTable -Table 'incident' -Query 'ORDERBYDESCopened_at').Count -gt 0  | Should -Match $true
+        ([array](Get-ServiceNowTable -Table 'incident' -Query 'ORDERBYDESCopened_at')).Count -gt 0  | Should -Match $true
     }
 
     It "Get-ServiceNowIncident works" {
         # There should be one or more incidents returned
-        (Get-ServiceNowIncident).Count -gt 0 | Should -Match $true
+        ([array](Get-ServiceNowIncident)).count -gt 0 | Should -Match $true
+    }
+
+    It "Get-ServiceNowRequest works" {
+        # There should be one or more incidents returned
+        ([array](Get-ServiceNowRequest)).count -gt 0 | Should -Match $true
     }
 
     It "Update-ServiceNowIncident works" {
