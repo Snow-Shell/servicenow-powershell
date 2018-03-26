@@ -72,7 +72,40 @@ function Get-ServiceNowTable {
 
     # Perform table query and capture results
     $Uri = $ServiceNowURL + "/table/$Table"
-    $Result = (Invoke-RestMethod -Uri $Uri -Credential $ServiceNowCredential -Body $Body -ContentType "application/json").Result
+
+    $tokenSuccess = 0
+    $Result = $null
+    
+    #Use OAuth token if available
+    if($accessToken -ne $null){
+        
+        #Attempt Query with Token
+        
+        $Result = (Invoke-RestMethod -Uri $Uri -Body $Body -ContentType "application/json" -Headers @{Authorization="Bearer $accessToken"}).Result
+        
+        if($Result -ne $null){
+            $tokenSuccess = 1
+        }
+        
+        else{
+            
+            #Invalid Token (401)
+            if($error[0] | Select-String -Pattern "401"){
+                Set-ServiceNowAuthToken -ClientID $Client_ID -ClientSecret $Client_Secret -renewToken
+                $Result = (Invoke-RestMethod -Uri $Uri -Body $Body -ContentType "application/json" -Headers @{Authorization="Bearer $accessToken"}).Result
+
+                if($Result -ne $null){
+                    $tokenSuccess = 1
+                }
+            }
+        }
+
+    }
+
+    if($tokenSuccess -eq 0){
+        #Fall back to credentials if token request fails
+        $Result = (Invoke-RestMethod -Uri $Uri -Credential $ServiceNowCredential -Body $Body -ContentType "application/json").Result
+    }
 
     # Convert specific fields to DateTime format
     $ConvertToDateField = @('closed_at', 'expected_start', 'follow_up', 'opened_at', 'sys_created_on', 'sys_updated_on', 'work_end', 'work_start')

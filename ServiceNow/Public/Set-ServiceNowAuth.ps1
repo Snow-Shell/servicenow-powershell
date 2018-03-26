@@ -15,7 +15,7 @@ Credentials to authenticate you to the Service-Now instance provided in the Url 
 Set-ServiceNowAuth -Url tenant.service-now.com
 
 .NOTES
-The URL should be the instance name portion of the FQDN for your instance. If you browse to https://yourinstance.service-now.com the URL required for the module is yourinstance.service-now.com
+The URL should be the instance name portion of the FQDN for your instance. If you browse to https://yourinstance.service-now.com the URL required for the module is yourinstance.service-now.com. ClientID and ClientSecret are optional but nessesary if you wish to use OAuth.
 #>
 function Set-ServiceNowAuth {
     [CmdletBinding()]
@@ -36,10 +36,23 @@ function Set-ServiceNowAuth {
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         [System.Management.Automation.PSCredential]
-        $Credentials
+        $Credentials,
+
+        [string]$ClientID,
+
+        [string]$ClientSecret
     )
     $Global:serviceNowUrl = 'https://' + $Url
     $Global:serviceNowRestUrl = $serviceNowUrl + '/api/now/v1'
     $Global:serviceNowCredentials = $Credentials
+    $Global:Client_ID = $ClientID
+    $Global:Client_Secret = $ClientSecret
+
+
+    if ($client_id -ne $null -and $client_secret -ne $null){
+        $result = Set-ServiceNowAuthToken -ClientID $client_id -ClientSecret $client_secret
+        return $result
+    }
+
     return $true
 }
