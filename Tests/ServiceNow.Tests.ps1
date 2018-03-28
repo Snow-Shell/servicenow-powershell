@@ -129,6 +129,25 @@ Describe "ServiceNow-Module" {
         (Get-ServiceNowChangeRequest).Count -gt 0 | Should -Match $true
     }
 
+    It "Update-ServiceNowChangeRequest works" {
+        $ServiceNowChangeRequestSplat = @{
+            number = "CHG0000001"
+        };
+
+        $TestTicket = Get-ServiceNowChangeRequest -MatchExact $ServiceNowChangeRequestSplat;
+
+        $Values =
+        @{
+            'comments'   = "Automated_Comment_$((New-Guid).guid)"
+            'work_notes' = "Automated_Work_Note_$((New-Guid).guid)"
+        }
+
+        $TestTicket = Update-ServiceNowChangeRequest -SysId $TestTicket.sys_id -Values $Values;
+        $TestTicket = Get-ServiceNowChangeRequest -MatchExact @{sys_id=$TestTicket.sys_id};
+        $TestTicket.comments   | Should -BeLike ("*$($Values['comments'])*");
+        $TestTicket.work_notes | Should -BeLike ("*$($Values['work_notes'])*");
+    }
+
     It "Remove-ServiceNowAuth works" {
         Remove-ServiceNowAuth | Should be $true
     }
