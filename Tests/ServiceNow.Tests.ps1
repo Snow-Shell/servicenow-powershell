@@ -148,6 +148,146 @@ Describe "ServiceNow-Module" {
         $TestTicket.work_notes | Should -BeLike ("*$($Values['work_notes'])*");
     }
 
+    It "Format-ServiceNowJournalTable works" {
+        $ServiceNowChangeRequestSplat = @{
+            number = "CHG0000003"
+        };
+
+        $TestTicket = Get-ServiceNowChangeRequest -MatchExact $ServiceNowChangeRequestSplat;
+
+        $Values =
+        @{
+            'comments'   = ""
+        }
+
+        #region Multiple Custom Objects.  Use the pipeline.  Order the columns.  No line wrap.
+
+            # Create an array of custom objects
+            # NOTE: This should be wide enough to make the horizontal scroll bar appear.
+            $Title = "Multiple Custom Objects.  Use the pipeline.  Order the columns.  No line wrap.";
+            $Array = New-Object System.Collections.ArrayList 
+            $Array.Add( $(New-Object –TypeName PSObject –Prop @{'Property1'=$((New-Guid).guid); 'Property2'=$((New-Guid).guid); 'Property3'=$((New-Guid).guid); 'Property4'=$((New-Guid).guid); 'Property5'=$((New-Guid).guid);}) ) | Out-Null;
+            $Array.Add( $(New-Object –TypeName PSObject –Prop @{'Property1'=$((New-Guid).guid); 'Property2'=$((New-Guid).guid); 'Property3'=$((New-Guid).guid); 'Property4'=$((New-Guid).guid); 'Property5'=$((New-Guid).guid);}) ) | Out-Null;
+            $Array.Add( $(New-Object –TypeName PSObject –Prop @{'Property1'=$((New-Guid).guid); 'Property2'=$((New-Guid).guid); 'Property3'=$((New-Guid).guid); 'Property4'=$((New-Guid).guid); 'Property5'=$((New-Guid).guid);}) ) | Out-Null;
+            $Array.Add( $(New-Object –TypeName PSObject –Prop @{'Property1'=$((New-Guid).guid); 'Property2'=$((New-Guid).guid); 'Property3'=$((New-Guid).guid); 'Property4'=$((New-Guid).guid); 'Property5'=$((New-Guid).guid);}) ) | Out-Null;
+
+            # Convert $Array into the HTML table and store in Comments.  Use the pipeline.  Order the columns.  No line wrap of data.  
+            $StyleData = "width: auto; border-width: 0px; border-style: solid; border-color: black; border-collapse: collapse; padding: 3px; padding-right:15px; white-space: nowrap";
+            $Values['comments'] = $Array | SELECT -Property Property1,Property2,Property3,Property4,Property5 | Format-ServiceNowJournalTable -Title $Title -StyleData $StyleData;
+
+            # Update ticket
+            $TestTicket = Update-ServiceNowChangeRequest -SysId $TestTicket.sys_id -Values $Values;
+            $TestTicket = Get-ServiceNowChangeRequest -MatchExact @{sys_id=$TestTicket.sys_id};
+        
+            # Verify ticket updated
+            $TestTicket.comments.split("`n")[1]   | Should -Be ($Values['comments']);
+
+        #endregion Multiple Custom Objects.  Use the pipeline.  Order the columns.  No line wrap.
+        
+        #region Multiple Custom Objects.  Use the pipeline.  Order the columns.  No line wrap.  Pivot the data.
+
+            # Create an array of custom objects
+            # NOTE: This should be wide enough to make the horizontal scroll bar appear.
+            $Title = "Multiple Custom Objects.  Use the pipeline.  Order the columns.  No line wrap.  Pivot the data.";
+            $Array = New-Object System.Collections.ArrayList 
+            $Array.Add( $(New-Object –TypeName PSObject –Prop @{'Property1'=$((New-Guid).guid); 'Property2'=$((New-Guid).guid); 'Property3'=$((New-Guid).guid); 'Property4'=$((New-Guid).guid); 'Property5'=$((New-Guid).guid);}) ) | Out-Null;
+            $Array.Add( $(New-Object –TypeName PSObject –Prop @{'Property1'=$((New-Guid).guid); 'Property2'=$((New-Guid).guid); 'Property3'=$((New-Guid).guid); 'Property4'=$((New-Guid).guid); 'Property5'=$((New-Guid).guid);}) ) | Out-Null;
+            $Array.Add( $(New-Object –TypeName PSObject –Prop @{'Property1'=$((New-Guid).guid); 'Property2'=$((New-Guid).guid); 'Property3'=$((New-Guid).guid); 'Property4'=$((New-Guid).guid); 'Property5'=$((New-Guid).guid);}) ) | Out-Null;
+            $Array.Add( $(New-Object –TypeName PSObject –Prop @{'Property1'=$((New-Guid).guid); 'Property2'=$((New-Guid).guid); 'Property3'=$((New-Guid).guid); 'Property4'=$((New-Guid).guid); 'Property5'=$((New-Guid).guid);}) ) | Out-Null;
+
+            # Convert $Array into the HTML table and store in Comments.  Use the pipeline.  Order the columns.  No line wrap of data.  
+            $StyleData = "width: auto; border-width: 0px; border-style: solid; border-color: black; border-collapse: collapse; padding: 3px; padding-right:15px; white-space: nowrap";
+            $Values['comments'] = $Array | SELECT -Property Property1,Property2,Property3,Property4,Property5 | Format-ServiceNowJournalTable -Title $Title -PivotObject -StyleData $StyleData;
+
+            # Update ticket
+            $TestTicket = Update-ServiceNowChangeRequest -SysId $TestTicket.sys_id -Values $Values;
+            $TestTicket = Get-ServiceNowChangeRequest -MatchExact @{sys_id=$TestTicket.sys_id};
+        
+            # Verify ticket updated
+            $TestTicket.comments.split("`n")[1]   | Should -Be ($Values['comments']);
+
+        #endregion Multiple Custom Objects.  Use the pipeline.  Order the columns.  No line wrap.  Pivot the data.
+        
+        #region Single Object: (Get-PSDrive -Name 'C').  Use input parameter.  Unordered columns.  No line wrap.
+        
+            # Retrieve a single object
+            $Title = "Single Object: (Get-PSDrive -Name 'C').  Use input parameter.  Unordered columns.  No line wrap."
+            $Object = Get-PSDrive -Name "C";
+        
+            # Store the HTML table in Comments
+            $StyleData = "width: auto; border-width: 0px; border-style: solid; border-color: black; border-collapse: collapse; padding: 3px; padding-right:15px; white-space: nowrap";
+            $Values['comments'] = Format-ServiceNowJournalTable -Title $Title -Object_ $Object -StyleData $StyleData;
+
+            # Update ticket
+            $TestTicket = Update-ServiceNowChangeRequest -SysId $TestTicket.sys_id -Values $Values;
+            $TestTicket = Get-ServiceNowChangeRequest -MatchExact @{sys_id=$TestTicket.sys_id};
+        
+            # Verify ticket updated
+            $TestTicket.comments.split("`n")[1]   | Should -Be ($Values['comments']);
+
+        #endregion Single Object: (Get-PSDrive -Name 'C').  Use input parameter.  Unordered columns.  No line wrap.
+
+        #region Single Object: (Get-PSDrive -Name 'C').  Use input parameter.  Unordered columns.  No line wrap.  Pivot the data.  Custom column header name.
+        
+            # Retrieve a single object
+            $Title = "Single Object: (Get-PSDrive -Name 'C').  Use input parameter.  Unordered columns.  No line wrap.  Pivot the data.  Custom column header name."
+            $Object = Get-PSDrive -Name C;
+        
+            # Store the HTML table in Comments
+            $StyleData = "width: auto; border-width: 0px; border-style: solid; border-color: black; border-collapse: collapse; padding: 3px; padding-right:15px; white-space: nowrap";
+            $Values['comments'] = Format-ServiceNowJournalTable -Title $Title -Object_ $Object -PivotObject -PivotColumnHeaderName "Name" -StyleData $StyleData;
+
+            # Update ticket
+            $TestTicket = Update-ServiceNowChangeRequest -SysId $TestTicket.sys_id -Values $Values;
+            $TestTicket = Get-ServiceNowChangeRequest -MatchExact @{sys_id=$TestTicket.sys_id};
+        
+            # Verify ticket updated
+            $TestTicket.comments.split("`n")[1]   | Should -Be ($Values['comments']);
+
+        #endregion Single Object: (Get-PSDrive -Name 'C').  Use input parameter.  Unordered columns.  No line wrap.  Pivot the data.  Custom column header name.
+
+        #region Multiple Objects: (Get-PSDrive).  Use input parameter.  Unordered columns.  No line wrap.  Pivot the data.  Custom column header name.
+        
+            # Retrieve a single object
+            $Title = " Multiple Objects: (Get-PSDrive).  Use input parameter.  Unordered columns.  No line wrap.  Pivot the data.  Custom column header name."
+            $Objects = Get-PSDrive;
+        
+            # Store the HTML table in Work Notes
+            $StyleData = "width: auto; border-width: 0px; border-style: solid; border-color: black; border-collapse: collapse; padding: 3px; padding-right:15px; white-space: nowrap";
+            $Values['comments'] = Format-ServiceNowJournalTable -Title $Title -Object_ $Objects -PivotObject -PivotColumnHeaderName "Name" -StyleData $StyleData;
+
+            # Update ticket
+            $TestTicket = Update-ServiceNowChangeRequest -SysId $TestTicket.sys_id -Values $Values;
+            $TestTicket = Get-ServiceNowChangeRequest -MatchExact @{sys_id=$TestTicket.sys_id};
+        
+            # Verify ticket updated
+            $TestTicket.comments.split("`n")[1]   | Should -Be ($Values['comments']);
+
+        #endregion  Multiple Objects: (Get-PSDrive).  Use input parameter.  Unordered columns.  No line wrap.  Pivot the data.  Custom column header name.
+
+        #region Multiple Objects: (Get-PSDrive).  Use input parameter.  Unordered columns.  Allow line wrap.  Pivot the data.  Default column header name.  Custom table colors.
+        
+            # Retrieve a single object
+            $Title = "Multiple Objects: (Get-PSDrive).  Use input parameter.  Unordered columns.  Allow line wrap.  Custom table colors.  Pivot the data.  Default column header name."
+            $Objects = Get-PSDrive;
+        
+            # Store the HTML table in Work Notes
+            $StyleHeader        = "width: auto;  border-width: 1px; border-style: solid; border-color: black; border-collapse: collapse; background-color: #CC0000; color: #000000; font-weight: bold;  padding: 3px; padding-right:15px;";
+            $StyleRowOdd        = "width: auto;  border-width: 1px; border-style: solid; border-color: black; border-collapse: collapse; background-color: #ffe6e6; color: #000000; font-weight: normal; ";
+            $StyleRowEven       = "width: auto;  border-width: 1px; border-style: solid; border-color: black; border-collapse: collapse; background-color: #FFFFFF; color: #000000; font-weight: normal; ";
+            $Values['comments'] = Format-ServiceNowJournalTable -Title $Title -Object_ $Objects -PivotObject -StyleHeader $StyleHeader -StyleRowOdd $StyleRowOdd -StyleRowEven $StyleRowEven;
+
+            # Update ticket
+            $TestTicket = Update-ServiceNowChangeRequest -SysId $TestTicket.sys_id -Values $Values;
+            $TestTicket = Get-ServiceNowChangeRequest -MatchExact @{sys_id=$TestTicket.sys_id};
+        
+            # Verify ticket updated
+            $TestTicket.comments.split("`n")[1]   | Should -Be ($Values['comments']);
+
+        #endregion Multiple Objects: (Get-PSDrive).  Use input parameter.  Unordered columns.  Allow line wrap.  Pivot the data.  Default column header name.  Custom table colors.
+        
+    }
+    break;
     It "Remove-ServiceNowAuth works" {
         Remove-ServiceNowAuth | Should be $true
     }
