@@ -249,9 +249,9 @@ Describe "ServiceNow-Module" {
         #region Multiple Objects: (Get-PSDrive).  Use input parameter.  Unordered columns.  No line wrap.  Pivot the data.  Custom column header name.
         
             # Retrieve a single object
-            $Title = " Multiple Objects: (Get-PSDrive).  Use input parameter.  Unordered columns.  No line wrap.  Pivot the data.  Custom column header name."
+            $Title = "Multiple Objects: (Get-PSDrive).  Use input parameter.  Unordered columns.  No line wrap.  Pivot the data.  Custom column header name."
             $Objects = Get-PSDrive;
-        
+            
             # Store the HTML table in Work Notes
             $StyleData = "width: auto; border-width: 0px; border-style: solid; border-color: black; border-collapse: collapse; padding: 3px; padding-right:15px; white-space: nowrap";
             $Values['comments'] = Format-ServiceNowJournalTable -Title $Title -Object_ $Objects -PivotObject -PivotColumnHeaderName "Name" -StyleData $StyleData;
@@ -287,7 +287,7 @@ Describe "ServiceNow-Module" {
         #endregion Multiple Objects: (Get-PSDrive).  Use input parameter.  Unordered columns.  Allow line wrap.  Pivot the data.  Default column header name.  Custom table colors.
         
     }
-    break;
+    
     It "Remove-ServiceNowAuth works" {
         Remove-ServiceNowAuth | Should be $true
     }
