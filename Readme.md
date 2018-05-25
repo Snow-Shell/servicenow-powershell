@@ -103,4 +103,4 @@ This module has been created as an abstraction layer to suit my immediate requir
 
 ## Author
 
-Author:: Sam Martin (<samjackmartin@gmail.com>)
+Author:: Sam Martin
