@@ -1,5 +1,18 @@
 function Get-ServiceNowTable {
-    [OutputType([Array])]
+<#
+.SYNOPSIS
+    Retrieves multiple records for the specified table
+.DESCRIPTION
+    The Get-ServiceNowTable function retrieves multiple records for the specified table
+.INPUTS
+    None
+.OUTPUTS
+    System.Management.Automation.PSCustomObject
+.LINK
+    Service-Now Kingston REST Table API: https://docs.servicenow.com/bundle/kingston-application-development/page/integrate/inbound-rest/concept/c_TableAPI.html
+    Service-Now Table API FAQ: https://hi.service-now.com/kb_view.do?sysparm_article=KB0534905
+#>
+[OutputType([Array])]
     Param (
         # Name of the table we're querying (e.g. incidents)
         [parameter(Mandatory)]
@@ -21,7 +34,7 @@ function Get-ServiceNowTable {
         [parameter(ParameterSetName = 'SetGlobalAuth')]
         [int]$Limit = 10,
 
-        # Whether or not to show human readable display values instead of machine values
+        # Whether to return manipulated display values rather than actual database values.
         [parameter(ParameterSetName = 'SpecifyConnectionFields')]
         [parameter(ParameterSetName = 'UseConnectionObject')]
         [parameter(ParameterSetName = 'SetGlobalAuth')]
@@ -59,6 +72,7 @@ function Get-ServiceNowTable {
     elseif ((Test-ServiceNowAuthIsSet)) {
         $ServiceNowCredential = $Global:ServiceNowCredentials
         $ServiceNowURL = $global:ServiceNowRESTURL
+        $ServiceNowDateFormat = $Global:ServiceNowDateFormat
     }
     else {
         throw "Exception:  You must do one of the following to authenticate: `n 1. Call the Set-ServiceNowAuth cmdlet `n 2. Pass in an Azure Automation connection object `n 3. Pass in an endpoint and credential"
@@ -75,27 +89,26 @@ function Get-ServiceNowTable {
     $Result = (Invoke-RestMethod -Uri $Uri -Credential $ServiceNowCredential -Body $Body -ContentType "application/json").Result
 
     # Convert specific fields to DateTime format
+    $DefaultServiceNowDateFormat = 'yyyy-MM-dd HH:mm:ss'
     $ConvertToDateField = @('closed_at', 'expected_start', 'follow_up', 'opened_at', 'sys_created_on', 'sys_updated_on', 'work_end', 'work_start')
     ForEach ($SNResult in $Result) {
         ForEach ($Property in $ConvertToDateField) {
             If (-not [string]::IsNullOrEmpty($SNResult.$Property)) {
-                Try {
-                    # Extract the default Date/Time formatting from the local computer's "Culture" settings, and then create the format to use when parsing the date/time from Service-Now
-                    $CultureDateTimeFormat = (Get-Culture).DateTimeFormat
-                    $DateFormat = $CultureDateTimeFormat.ShortDatePattern
-                    $TimeFormat = $CultureDateTimeFormat.LongTimePattern
-                    $DateTimeFormat = "$DateFormat $TimeFormat"
-                    $SNResult.$Property = [DateTime]::ParseExact($($SNResult.$Property), $DateTimeFormat, [System.Globalization.DateTimeFormatInfo]::InvariantInfo, [System.Globalization.DateTimeStyles]::None)
-                }
-                Catch {
+                If ($DisplayValues -eq $True) {
+                    # DateTime fields returned in the Service-Now instance system date format need converting to the local computers "culture" setting based upon the format specified
                     Try {
-                        # Universal Format
-                        $DateTimeFormat = 'yyyy-MM-dd HH:mm:ss'
-                        $SNResult.$Property = [DateTime]::ParseExact($($SNResult.$Property), $DateTimeFormat, [System.Globalization.DateTimeFormatInfo]::InvariantInfo, [System.Globalization.DateTimeStyles]::None)
+                        Write-Debug "Date Parsing field: $Property, value: $($SNResult.$Property) against global format $Global:ServiceNowDateFormat"
+                        $SNResult.$Property = [DateTime]::ParseExact($($SNResult.$Property), $Global:ServiceNowDateFormat, [System.Globalization.DateTimeFormatInfo]::InvariantInfo)
                     }
                     Catch {
-                        # If the local culture and universal formats both fail keep the property as a string (Do nothing)
+                        Throw "Problem parsing date-time field $Property with value $($SNResult.$Property) against format $Global:ServiceNowDateFormat. " +
+                              "Please verify the DateFormat parameter matches the glide.sys.date_format property of the Service-Now instance"
                     }
+                }
+                Else {
+                    # DateTime fields always returned as yyyy-MM-dd hh:mm:ss when sysparm_display_value is set to false
+                    Write-Debug "Date Parsing field: $Property, value: $($SNResult.$Property) against default format $DefaultServiceNowDateFormat"
+                    $SNResult.$Property = [DateTime]::ParseExact($($SNResult.$Property), $DefaultServiceNowDateFormat, [System.Globalization.DateTimeFormatInfo]::InvariantInfo) 
                 }
             }
         }
