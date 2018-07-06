@@ -6,7 +6,7 @@ function Get-ServiceNowConfigurationItem {
         [parameter(ParameterSetName='UseConnectionObject')]
         [parameter(ParameterSetName='SetGlobalAuth')]
         [string]$OrderBy='name',
-        
+
         # Direction of ordering (Desc/Asc)
         [parameter(mandatory=$false)]
         [parameter(ParameterSetName='SpecifyConnectionFields')]
@@ -21,7 +21,7 @@ function Get-ServiceNowConfigurationItem {
         [parameter(ParameterSetName='UseConnectionObject')]
         [parameter(ParameterSetName='SetGlobalAuth')]
         [int]$Limit=10,
-        
+
         # Hashtable containing machine field names and values returned must match exactly (will be combined with AND)
         [parameter(mandatory=$false)]
         [parameter(ParameterSetName='SpecifyConnectionFields')]
@@ -42,19 +42,19 @@ function Get-ServiceNowConfigurationItem {
         [parameter(ParameterSetName='UseConnectionObject')]
         [parameter(ParameterSetName='SetGlobalAuth')]
         [ValidateSet("true","false", "all")]
-        [string]$DisplayValues='false',
+        [string]$DisplayValues='true',
 
         [Parameter(ParameterSetName='SpecifyConnectionFields', Mandatory=$True)]
         [ValidateNotNullOrEmpty()]
         [PSCredential]
-        $ServiceNowCredential, 
+        $ServiceNowCredential,
 
         [Parameter(ParameterSetName='SpecifyConnectionFields', Mandatory=$True)]
         [ValidateNotNullOrEmpty()]
         [string]
-        $ServiceNowURL, 
+        $ServiceNowURL,
 
-        [Parameter(ParameterSetName='UseConnectionObject', Mandatory=$True)] 
+        [Parameter(ParameterSetName='UseConnectionObject', Mandatory=$True)]
         [ValidateNotNullOrEmpty()]
         [Hashtable]
         $Connection
@@ -68,7 +68,7 @@ function Get-ServiceNowConfigurationItem {
         MatchContains   = $MatchContains
     }
     $Query = New-ServiceNowQuery @newServiceNowQuerySplat
-    
+
     # Table Splat
     $getServiceNowTableSplat = @{
         Table           = 'cmdb_ci'
@@ -79,10 +79,10 @@ function Get-ServiceNowConfigurationItem {
 
     # Update the Table Splat if the parameters have values
     if ($null -ne $PSBoundParameters.Connection)
-    {     
+    {
         $getServiceNowTableSplat.Add('Connection',$Connection)
     }
-    elseif ($null -ne $PSBoundParameters.ServiceNowCredential -and $null -ne $PSBoundParameters.ServiceNowURL) 
+    elseif ($null -ne $PSBoundParameters.ServiceNowCredential -and $null -ne $PSBoundParameters.ServiceNowURL)
     {
          $getServiceNowTableSplat.Add('ServiceNowCredential',$ServiceNowCredential)
          $getServiceNowTableSplat.Add('ServiceNowURL',$ServiceNowURL)
