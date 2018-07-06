@@ -6,7 +6,7 @@ function Get-ServiceNowIncident{
         [parameter(ParameterSetName='UseConnectionObject')]
         [parameter(ParameterSetName='SetGlobalAuth')]
         [string]$OrderBy='opened_at',
-        
+
         # Direction of ordering (Desc/Asc)
         [parameter(mandatory=$false)]
         [parameter(ParameterSetName='SpecifyConnectionFields')]
@@ -21,7 +21,7 @@ function Get-ServiceNowIncident{
         [parameter(ParameterSetName='UseConnectionObject')]
         [parameter(ParameterSetName='SetGlobalAuth')]
         [int]$Limit=10,
-        
+
         # Hashtable containing machine field names and values returned must match exactly (will be combined with AND)
         [parameter(mandatory=$false)]
         [parameter(ParameterSetName='SpecifyConnectionFields')]
@@ -42,22 +42,22 @@ function Get-ServiceNowIncident{
         [parameter(ParameterSetName='UseConnectionObject')]
         [parameter(ParameterSetName='SetGlobalAuth')]
         [ValidateSet("true","false", "all")]
-        [string]$DisplayValues='false',
+        [string]$DisplayValues='true',
 
-        # Credential used to authenticate to ServiceNow  
+        # Credential used to authenticate to ServiceNow
         [Parameter(ParameterSetName='SpecifyConnectionFields', Mandatory=$True)]
         [ValidateNotNullOrEmpty()]
         [PSCredential]
-        $ServiceNowCredential, 
+        $ServiceNowCredential,
 
-        # The URL for the ServiceNow instance being used  
+        # The URL for the ServiceNow instance being used
         [Parameter(ParameterSetName='SpecifyConnectionFields', Mandatory=$True)]
         [ValidateNotNullOrEmpty()]
         [string]
-        $ServiceNowURL, 
+        $ServiceNowURL,
 
         #Azure Automation Connection object containing username, password, and URL for the ServiceNow instance
-        [Parameter(ParameterSetName='UseConnectionObject', Mandatory=$True)] 
+        [Parameter(ParameterSetName='UseConnectionObject', Mandatory=$True)]
         [ValidateNotNullOrEmpty()]
         [Hashtable]
         $Connection
@@ -72,20 +72,20 @@ function Get-ServiceNowIncident{
     }
     $Query = New-ServiceNowQuery @newServiceNowQuerySplat
 
-    # Table Splat 
+    # Table Splat
     $getServiceNowTableSplat = @{
         Table = 'incident'
         Query = $Query
         Limit = $Limit
         DisplayValues = $DisplayValues
     }
-    
+
     # Update the splat if the parameters have values
     if ($null -ne $PSBoundParameters.Connection)
-    {     
+    {
         $getServiceNowTableSplat.Add('Connection',$Connection)
     }
-    elseif ($null -ne $PSBoundParameters.ServiceNowCredential -and $null -ne $PSBoundParameters.ServiceNowURL) 
+    elseif ($null -ne $PSBoundParameters.ServiceNowCredential -and $null -ne $PSBoundParameters.ServiceNowURL)
     {
          $getServiceNowTableSplat.Add('ServiceNowCredential',$ServiceNowCredential)
          $getServiceNowTableSplat.Add('ServiceNowURL',$ServiceNowURL)
