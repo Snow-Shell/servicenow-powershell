@@ -94,6 +94,7 @@ function Get-ServiceNowTableEntry {
             'UseConnectionObject' {
                 $getServiceNowTableSplat.Add('Connection', $Connection)
             }
+            Default {}
         }
 
         # Perform table query and return each object.  No fancy formatting here as this can pull tables with unknown default properties
