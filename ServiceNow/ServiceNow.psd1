@@ -66,7 +66,7 @@ FormatsToProcess = @('ServiceNow.format.ps1xml')
 NestedModules = @()
 
 # Functions to export from this module
-FunctionsToExport = @('Get-ServiceNowChangeRequest','Get-ServiceNowConfigurationItem','Get-ServiceNowIncident','Get-ServiceNowRequest','Get-ServiceNowTable','Get-ServiceNowUser','Get-ServiceNowUserGroup','New-ServiceNowIncident','New-ServiceNowQuery','New-ServiceNowTableEntry','Remove-ServiceNowAuth','Remove-ServiceNowTableEntry','Set-ServiceNowAuth','Test-ServiceNowAuthIsSet','Update-ServiceNowChangeRequest','Update-ServiceNowIncident','Update-ServiceNowTableEntry')
+FunctionsToExport = @('Get-ServiceNowChangeRequest','Get-ServiceNowConfigurationItem','Get-ServiceNowIncident','Get-ServiceNowRequest','Get-ServiceNowTable','Get-ServiceNowTableEntry','Get-ServiceNowUser','Get-ServiceNowUserGroup','New-ServiceNowIncident','New-ServiceNowQuery','New-ServiceNowTableEntry','Remove-ServiceNowAuth','Remove-ServiceNowTableEntry','Set-ServiceNowAuth','Test-ServiceNowAuthIsSet','Update-ServiceNowChangeRequest','Update-ServiceNowIncident','Update-ServiceNowTableEntry')
 
 # List of all modules packaged with this module
 # ModuleList = @()
