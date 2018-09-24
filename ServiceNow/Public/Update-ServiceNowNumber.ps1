@@ -1,10 +1,10 @@
 Function Update-ServiceNowNumber {
     <#
     .SYNOPSIS
-    Allows for the passing of a number and associated table to update a ServiceNow entry.
+    Allows for the passing of a number, instead of a sys_id, and associated table to update a ServiceNow entry.
 
     .DESCRIPTION
-    Allows for the passing of a number and associated table to update a ServiceNow entry.  Output is suppressed and may be returned with a switch parameter.
+    Allows for the passing of a number, instead of a sys_id, and associated table to update a ServiceNow entry.  Output is suppressed and may be returned with a switch parameter.
 
     .EXAMPLE
     Update-ServiceNowNumber -Number $Number -Table $Table -Values @{property='value'}
