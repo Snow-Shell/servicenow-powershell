@@ -13,8 +13,7 @@ Properties {
     $lines = '----------------------------------------------------------------------'
 
     $Verbose = @{}
-    if($ENV:BHCommitMessage -match "!verbose")
-    {
+    if ($ENV:BHCommitMessage -match "!verbose") {
         $Verbose = @{Verbose = $True}
     }
 }
@@ -30,23 +29,20 @@ Task Init {
     "`n"
 }
 
-
 Task Analyze -Depends Init {
     $saResults = Invoke-ScriptAnalyzer -Path $ENV:BHModulePath -Severity @('Error', 'Warning') -Recurse -Verbose:$false
     if ($saResults) {
-        $saResults | Format-Table  
-        #Write-Error -Message 'One or more Script Analyzer errors/warnings where found. Build cannot continue!'        
+        $saResults | Format-Table
+        # Write-Error -Message 'One or more Script Analyzer errors/warnings where found. Build cannot continue!'
     }
 }
-
 
 Task UnitTests -Depends Init {
     $lines
     'Running quick unit tests to fail early if there is an error'
-    $TestResults = Invoke-Pester -Path $ProjectRoot\Tests\*unit* -PassThru -Tag Build 
-    
-    if($TestResults.FailedCount -gt 0)
-    {
+    $TestResults = Invoke-Pester -Path $ProjectRoot\Tests\*unit* -PassThru -Tag Build
+
+    if($TestResults.FailedCount -gt 0) {
         Write-Error "Failed '$($TestResults.FailedCount)' tests, build failed"
     }
     "`n"
@@ -63,13 +59,12 @@ Task Test -Depends UnitTests  {
     $CodeCoverage.AddRange($CodeFiles.FullName)
     $Script:TestResults = Invoke-Pester -Path $ProjectRoot\Tests -CodeCoverage $CodeCoverage -PassThru -OutputFormat NUnitXml -OutputFile $TestFilePath
 
-    # In Appveyor?  Upload our tests! #Abstract this into a function? 
-    If($ENV:BHBuildSystem -eq 'AppVeyor')
-    {
-        [xml]$content = Get-Content $TestFilePath
-        $content.'test-results'.'test-suite'.type = "Powershell"
-        $content.Save($TestFilePath)
+    [xml]$content = Get-Content $TestFilePath
+    $content.'test-results'.'test-suite'.type = "Powershell"
+    $content.Save($TestFilePath)
 
+    # In Appveyor?  Upload our tests! #Abstract this into a function?
+    If($ENV:BHBuildSystem -eq 'AppVeyor') {
         "Uploading $ProjectRoot\$TestFile to AppVeyor"
         "JobID: $env:APPVEYOR_JOB_ID"
         (New-Object 'System.Net.WebClient').UploadFile("https://ci.appveyor.com/api/testresults/nunit/$($env:APPVEYOR_JOB_ID)", (Resolve-Path $TestFilePath))
@@ -79,8 +74,7 @@ Task Test -Depends UnitTests  {
 
     # Failed tests?
     # Need to tell psake or it will proceed to the deployment. Danger!
-    if($TestResults.FailedCount -gt 0)
-    {
+    if($TestResults.FailedCount -gt 0) {
         Write-Error "Failed '$($TestResults.FailedCount)' tests, build failed"
     }
     "`n"
@@ -89,9 +83,9 @@ Task Test -Depends UnitTests  {
 Task Build -Depends Test {
     $lines
 
-    $functions = Get-ChildItem "$ENV:BHModulePath\Public\*.ps1" | 
-            Where-Object{ $_.name -notmatch 'Tests'} |
-            Select-Object -ExpandProperty basename      
+    $functions = Get-ChildItem "$ENV:BHModulePath\Public\*.ps1" |
+        Where-Object {$_.name -notmatch 'Tests'} |
+        Select-Object -ExpandProperty basename
 
     # Load the module, read the exported functions, update the psd1 FunctionsToExport
     Set-ModuleFunctions -Name $env:BHPSModuleManifest -FunctionsToExport $functions
@@ -105,11 +99,11 @@ Task Build -Depends Test {
     }
     $Script:version = [version]::New($version.Major,$version.Minor,$version.Build)
     Write-Host "Using version: $version"
-    
+
     Update-Metadata -Path $env:BHPSModuleManifest -PropertyName ModuleVersion -Value $version
 
     # Update Code Coverage
-    Function Update-CodeCoveragePercent{
+    Function Update-CodeCoveragePercent {
         param(
             [int]$CodeCoverage=0,
             [string]$TextFilePath="$Env:BHProjectPath\Readme.md"
@@ -138,16 +132,15 @@ Task Build -Depends Test {
 Task MakePackage -Depends Build,Test {
     $lines
 
-    function ZipFiles
-    {
+    function ZipFiles {
         param( $zipfilename, $sourcedir )
-        Add-Type -Assembly System.IO.Compression.FileSystem 
+        Add-Type -Assembly System.IO.Compression.FileSystem
         $compressionLevel = [System.IO.Compression.CompressionLevel]::Optimal
         [System.IO.Compression.ZipFile]::CreateFromDirectory($sourcedir,
-            $zipfilename, $compressionLevel, $true) 
+            $zipfilename, $compressionLevel, $true)
     }
 
-    function New-MakePackage{
+    function New-MakePackage {
         param(
             [string]$PackageName,
             [string]$PackagePath,
@@ -171,21 +164,18 @@ Task Deploy -Depends Build,MakePackage {
     $lines
 
     # Gate deployment
-    if(
+    if (
         $ENV:BHBuildSystem -ne 'Unknown' -and
         $ENV:BHBranchName -eq "master" -and
         $ENV:BHCommitMessage -match '!deploy'
-    )
-    {
+    ) {
         $Params = @{
             Path = $ProjectRoot
             Force = $true
         }
 
         Invoke-PSDeploy @Verbose @Params
-    }
-    else
-    {
+    } else {
         "Skipping deployment: To deploy, ensure that...`n" +
         "`t* You are in a known build system (Current: $ENV:BHBuildSystem)`n" +
         "`t* You are committing to the master branch (Current: $ENV:BHBranchName) `n" +
