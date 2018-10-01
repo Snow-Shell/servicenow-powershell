@@ -60,25 +60,25 @@ Function Update-ServiceNowNumber {
     begin {}
     process {
         Try {
-            # Use the number and table to determine the sys_id
+            # Prep a splat to use the provided number to find the sys_id
             $getServiceNowTableEntry = @{
                 Table         = $Table
                 MatchExact    = @{number = $number}
-                Credential    = $Credential
-                ServiceNowURL = $ServiceNowURL
                 ErrorAction   = 'Stop'
             }
-            $SysID = Get-ServiceNowTableEntry @getServiceNowTableEntry | Select-Object -Expand sys_id
 
             # Process credential steps based on parameter set name
             Switch ($PSCmdlet.ParameterSetName) {
                 'SpecifyConnectionFields' {
                     $ServiceNowURL = 'https://' + $ServiceNowURL + '/api/now/v1'
+                    $updateServiceNowTableEntrySplat.Add('ServiceNowCredential',$ServiceNowCredential)
+                    $updateServiceNowTableEntrySplat.Add('ServiceNowURL',$ServiceNowURL)
                 }
                 'UseConnectionObject' {
                     $SecurePassword = ConvertTo-SecureString $Connection.Password -AsPlainText -Force
                     $Credential = New-Object System.Management.Automation.PSCredential ($Connection.Username, $SecurePassword)
                     $ServiceNowURL = 'https://' + $Connection.ServiceNowUri + '/api/now/v1'
+                    $updateServiceNowTableEntrySplat.Add('Connection',$Connection)
                 }
                 Default {
                     If ((Test-ServiceNowAuthIsSet)) {
@@ -90,6 +90,9 @@ Function Update-ServiceNowNumber {
                     }
                 }
             }
+
+            # Use the number and table to determine the sys_id
+            $SysID = Get-ServiceNowTableEntry @getServiceNowTableEntry | Select-Object -Expand sys_id
 
             # Convert the values to Json and encode them to an UTF8 array to support special chars
             $Body = $Values | ConvertTo-Json

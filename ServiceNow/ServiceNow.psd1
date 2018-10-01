@@ -12,7 +12,7 @@
 RootModule = 'ServiceNow.psm1'
 
 # Version number of this module.
-ModuleVersion = '1.2.0'
+ModuleVersion = '1.2.1'
 
 # ID used to uniquely identify this module
 GUID = 'b90d67da-f8d0-4406-ad74-89d169cd0633'
@@ -99,3 +99,7 @@ PrivateData = @{
 # DefaultCommandPrefix = ''
 
 }
+
+
+
+
