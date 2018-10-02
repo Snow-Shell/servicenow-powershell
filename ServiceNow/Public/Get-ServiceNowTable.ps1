@@ -1,5 +1,19 @@
 function Get-ServiceNowTable {
-    [OutputType([Array])]
+<#
+    .SYNOPSIS
+        Retrieves records for the specified table
+    .DESCRIPTION
+        The Get-ServiceNowTable function retrieves records for the specified table
+    .INPUTS
+        None
+    .OUTPUTS
+        System.Management.Automation.PSCustomObject
+    .LINK
+        Service-Now Kingston REST Table API: https://docs.servicenow.com/bundle/kingston-application-development/page/integrate/inbound-rest/concept/c_TableAPI.html
+        Service-Now Table API FAQ: https://hi.service-now.com/kb_view.do?sysparm_article=KB0534905
+#>
+
+    [OutputType([System.Management.Automation.PSCustomObject])]
     Param (
         # Name of the table we're querying (e.g. incidents)
         [parameter(Mandatory)]
@@ -26,7 +40,7 @@ function Get-ServiceNowTable {
         [parameter(ParameterSetName = 'UseConnectionObject')]
         [parameter(ParameterSetName = 'SetGlobalAuth')]
         [ValidateSet("true", "false", "all")]
-        [string]$DisplayValues = 'false',
+        [string]$DisplayValues = 'true',
 
         # Credential used to authenticate to ServiceNow
         [Parameter(ParameterSetName = 'SpecifyConnectionFields')]
