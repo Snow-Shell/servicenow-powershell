@@ -70,15 +70,15 @@ Function Update-ServiceNowNumber {
             # Process credential steps based on parameter set name
             Switch ($PSCmdlet.ParameterSetName) {
                 'SpecifyConnectionFields' {
+                    $getServiceNowTableEntry.Add('ServiceNowCredential',$Credential)
+                    $getServiceNowTableEntry.Add('ServiceNowURL',$ServiceNowURL)
                     $ServiceNowURL = 'https://' + $ServiceNowURL + '/api/now/v1'
-                    $updateServiceNowTableEntrySplat.Add('ServiceNowCredential',$ServiceNowCredential)
-                    $updateServiceNowTableEntrySplat.Add('ServiceNowURL',$ServiceNowURL)
                 }
                 'UseConnectionObject' {
+                    $getServiceNowTableEntry.Add('Connection',$Connection)
                     $SecurePassword = ConvertTo-SecureString $Connection.Password -AsPlainText -Force
                     $Credential = New-Object System.Management.Automation.PSCredential ($Connection.Username, $SecurePassword)
                     $ServiceNowURL = 'https://' + $Connection.ServiceNowUri + '/api/now/v1'
-                    $updateServiceNowTableEntrySplat.Add('Connection',$Connection)
                 }
                 Default {
                     If ((Test-ServiceNowAuthIsSet)) {
