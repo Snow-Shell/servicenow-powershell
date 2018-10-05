@@ -202,6 +202,41 @@ Describe "ServiceNow-Module" {
         $TestTicket.description | Should -Be 'Updated by Pester test Update-ServiceNowNumber works'
     }
 
+    It "Update-ServiceNowNumber with SpecifyConnectionFields works" {
+        $ShortDescription = 'Testing Ticket Update with Pester'
+        $newServiceNowIncidentSplat = @{
+            Caller              = $Defaults.TestUser
+            ShortDescription    = $ShortDescription
+            Description         = 'Long description'
+            AssignmentGroup     = $Defaults.TestUserGroup
+            Comment             = 'Comment'
+            Category            = $Defaults.TestCategory
+            SubCategory         = $Defaults.TestSubcategory
+            ConfigurationItem   = $Defaults.TestConfigurationItem
+        }
+        $TestTicket = New-ServiceNowIncident @newServiceNowIncidentSplat
+
+        $TestTicket.short_description | Should -Be $ShortDescription
+
+        $Values = @{
+            'short_description' = 'Ticket Updated with Pester (Update-ServiceNowNumber)'
+            'description'       = 'Updated by Pester test Update-ServiceNowNumber with SpecifyConnectionFields works'
+        }
+
+        $updateServiceNowNumberSplat = @{
+            Number        = $TestTicket.Number
+            Table         = 'incident'
+            Values        = $Values
+            Credential    = $Defaults.Creds
+            ServiceNowURL = $Defaults.ServiceNowURL
+        }
+        Update-ServiceNowNumber @updateServiceNowNumberSplat
+
+        $TestTicket = Get-ServiceNowIncident -MatchExact @{sys_id=$TestTicket.sys_id}
+        $TestTicket.short_description | Should -Be 'Ticket Updated with Pester (Update-ServiceNowNumber)'
+        $TestTicket.description | Should -Be 'Updated by Pester test Update-ServiceNowNumber with SpecifyConnectionFields works'
+    }
+
     # Remove Functions
     It "Remove-ServiceNowTable works" {
         $TestTicket = Get-ServiceNowIncident -Limit 1
