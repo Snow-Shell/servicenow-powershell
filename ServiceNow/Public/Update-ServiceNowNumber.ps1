@@ -90,10 +90,9 @@ Function Update-ServiceNowNumber {
                     }
                 }
             }
-            Write-Verbose "ServiceNowURL:  $ServiceNowURL"
+
             # Use the number and table to determine the sys_id
             $SysID = Get-ServiceNowTableEntry @getServiceNowTableEntry | Select-Object -Expand sys_id
-            Write-Verbose "SysID:  $SysID"
 
             # Convert the values to Json and encode them to an UTF8 array to support special chars
             $Body = $Values | ConvertTo-Json
