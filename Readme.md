@@ -68,6 +68,18 @@ $Incident = Get-ServiceNowIncident -Limit 1 -MatchContains @{short_description='
 Update-ServiceNowIncident -SysID $Incident.Sys_ID -Values @{comments='Updated via PowerShell'}
 ```
 
+### Example - Creating a Incident with custom table entries
+
+```PowerShell
+$IncidentParams = @{Caller = "UserName" 
+            ShortDescription = "New PS Incident" 
+            Description = "This incident was created from Powershell" 
+            CustomFields = @{u_service = "MyService"
+                            u_incident_type = "Request"}
+            }                            
+New-ServiceNowIncident @Params
+```
+
 ### Azure Connection Object (Automation Integration Module Support)
 
 The module can use the `Connection` parameter in conjunction with the included `ServiceNow-Automation.json` file for use as an Azure automation integration module.  Details of the process is available at [Authoring Integration Modules for Azure Automation](https://azure.microsoft.com/en-us/blog/authoring-integration-modules-for-azure-automation).
