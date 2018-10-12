@@ -1,4 +1,23 @@
+<#
+.SYNOPSIS
+    Build query string for api call
+.DESCRIPTION
+    Build query string for api call
+.EXAMPLE
+    New-ServiceNowQuery -MatchExact @{field_name=value}
+    Get query string where field name exactly matches the value
+.EXAMPLE
+    New-ServiceNowQuery -MatchContains @{field_name=value}
+    Get query string where field name contains the value
+.INPUTS
+    None
+.OUTPUTS
+    String
+#>
 function New-ServiceNowQuery{
+
+    [CmdletBinding()]
+    [OutputType([System.String])]
 
     param(
         # Machine name of the field to order by
