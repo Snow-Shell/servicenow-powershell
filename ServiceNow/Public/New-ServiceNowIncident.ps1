@@ -1,4 +1,36 @@
 function New-ServiceNowIncident{
+<#
+.SYNOPSIS
+    Generates a new ServiceNow Incident
+
+.DESCRIPTION
+    Generates a new ServiceNow Incident using predefined or custom fields by invoking the ServiceNow API
+
+.LINK
+    https://github.com/Sam-Martin/servicenow-powershell
+
+.EXAMPLE
+    Generate a basic Incident attributed to the caller "UserName" with descriptions, categories, assignment groups and CMDB items set.
+        New-ServiceNowIncident -Caller "UserName" -ShortDescription = "New PS Incident" -Description = "This incident was created from Powershell" -AssignmentGroup "ServiceDesk" -Comment "Inline Comment" -Category "Office" -Subcategory "Outlook" -ConfigurationItem UserPC1
+
+.EXAMPLE
+    Generate an Incident by "Splatting" all fields used in the 1st example plus some additional custom ServiceNow fields (These must exist in your ServiceNow Instance):
+
+        $IncidentParams = @{Caller = "UserName" 
+            ShortDescription = "New PS Incident" 
+            Description = "This incident was created from Powershell" 
+            AssignmentGroup "ServiceDesk" 
+            Comment "Inline Comment" 
+            Category "Office" 
+            Subcategory "Outlook" 
+            ConfigurationItem UserPC1
+            CustomFields = @{u_custom1 = "Custom Field Entry"
+                            u_another_custom = "Related Test"}
+            }                            
+        New-ServiceNowIncident @Params
+
+ #>
+ 
     Param(
 
         # sys_id of the caller of the incident (user Get-ServiceNowUser to retrieve this)
