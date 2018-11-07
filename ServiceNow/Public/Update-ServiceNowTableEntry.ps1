@@ -1,14 +1,14 @@
 function Update-ServiceNowTableEntry{
 [CmdletBinding(ConfirmImpact='High')]
     Param(
-        # sys_id of the entry we're deleting
+        # sys_id of the entry we're updating
         [parameter(mandatory=$true)]
         [parameter(ParameterSetName='SpecifyConnectionFields')]
         [parameter(ParameterSetName='UseConnectionObject')]
         [parameter(ParameterSetName='SetGlobalAuth')]
         [string]$SysId,
         
-        # Table containing the entry we're deleting
+        # Table containing the entry we're updating
         [parameter(mandatory=$true)]
         [parameter(ParameterSetName='SpecifyConnectionFields')]
         [parameter(ParameterSetName='UseConnectionObject')]
