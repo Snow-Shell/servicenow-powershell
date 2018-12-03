@@ -1,15 +1,34 @@
+<#
+.SYNOPSIS
+    Build query string for api call
+.DESCRIPTION
+    Build query string for api call
+.EXAMPLE
+    New-ServiceNowQuery -MatchExact @{field_name=value}
+    Get query string where field name exactly matches the value
+.EXAMPLE
+    New-ServiceNowQuery -MatchContains @{field_name=value}
+    Get query string where field name contains the value
+.INPUTS
+    None
+.OUTPUTS
+    String
+#>
 function New-ServiceNowQuery{
+
+    [CmdletBinding()]
+    [OutputType([System.String])]
 
     param(
         # Machine name of the field to order by
         [parameter(mandatory=$false)]
         [string]$OrderBy='opened_at',
-        
+
         # Direction of ordering (Desc/Asc)
         [parameter(mandatory=$false)]
         [ValidateSet("Desc", "Asc")]
         [string]$OrderDirection='Desc',
-        
+
         # Hashtable containing machine field names and values returned must match exactly (will be combined with AND)
         [parameter(mandatory=$false)]
         [hashtable]$MatchExact,
@@ -30,14 +49,14 @@ function New-ServiceNowQuery{
     # Build the exact matches into the query
     if($MatchExact){
         foreach($Field in $MatchExact.keys){
-            $Query += "^$Field="+$MatchExact.$Field
+            $Query += "^{0}={1}" -f $Field.ToString().ToLower(), ($MatchExact.$Field)
         }
     }
 
     # Add the values which given fields should contain
     if($MatchContains){
         foreach($Field in $MatchContains.keys){
-            $Query += "^$($Field)LIKE"+$MatchContains.$Field
+            $Query += "^{0}LIKE{1}" -f $Field.ToString().ToLower(), ($MatchContains.$Field)
         }
     }
 
