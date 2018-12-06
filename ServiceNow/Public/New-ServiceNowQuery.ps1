@@ -1,20 +1,25 @@
-<#
-.SYNOPSIS
-    Build query string for api call
-.DESCRIPTION
-    Build query string for api call
-.EXAMPLE
-    New-ServiceNowQuery -MatchExact @{field_name=value}
-    Get query string where field name exactly matches the value
-.EXAMPLE
-    New-ServiceNowQuery -MatchContains @{field_name=value}
-    Get query string where field name contains the value
-.INPUTS
-    None
-.OUTPUTS
-    String
-#>
-function New-ServiceNowQuery{
+function New-ServiceNowQuery {
+    <#
+    .SYNOPSIS
+        Build query string for api call
+    .DESCRIPTION
+        Build query string for api call
+    .EXAMPLE
+        New-ServiceNowQuery -MatchExact @{field_name=value}
+
+        Get query string where field name exactly matches the value
+    .EXAMPLE
+        New-ServiceNowQuery -MatchContains @{field_name=value}
+
+        Get query string where field name contains the value
+    .INPUTS
+        None
+    .OUTPUTS
+        String
+    #>
+
+    # This function doesn't change state.  Doesn't justify ShouldProcess functionality
+    [System.Diagnostics.CodeAnalysis.SuppressMessage('PSUseShouldProcessForStateChangingFunctions','')]
 
     [CmdletBinding()]
     [OutputType([System.String])]
@@ -37,28 +42,39 @@ function New-ServiceNowQuery{
         [parameter(mandatory=$false)]
         [hashtable]$MatchContains
     )
-    # Start the query off with a order direction
-    $Query = '';
-    if($OrderDirection -eq 'Asc'){
-        $Query += 'ORDERBY'
-    }else{
-        $Query += 'ORDERBYDESC'
-    }
-    $Query +="$OrderBy"
 
-    # Build the exact matches into the query
-    if($MatchExact){
-        foreach($Field in $MatchExact.keys){
-            $Query += "^{0}={1}" -f $Field.ToString().ToLower(), ($MatchExact.$Field)
+    Try {
+        # Create StringBuilder
+        $Query = New-Object System.Text.StringBuilder
+
+        # Start the query off with a order direction
+        $Order = Switch ($OrderDirection) {
+            'Asc'   {'ORDERBY'}
+            Default {'ORDERBYDESC'}
         }
-    }
+        [void]$Query.Append($Order)
 
-    # Add the values which given fields should contain
-    if($MatchContains){
-        foreach($Field in $MatchContains.keys){
-            $Query += "^{0}LIKE{1}" -f $Field.ToString().ToLower(), ($MatchContains.$Field)
+        # Build the exact matches into the query
+        If ($MatchExact) {
+            $Match = ForEach ($Field in $MatchExact.keys) {
+                "^{0}={1}" -f $Field.ToString().ToLower(), ($MatchExact.$Field)
+            }
         }
-    }
 
-    return $Query
+        # Add the values which given fields should contain
+        If ($MatchContains) {
+            $Match = ForEach ($Field in $MatchContains.keys) {
+                "^{0}LIKE{1}" -f $Field.ToString().ToLower(), ($MatchContains.$Field)
+            }
+        }
+
+        # Append Match (Exact or Contains)
+        [void]$Query.Append($Match)
+
+        # Output StringBuilder to string
+        $Query.ToString()
+    }
+    Catch {
+        Write-Error $PSItem
+    }
 }
