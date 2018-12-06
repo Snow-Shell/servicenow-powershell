@@ -54,22 +54,24 @@ function New-ServiceNowQuery {
         }
         [void]$Query.Append($Order)
 
+        # Add OrderBy
+        [void]$Query.Append($OrderBy)
+
         # Build the exact matches into the query
         If ($MatchExact) {
-            $Match = ForEach ($Field in $MatchExact.keys) {
-                "^{0}={1}" -f $Field.ToString().ToLower(), ($MatchExact.$Field)
+            ForEach ($Field in $MatchExact.keys) {
+                $ExactString = "^{0}={1}" -f $Field.ToString().ToLower(), ($MatchExact.$Field)
+                [void]$Query.Append($ExactString)
             }
         }
 
         # Add the values which given fields should contain
         If ($MatchContains) {
-            $Match = ForEach ($Field in $MatchContains.keys) {
-                "^{0}LIKE{1}" -f $Field.ToString().ToLower(), ($MatchContains.$Field)
+            ForEach ($Field in $MatchContains.keys) {
+                $ContainsString = "^{0}LIKE{1}" -f $Field.ToString().ToLower(), ($MatchContains.$Field)
+                [void]$Query.Append($ContainsString)
             }
         }
-
-        # Append Match (Exact or Contains)
-        [void]$Query.Append($Match)
 
         # Output StringBuilder to string
         $Query.ToString()
