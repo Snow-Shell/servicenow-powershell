@@ -15,13 +15,6 @@ function Get-ServiceNowIncident{
         [ValidateSet("Desc", "Asc")]
         [string]$OrderDirection='Desc',
 
-        # Maximum number of records to return
-        [parameter(mandatory=$false)]
-        [parameter(ParameterSetName='SpecifyConnectionFields')]
-        [parameter(ParameterSetName='UseConnectionObject')]
-        [parameter(ParameterSetName='SetGlobalAuth')]
-        [int]$Limit=10,
-
         # Hashtable containing machine field names and values returned must match exactly (will be combined with AND)
         [parameter(mandatory=$false)]
         [parameter(ParameterSetName='SpecifyConnectionFields')]
@@ -89,6 +82,11 @@ function Get-ServiceNowIncident{
     {
          $getServiceNowTableSplat.Add('ServiceNowCredential',$ServiceNowCredential)
          $getServiceNowTableSplat.Add('ServiceNowURL',$ServiceNowURL)
+    }
+
+    # Add all provided paging parameters
+    ($PSCmdlet.PagingParameters | Get-Member -MemberType Property).Name | Foreach-Object {
+        $getServiceNowTableSplat.Add($_, $PSCmdlet.PagingParameters.$_)
     }
 
     # Perform query and return each object in the format.ps1xml format

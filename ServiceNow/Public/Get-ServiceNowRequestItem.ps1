@@ -1,4 +1,5 @@
 function Get-ServiceNowRequestItem {
+    [CmdletBinding(SupportsPaging = $true)]
     param(
         # Machine name of the field to order by
         [parameter(mandatory = $false)]
@@ -14,13 +15,6 @@ function Get-ServiceNowRequestItem {
         [parameter(ParameterSetName = 'SetGlobalAuth')]
         [ValidateSet("Desc", "Asc")]
         [string]$OrderDirection = 'Desc',
-
-        # Maximum number of records to return
-        [parameter(mandatory = $false)]
-        [parameter(ParameterSetName = 'SpecifyConnectionFields')]
-        [parameter(ParameterSetName = 'UseConnectionObject')]
-        [parameter(ParameterSetName = 'SetGlobalAuth')]
-        [int]$Limit = 10,
 
         # Hashtable containing machine field names and values returned must match exactly (will be combined with AND)
         [parameter(mandatory = $false)]
@@ -73,7 +67,6 @@ function Get-ServiceNowRequestItem {
     $getServiceNowTableSplat = @{
         Table         = 'sc_req_item'
         Query         = $Query
-        Limit         = $Limit
         DisplayValues = $DisplayValues
     }
 
@@ -84,6 +77,11 @@ function Get-ServiceNowRequestItem {
     elseif ($null -ne $PSBoundParameters.ServiceNowCredential -and $null -ne $PSBoundParameters.ServiceNowURL) {
         $getServiceNowTableSplat.Add('ServiceNowCredential', $ServiceNowCredential)
         $getServiceNowTableSplat.Add('ServiceNowURL', $ServiceNowURL)
+    }
+
+    # Add all provided paging parameters
+    ($PSCmdlet.PagingParameters | Get-Member -MemberType Property).Name | Foreach-Object {
+        $getServiceNowTableSplat.Add($_, $PSCmdlet.PagingParameters.$_)
     }
 
     # Perform query and return each object in the format.ps1xml format

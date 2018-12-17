@@ -34,10 +34,6 @@ function Get-ServiceNowTableEntry {
         [ValidateSet("Desc", "Asc")]
         [string]$OrderDirection = 'Desc',
 
-        # Maximum number of records to return
-        [parameter(mandatory = $false)]
-        [int]$Limit = 10,
-
         # Hashtable containing machine field names and values returned must match exactly (will be combined with AND)
         [parameter(mandatory = $false)]
         [hashtable]$MatchExact = @{},
@@ -95,6 +91,11 @@ function Get-ServiceNowTableEntry {
                 $getServiceNowTableSplat.Add('Connection', $Connection)
             }
             Default {}
+        }
+
+        # Add all provided paging parameters
+        ($PSCmdlet.PagingParameters | Get-Member -MemberType Property).Name | Foreach-Object {
+            $getServiceNowTableSplat.Add($_, $PSCmdlet.PagingParameters.$_)
         }
 
         # Perform table query and return each object.  No fancy formatting here as this can pull tables with unknown default properties

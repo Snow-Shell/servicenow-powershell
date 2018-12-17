@@ -13,6 +13,7 @@ function Get-ServiceNowTable {
         Service-Now Table API FAQ: https://hi.service-now.com/kb_view.do?sysparm_article=KB0534905
 #>
 
+    [CmdletBinding(SupportsPaging = $true)]
     [OutputType([System.Management.Automation.PSCustomObject])]
     Param (
         # Name of the table we're querying (e.g. incidents)
@@ -28,12 +29,6 @@ function Get-ServiceNowTable {
         [parameter(ParameterSetName = 'UseConnectionObject')]
         [parameter(ParameterSetName = 'SetGlobalAuth')]
         [string]$Query,
-
-        # Maximum number of records to return
-        [parameter(ParameterSetName = 'SpecifyConnectionFields')]
-        [parameter(ParameterSetName = 'UseConnectionObject')]
-        [parameter(ParameterSetName = 'SetGlobalAuth')]
-        [int]$Limit = 10,
 
         # Whether or not to show human readable display values instead of machine values
         [parameter(ParameterSetName = 'SpecifyConnectionFields')]
@@ -79,7 +74,37 @@ function Get-ServiceNowTable {
     }
 
     # Populate the query
-    $Body = @{'sysparm_limit' = $Limit; 'sysparm_display_value' = $DisplayValues}
+    $Body = @{
+        'sysparm_display_value' = $DisplayValues
+    }
+
+    # Number of results to return.
+    # If the user doesn't provide the -First parameter, it defaults to [uint64]::MaxValue
+    if ($PSCmdlet.PagingParameters.First -ne [uint64]::MaxValue) {
+        $Body['sysparm_limit'] = $PSCmdlet.PagingParameters.First
+    }
+    else {
+        # If no paging information was provided, default to the legacy behavior,
+        # which was to return 10 records
+        $Body['sysparm_limit'] = 10
+    }
+
+    if ($PSCmdlet.PagingParameters.Skip) {
+        $Body['sysparm_offset'] = $PSCmdlet.PagingParameters.Skip
+    }
+
+    if ($PSCmdlet.PagingParameters.IncludeTotalCount) {
+        # To my knowledge, ServiceNow doesn't expose any data regarding how
+        # many records match the provided query.
+        # If that data is available, we'd update it here.
+
+        # Accuracy is a double between 0.0 and 1.0 representing an estimated
+        # percentage accuracy. 0.0 means we have no idea and 1.0 means the
+        # number is exact.
+        [double] $accuracy = 0.0
+        $PSCmdlet.PagingParameters.NewTotalCount($PSCmdlet.PagingParameters.First, $accuracy)
+    }
+
     if ($Query) {
         $Body.sysparm_query = $Query
     }
