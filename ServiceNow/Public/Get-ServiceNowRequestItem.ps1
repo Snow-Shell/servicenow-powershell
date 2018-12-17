@@ -1,5 +1,12 @@
 function Get-ServiceNowRequestItem {
     param(
+        # Fields to return
+        [parameter(mandatory = $false)]
+        [parameter(ParameterSetName = 'SpecifyConnectionFields')]
+        [parameter(ParameterSetName = 'UseConnectionObject')]
+        [parameter(ParameterSetName = 'SetGlobalAuth')]
+        [string[]]$Fields,
+
         # Machine name of the field to order by
         [parameter(mandatory = $false)]
         [parameter(ParameterSetName = 'SpecifyConnectionFields')]
@@ -74,6 +81,7 @@ function Get-ServiceNowRequestItem {
         Table         = 'sc_req_item'
         Query         = $Query
         Limit         = $Limit
+        Fields        = $Fields
         DisplayValues = $DisplayValues
     }
 

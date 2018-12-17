@@ -1,5 +1,12 @@
 function Get-ServiceNowConfigurationItem {
     param(
+        # Fields to return
+        [parameter(mandatory = $false)]
+        [parameter(ParameterSetName = 'SpecifyConnectionFields')]
+        [parameter(ParameterSetName = 'UseConnectionObject')]
+        [parameter(ParameterSetName = 'SetGlobalAuth')]
+        [string[]]$Fields,
+
         # Machine name of the field to order by
         [parameter(mandatory=$false)]
         [parameter(ParameterSetName='SpecifyConnectionFields')]
