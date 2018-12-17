@@ -35,6 +35,13 @@ function Get-ServiceNowTable {
         [parameter(ParameterSetName = 'SetGlobalAuth')]
         [int]$Limit = 10,
 
+        # Fields to return
+        [parameter(mandatory = $false)]
+        [parameter(ParameterSetName = 'SpecifyConnectionFields')]
+        [parameter(ParameterSetName = 'UseConnectionObject')]
+        [parameter(ParameterSetName = 'SetGlobalAuth')]
+        [string[]]$Fields,
+
         # Whether or not to show human readable display values instead of machine values
         [parameter(ParameterSetName = 'SpecifyConnectionFields')]
         [parameter(ParameterSetName = 'UseConnectionObject')]
@@ -82,6 +89,10 @@ function Get-ServiceNowTable {
     $Body = @{'sysparm_limit' = $Limit; 'sysparm_display_value' = $DisplayValues}
     if ($Query) {
         $Body.sysparm_query = $Query
+    }
+
+    if ($Fields) {
+        $Body.sysparm_fields = $Fields -join ','
     }
 
     # Perform table query and capture results
