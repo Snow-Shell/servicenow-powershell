@@ -44,16 +44,16 @@ function Get-ServiceNowRequestItem {
         [ValidateSet('true', 'false', 'all')]
         [string]$DisplayValues = 'true',
 
-        [Parameter(ParameterSetName = 'SpecifyConnectionFields', Mandatory = $True)]
+        [Parameter(ParameterSetName = 'SpecifyConnectionFields', Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         [Alias('ServiceNowCredential')]
         [PSCredential]$Credential,
 
-        [Parameter(ParameterSetName = 'SpecifyConnectionFields', Mandatory = $True)]
+        [Parameter(ParameterSetName = 'SpecifyConnectionFields', Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$ServiceNowURL,
 
-        [Parameter(ParameterSetName = 'UseConnectionObject', Mandatory = $True)]
+        [Parameter(ParameterSetName = 'UseConnectionObject', Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         [hashtable]$Connection
     )
