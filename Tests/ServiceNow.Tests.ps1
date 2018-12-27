@@ -79,6 +79,10 @@ Describe "ServiceNow-Module" {
         ([array](Get-ServiceNowRequest)).count -gt 0 | Should -Match $true
     }
 
+    It "Get-ServiceNowRequestItem returns records" {
+        ([array](Get-ServiceNowRequestItem)).count -gt 0 | Should -Match $true
+    }
+
     It "Get-ServiceNowUserGroup works" {
         (Get-ServiceNowUserGroup).Count -gt 0 | Should -Match $true
     }

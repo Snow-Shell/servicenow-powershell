@@ -32,6 +32,12 @@ These changes should improve your ability to filter on the right, especially by 
 
 Requires PowerShell 3.0 or above as this is when `Invoke-RestMethod` was introduced.
 
+Requires authorization in your ServiceNow tenant.  Due to the custom nature of ServiceNow your organization may have REST access restricted.  The following are some tips to ask for if you're having to go to your admin for access:
+
+* Out of the box tables should be accessible by granting the `ITIL` role.
+* Custom tables may require adjustments to the ACL.
+* The `Web_Service_Admin` role may also be an option.
+
 ## Usage
 
 Download the [latest release](https://github.com/Sam-Martin/servicenow-powershell/releases/latest) and  extract the .psm1 and .psd1 files to your PowerShell profile directory (i.e. the `Modules` directory under wherever `$profile` points to in your PS console) and run:
