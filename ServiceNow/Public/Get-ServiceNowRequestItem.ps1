@@ -86,6 +86,6 @@ function Get-ServiceNowRequestItem {
 
     # Perform query and return each object in the format.ps1xml format
     $Result = Get-ServiceNowTable @getServiceNowTableSplat
-    $Result | ForEach-Object {$_.PSObject.TypeNames.Insert(0,'ServiceNow.Request')}
+    $Result | ForEach-Object {$_.PSObject.TypeNames.Insert(0,'ServiceNow.RequestItem')}
     $Result
 }
