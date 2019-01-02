@@ -21,17 +21,9 @@ function Set-ServiceNowAuth {
     [CmdletBinding()]
     Param (
         [Parameter(Mandatory = $true)]
-        [ValidateNotNullOrEmpty()]
-        [ValidateScript( {
-                if ($_ -match '^\w+\..*\.\w+') {
-                    $true
-                }
-                else {
-                    Throw "The expected URL format is tenant.domain.com"
-                }
-            })]
-        [string]
-        $Url,
+        [ValidateScript({Test-ServiceNowURL -Url $_})]
+        [Alias('ServiceNowUrl')]
+        [string]$Url,
 
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]

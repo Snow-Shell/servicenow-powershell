@@ -15,45 +15,35 @@ function Get-ServiceNowTable {
 
     [CmdletBinding(SupportsPaging = $true)]
     [OutputType([System.Management.Automation.PSCustomObject])]
+    [CmdletBinding(DefaultParameterSetName)]
     Param (
         # Name of the table we're querying (e.g. incidents)
-        [parameter(Mandatory)]
-        [parameter(ParameterSetName = 'SpecifyConnectionFields')]
-        [parameter(ParameterSetName = 'UseConnectionObject')]
-        [parameter(ParameterSetName = 'SetGlobalAuth')]
+        [parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$Table,
 
         # sysparm_query param in the format of a ServiceNow encoded query string (see http://wiki.servicenow.com/index.php?title=Encoded_Query_Strings)
-        [parameter(ParameterSetName = 'SpecifyConnectionFields')]
-        [parameter(ParameterSetName = 'UseConnectionObject')]
-        [parameter(ParameterSetName = 'SetGlobalAuth')]
+        [Parameter(Mandatory = $false)]
         [string]$Query,
 
         # Whether or not to show human readable display values instead of machine values
-        [parameter(ParameterSetName = 'SpecifyConnectionFields')]
-        [parameter(ParameterSetName = 'UseConnectionObject')]
-        [parameter(ParameterSetName = 'SetGlobalAuth')]
-        [ValidateSet("true", "false", "all")]
+        [Parameter(Mandatory = $false)]
+        [ValidateSet('true', 'false', 'all')]
         [string]$DisplayValues = 'true',
 
-        # Credential used to authenticate to ServiceNow
-        [Parameter(ParameterSetName = 'SpecifyConnectionFields')]
+        [Parameter(ParameterSetName = 'SpecifyConnectionFields', Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        [PSCredential]
-        $ServiceNowCredential,
+        [Alias('ServiceNowCredential')]
+        [PSCredential]$Credential,
 
-        # The URL for the ServiceNow instance being used
-        [Parameter(ParameterSetName = 'SpecifyConnectionFields', Mandatory = $True)]
+        [Parameter(ParameterSetName = 'SpecifyConnectionFields', Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        [string]
-        $ServiceNowURL,
+        [Alias('Url')]
+        [string]$ServiceNowURL,
 
-        # Azure Automation Connection object containing username, password, and URL for the ServiceNow instance
-        [Parameter(ParameterSetName = 'UseConnectionObject', Mandatory = $True)]
+        [Parameter(ParameterSetName = 'UseConnectionObject', Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        [Hashtable]
-        $Connection
+        [hashtable]$Connection
     )
 
     # Get credential and ServiceNow REST URL
@@ -63,6 +53,7 @@ function Get-ServiceNowTable {
         $ServiceNowURL = 'https://' + $Connection.ServiceNowUri + '/api/now/v1'
     }
     elseif ($null -ne $ServiceNowCredential -and $null -ne $ServiceNowURL) {
+        Test-ServiceNowURL -Url $ServiceNowURL
         $ServiceNowURL = 'https://' + $ServiceNowURL + '/api/now/v1'
     }
     elseif ((Test-ServiceNowAuthIsSet)) {
@@ -134,6 +125,7 @@ function Get-ServiceNowTable {
                     }
                     Catch {
                         # If the local culture and universal formats both fail keep the property as a string (Do nothing)
+                        $null = 'Silencing a PSSA alert with this line'
                     }
                 }
             }
