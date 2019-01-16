@@ -19,7 +19,7 @@ function Get-ServiceNowTableEntry {
 
     #>
 
-    [CmdletBinding(DefaultParameterSetName)]
+    [CmdletBinding(DefaultParameterSetName, SupportsPaging)]
     param(
         # Table containing the entry we're deleting
         [parameter(mandatory = $true)]
@@ -77,7 +77,6 @@ function Get-ServiceNowTableEntry {
         $getServiceNowTableSplat = @{
             Table         = $Table
             Query         = $Query
-            Limit         = $Limit
             DisplayValues = $DisplayValues
             ErrorAction   = 'Stop'
         }
