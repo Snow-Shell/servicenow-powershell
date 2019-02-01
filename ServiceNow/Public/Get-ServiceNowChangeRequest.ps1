@@ -15,6 +15,10 @@ function Get-ServiceNowChangeRequest {
         [Parameter(Mandatory = $false)]
         [int]$Limit = 10,
 
+        # Fields to return
+        [parameter(mandatory = $false)]
+        [string[]]$Fields,
+
         # Hashtable containing machine field names and values returned must match exactly (will be combined with AND)
         [Parameter(Mandatory = $false)]
         [hashtable]$MatchExact = @{},
@@ -56,7 +60,8 @@ function Get-ServiceNowChangeRequest {
     $getServiceNowTableSplat = @{
         Table           = 'change_request'
         Query           = $Query
-        Limit           = $Limit
+        Limit           = $
+        Fields          = $Fields
         DisplayValues   = $DisplayValues
     }
 

@@ -29,6 +29,10 @@ function Get-ServiceNowTable {
         [Parameter(Mandatory = $false)]
         [int]$Limit = 10,
 
+        # Fields to return
+        [parameter(mandatory = $false)]
+        [string[]]$Fields,
+
         # Whether or not to show human readable display values instead of machine values
         [Parameter(Mandatory = $false)]
         [ValidateSet('true', 'false', 'all')]
@@ -71,6 +75,10 @@ function Get-ServiceNowTable {
     $Body = @{'sysparm_limit' = $Limit; 'sysparm_display_value' = $DisplayValues}
     if ($Query) {
         $Body.sysparm_query = $Query
+    }
+
+    if ($Fields) {
+        $Body.sysparm_fields = $Fields -join ','
     }
 
     # Perform table query and capture results

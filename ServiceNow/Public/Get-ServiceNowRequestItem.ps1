@@ -31,6 +31,10 @@ function Get-ServiceNowRequestItem {
         [parameter(Mandatory = $false)]
         [int]$Limit = 10,
 
+        # Fields to return
+        [parameter(mandatory = $false)]
+        [string[]]$Fields,
+
         # Hashtable containing machine field names and values returned must match exactly (will be combined with AND)
         [parameter(Mandatory = $false)]
         [hashtable]$MatchExact = @{},
@@ -72,6 +76,7 @@ function Get-ServiceNowRequestItem {
         Table         = 'sc_req_item'
         Query         = $Query
         Limit         = $Limit
+        Fields        = $Fields
         DisplayValues = $DisplayValues
     }
 

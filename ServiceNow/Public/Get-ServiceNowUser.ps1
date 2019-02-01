@@ -15,6 +15,10 @@ function Get-ServiceNowUser{
         [Parameter(Mandatory = $false)]
         [int]$Limit = 10,
 
+        # Fields to return
+        [parameter(mandatory = $false)]
+        [string[]]$Fields,
+
         # Hashtable containing machine field names and values returned must match exactly (will be combined with AND)
         [Parameter(Mandatory = $false)]
         [hashtable]$MatchExact = @{},
@@ -57,6 +61,7 @@ function Get-ServiceNowUser{
         Table = 'sys_user'
         Query = $Query
         Limit = $Limit
+        Fields = $Fields
         DisplayValues = $DisplayValues
     }
 
