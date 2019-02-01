@@ -78,7 +78,7 @@ function Get-ServiceNowTable {
     }
 
     if ($Fields) {
-        $Body.sysparm_fields = $Fields -join ','
+        $Body.sysparm_fields = ($Fields -join ',').ToLower()
     }
 
     # Perform table query and capture results
