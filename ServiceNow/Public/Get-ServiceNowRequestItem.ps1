@@ -18,10 +18,6 @@ function Get-ServiceNowRequestItem {
     [OutputType([System.Management.Automation.PSCustomObject])]
     [CmdletBinding(DefaultParameterSetName)]
     param(
-        # Fields to return
-        [parameter(mandatory = $false)]
-        [string[]]$Fields,
-
         # Machine name of the field to order by
         [parameter(Mandatory = $false)]
         [string]$OrderBy = 'opened_at',
@@ -34,6 +30,10 @@ function Get-ServiceNowRequestItem {
         # Maximum number of records to return
         [parameter(Mandatory = $false)]
         [int]$Limit = 10,
+
+        # Fields to return
+        [parameter(mandatory = $false)]
+        [string[]]$Fields,
 
         # Hashtable containing machine field names and values returned must match exactly (will be combined with AND)
         [parameter(Mandatory = $false)]

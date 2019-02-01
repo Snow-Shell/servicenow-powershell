@@ -2,10 +2,6 @@ function Get-ServiceNowChangeRequest {
     [OutputType([System.Management.Automation.PSCustomObject])]
     [CmdletBinding(DefaultParameterSetName)]
     Param(
-        # Fields to return
-        [parameter(mandatory = $false)]
-        [string[]]$Fields,
-
         # Machine name of the field to order by
         [Parameter(Mandatory = $false)]
         [string]$OrderBy = 'opened_at',
@@ -18,6 +14,10 @@ function Get-ServiceNowChangeRequest {
         # Maximum number of records to return
         [Parameter(Mandatory = $false)]
         [int]$Limit = 10,
+
+        # Fields to return
+        [parameter(mandatory = $false)]
+        [string[]]$Fields,
 
         # Hashtable containing machine field names and values returned must match exactly (will be combined with AND)
         [Parameter(Mandatory = $false)]
@@ -60,7 +60,8 @@ function Get-ServiceNowChangeRequest {
     $getServiceNowTableSplat = @{
         Table           = 'change_request'
         Query           = $Query
-        Limit           = $Limit
+        Limit           = $
+        Fields          = $Fields
         DisplayValues   = $DisplayValues
     }
 
