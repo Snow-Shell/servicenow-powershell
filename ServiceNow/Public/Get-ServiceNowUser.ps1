@@ -49,31 +49,29 @@ function Get-ServiceNowUser{
 
     # Query Splat
     $newServiceNowQuerySplat = @{
-        OrderBy = $OrderBy
+        OrderBy        = $OrderBy
         OrderDirection = $OrderDirection
-        MatchExact = $MatchExact
-        MatchContains = $MatchContains
+        MatchExact     = $MatchExact
+        MatchContains  = $MatchContains
     }
     $Query = New-ServiceNowQuery @newServiceNowQuerySplat
 
     # Table Splat
     $getServiceNowTableSplat = @{
-        Table = 'sys_user'
-        Query = $Query
-        Limit = $Limit
-        Fields = $Fields
+        Table         = 'sys_user'
+        Query         = $Query
+        Limit         = $Limit
+        Fields        = $Fields
         DisplayValues = $DisplayValues
     }
 
     # Update the splat if the parameters have values
-    if ($null -ne $PSBoundParameters.Connection)
-    {
+    if ($null -ne $PSBoundParameters.Connection) {
         $getServiceNowTableSplat.Add('Connection',$Connection)
     }
-    elseif ($null -ne $PSBoundParameters.ServiceNowCredential -and $null -ne $PSBoundParameters.ServiceNowURL)
-    {
-         $getServiceNowTableSplat.Add('ServiceNowCredential',$ServiceNowCredential)
-         $getServiceNowTableSplat.Add('ServiceNowURL',$ServiceNowURL)
+    elseif ($null -ne $PSBoundParameters.ServiceNowCredential -and $null -ne $PSBoundParameters.ServiceNowURL) {
+        $getServiceNowTableSplat.Add('ServiceNowCredential', $ServiceNowCredential)
+        $getServiceNowTableSplat.Add('ServiceNowURL', $ServiceNowURL)
     }
 
     # Perform query and return each object in the format.ps1xml format

@@ -30,7 +30,7 @@ function Get-ServiceNowTable {
         [int]$Limit = 10,
 
         # Fields to return
-        [parameter(mandatory = $false)]
+        [Parameter(Mandatory = $false)]
         [string[]]$Fields,
 
         # Whether or not to show human readable display values instead of machine values

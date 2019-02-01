@@ -39,7 +39,7 @@ function Get-ServiceNowTableEntry {
         [int]$Limit = 10,
 
         # Fields to return
-        [parameter(mandatory = $false)]
+        [Parameter(Mandatory = $false)]
         [string[]]$Fields,
 
         # Hashtable containing machine field names and values returned must match exactly (will be combined with AND)

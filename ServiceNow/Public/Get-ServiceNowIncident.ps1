@@ -16,7 +16,7 @@ function Get-ServiceNowIncident{
         [int]$Limit = 10,
 
         # Fields to return
-        [parameter(mandatory = $false)]
+        [Parameter(Mandatory = $false)]
         [string[]]$Fields,
 
         # Hashtable containing machine field names and values returned must match exactly (will be combined with AND)
@@ -58,20 +58,18 @@ function Get-ServiceNowIncident{
 
     # Table Splat
     $getServiceNowTableSplat = @{
-        Table = 'incident'
-        Query = $Query
-        Limit = $Limit
+        Table         = 'incident'
+        Query         = $Query
+        Limit         = $Limit
         Fields        = $Fields
         DisplayValues = $DisplayValues
     }
 
     # Update the splat if the parameters have values
-    if ($null -ne $PSBoundParameters.Connection)
-    {
+    if ($null -ne $PSBoundParameters.Connection) {
         $getServiceNowTableSplat.Add('Connection',$Connection)
     }
-    elseif ($null -ne $PSBoundParameters.ServiceNowCredential -and $null -ne $PSBoundParameters.ServiceNowURL)
-    {
+    elseif ($null -ne $PSBoundParameters.ServiceNowCredential -and $null -ne $PSBoundParameters.ServiceNowURL) {
          $getServiceNowTableSplat.Add('ServiceNowCredential',$ServiceNowCredential)
          $getServiceNowTableSplat.Add('ServiceNowURL',$ServiceNowURL)
     }
