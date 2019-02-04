@@ -31,7 +31,8 @@ function Get-ServiceNowTable {
 
         # Fields to return
         [Parameter(Mandatory = $false)]
-        [string[]]$Fields,
+        [Alias('Fields')]
+        [string[]]$Properties,
 
         # Whether or not to show human readable display values instead of machine values
         [Parameter(Mandatory = $false)]
@@ -77,8 +78,8 @@ function Get-ServiceNowTable {
         $Body.sysparm_query = $Query
     }
 
-    if ($Fields) {
-        $Body.sysparm_fields = ($Fields -join ',').ToLower()
+    if ($Properties) {
+        $Body.sysparm_fields = ($Properties -join ',').ToLower()
     }
 
     # Perform table query and capture results

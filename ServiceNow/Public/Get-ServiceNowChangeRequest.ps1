@@ -17,7 +17,8 @@ function Get-ServiceNowChangeRequest {
 
         # Fields to return
         [Parameter(Mandatory = $false)]
-        [string[]]$Fields,
+        [Alias('Fields')]
+        [string[]]$Properties,
 
         # Hashtable containing machine field names and values returned must match exactly (will be combined with AND)
         [Parameter(Mandatory = $false)]
@@ -58,11 +59,11 @@ function Get-ServiceNowChangeRequest {
 
     # Table Splat
     $getServiceNowTableSplat = @{
-        Table           = 'change_request'
-        Query           = $Query
-        Limit           = $Limit
-        Fields          = $Fields
-        DisplayValues   = $DisplayValues
+        Table         = 'change_request'
+        Query         = $Query
+        Limit         = $Limit
+        Fields        = $Properties
+        DisplayValues = $DisplayValues
     }
 
     # Update the Table Splat if the parameters have values
@@ -76,6 +77,8 @@ function Get-ServiceNowChangeRequest {
 
     # Perform query and return each object in the format.ps1xml format
     $Result = Get-ServiceNowTable @getServiceNowTableSplat
-    $Result | ForEach-Object{$_.PSObject.TypeNames.Insert(0,"ServiceNow.ChangeRequest")}
+    If (-not $Properties) {
+        $Result | ForEach-Object{$_.PSObject.TypeNames.Insert(0,"ServiceNow.ChangeRequest")}
+    }
     $Result
 }

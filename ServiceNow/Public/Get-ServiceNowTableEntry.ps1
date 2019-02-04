@@ -40,7 +40,8 @@ function Get-ServiceNowTableEntry {
 
         # Fields to return
         [Parameter(Mandatory = $false)]
-        [string[]]$Fields,
+        [Alias('Fields')]
+        [string[]]$Properties,
 
         # Hashtable containing machine field names and values returned must match exactly (will be combined with AND)
         [parameter(Mandatory = $false)]
@@ -86,7 +87,7 @@ function Get-ServiceNowTableEntry {
             Table         = $Table
             Query         = $Query
             Limit         = $Limit
-            Fields        = $Fields
+            Fields        = $Properties
             DisplayValues = $DisplayValues
             ErrorAction   = 'Stop'
         }
