@@ -131,6 +131,66 @@
 			</TableControl>
 		</View>
 		<View>
+			<Name>ServiceNow.RequestItem</Name>
+			<ViewSelectedBy>
+				<TypeName>ServiceNow.RequestItem</TypeName>
+			</ViewSelectedBy>
+			<TableControl>
+				<TableHeaders>
+					<TableColumnHeader>
+						<Label>number</Label>
+						<Width>12</Width>
+					</TableColumnHeader>
+					<TableColumnHeader>
+						<Label>short_description</Label>
+						<Width>25</Width>
+					</TableColumnHeader>
+					<TableColumnHeader>
+						<Label>state</Label>
+						<Width>8</Width>
+					</TableColumnHeader>
+					<TableColumnHeader>
+						<Label>assigned_to</Label>
+						<Width>15</Width>
+					</TableColumnHeader>
+					<TableColumnHeader>
+						<Label>approval</Label>
+						<Width>10</Width>
+					</TableColumnHeader>
+					<TableColumnHeader>
+						<Label>opened_at</Label>
+						<Width>21</Width>
+					</TableColumnHeader>
+				</TableHeaders>
+				<TableRowEntries>
+					<TableRowEntry>
+						<TableColumnItems>
+							<TableColumnItem>
+								<PropertyName>number</PropertyName>
+							</TableColumnItem>
+							<TableColumnItem>
+								<PropertyName>short_description</PropertyName>
+							</TableColumnItem>
+							<TableColumnItem>
+								<PropertyName>state</PropertyName>
+							</TableColumnItem>
+							<TableColumnItem>
+								<ScriptBlock>
+									$_.assigned_to.display_value
+								</ScriptBlock>
+							</TableColumnItem>
+							<TableColumnItem>
+								<PropertyName>approval</PropertyName>
+							</TableColumnItem>
+							<TableColumnItem>
+								<PropertyName>opened_at</PropertyName>
+							</TableColumnItem>
+						</TableColumnItems>
+					</TableRowEntry>
+				</TableRowEntries>
+			</TableControl>
+		</View>
+		<View>
 			<Name>ServiceNow.ConfigurationItem</Name>
 			<ViewSelectedBy>
 				<TypeName>ServiceNow.ConfigurationItem</TypeName>
