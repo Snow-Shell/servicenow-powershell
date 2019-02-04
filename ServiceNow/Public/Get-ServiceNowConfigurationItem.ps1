@@ -15,6 +15,11 @@ function Get-ServiceNowConfigurationItem {
         [Parameter(Mandatory = $false)]
         [int]$Limit = 10,
 
+        # Fields to return
+        [Parameter(Mandatory = $false)]
+        [Alias('Fields')]
+        [string[]]$Properties,
+
         # Hashtable containing machine field names and values returned must match exactly (will be combined with AND)
         [Parameter(Mandatory = $false)]
         [hashtable]$MatchExact = @{},
@@ -54,25 +59,26 @@ function Get-ServiceNowConfigurationItem {
 
     # Table Splat
     $getServiceNowTableSplat = @{
-        Table           = 'cmdb_ci'
-        Query           = $Query
-        Limit           = $Limit
-        DisplayValues   = $DisplayValues
+        Table         = 'cmdb_ci'
+        Query         = $Query
+        Limit         = $Limit
+        Fields        = $Properties
+        DisplayValues = $DisplayValues
     }
 
     # Update the Table Splat if the parameters have values
-    if ($null -ne $PSBoundParameters.Connection)
-    {
+    if ($null -ne $PSBoundParameters.Connection) {
         $getServiceNowTableSplat.Add('Connection',$Connection)
     }
-    elseif ($null -ne $PSBoundParameters.ServiceNowCredential -and $null -ne $PSBoundParameters.ServiceNowURL)
-    {
+    elseif ($null -ne $PSBoundParameters.ServiceNowCredential -and $null -ne $PSBoundParameters.ServiceNowURL) {
          $getServiceNowTableSplat.Add('ServiceNowCredential',$ServiceNowCredential)
          $getServiceNowTableSplat.Add('ServiceNowURL',$ServiceNowURL)
     }
 
     # Perform query and return each object in the format.ps1xml format
     $Result = Get-ServiceNowTable @getServiceNowTableSplat
-    $Result | ForEach-Object{$_.PSObject.TypeNames.Insert(0,"ServiceNow.ConfigurationItem")}
+    If (-not $Properties) {
+        $Result | ForEach-Object{$_.PSObject.TypeNames.Insert(0,"ServiceNow.ConfigurationItem")}
+    }
     $Result
 }

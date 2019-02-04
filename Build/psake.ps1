@@ -1,11 +1,14 @@
 # PSake makes variables declared here available in other scriptblocks
 Properties {
     # Find the build folder based on build system
-        $ProjectRoot = Resolve-Path $ENV:BHProjectPath
-        if(-not $ProjectRoot)
-        {
-            $ProjectRoot = Resolve-Path "$PSScriptRoot\.."
-        }
+    $ProjectRoot = Resolve-Path $ENV:BHProjectPath
+    if(-not $ProjectRoot)
+    {
+        $ProjectRoot = Resolve-Path "$PSScriptRoot\.."
+    }
+
+    #
+    $StepVersionBy = 'Build'
 
     $Timestamp = Get-date -uformat "%Y%m%d-%H%M%S"
     $PSVersion = $PSVersionTable.PSVersion.Major
@@ -91,7 +94,7 @@ Task Build -Depends Test {
     Set-ModuleFunctions -Name $env:BHPSModuleManifest -FunctionsToExport $functions
 
     # Bump the module version
-    $version = [version] (Step-Version (Get-Metadata -Path $env:BHPSModuleManifest))
+    $version = [version] (Step-Version -Version (Get-Metadata -Path $env:BHPSModuleManifest) -By $StepVersionBy)
     $galleryVersion = Get-NextPSGalleryVersion -Name $env:BHProjectName
     if($version -lt $galleryVersion)
     {
