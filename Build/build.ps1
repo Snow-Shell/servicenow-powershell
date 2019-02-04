@@ -6,7 +6,12 @@ Warren F. (RamblingCookieMonster)
 #>
 
 [cmdletbinding()]
-param ($Task = 'Default')
+param (
+    $Task = 'Default',
+
+    [ValidateSet('Build','Minor','Major')]
+    $StepVersionBy = 'Build'
+)
 
 # Grab nuget bits, install modules, set build variables, start build.
 Get-PackageProvider -Name NuGet -ForceBootstrap | Out-Null
@@ -26,5 +31,12 @@ ForEach ($Module in $Modules) {
 $Path = (Resolve-Path $PSScriptRoot\..).Path
 Set-BuildEnvironment -Path $Path
 
-Invoke-psake -buildFile $PSScriptRoot\psake.ps1 -taskList $Task -nologo
+$invokepsakeSplat = @{
+    buildFile  = "$PSScriptRoot\psake.ps1"
+    taskList   = $Task
+    properties = @{'StepVersionBy' = $StepVersionBy}
+    nologo     = $true
+}
+Invoke-psake @invokepsakeSplat
+
 exit ([int](-not $psake.build_success))
