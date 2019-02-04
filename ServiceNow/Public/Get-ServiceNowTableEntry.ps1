@@ -38,6 +38,11 @@ function Get-ServiceNowTableEntry {
         [parameter(Mandatory = $false)]
         [int]$Limit = 10,
 
+        # Fields to return
+        [Parameter(Mandatory = $false)]
+        [Alias('Fields')]
+        [string[]]$Properties,
+
         # Hashtable containing machine field names and values returned must match exactly (will be combined with AND)
         [parameter(Mandatory = $false)]
         [hashtable]$MatchExact = @{},
@@ -82,6 +87,7 @@ function Get-ServiceNowTableEntry {
             Table         = $Table
             Query         = $Query
             Limit         = $Limit
+            Fields        = $Properties
             DisplayValues = $DisplayValues
             ErrorAction   = 'Stop'
         }

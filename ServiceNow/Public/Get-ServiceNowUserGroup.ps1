@@ -15,6 +15,11 @@ function Get-ServiceNowUserGroup{
         [Parameter(Mandatory = $false)]
         [int]$Limit = 10,
 
+        # Fields to return
+        [Parameter(Mandatory = $false)]
+        [Alias('Fields')]
+        [string[]]$Properties,
+
         # Hashtable containing machine field names and values returned must match exactly (will be combined with AND)
         [Parameter(Mandatory = $false)]
         [hashtable]$MatchExact = @{},
@@ -45,34 +50,35 @@ function Get-ServiceNowUserGroup{
 
     # Query Splat
     $newServiceNowQuerySplat = @{
-        OrderBy = $OrderBy
+        OrderBy        = $OrderBy
         OrderDirection = $OrderDirection
-        MatchExact = $MatchExact
-        MatchContains = $MatchContains
+        MatchExact     = $MatchExact
+        MatchContains  = $MatchContains
     }
     $Query = New-ServiceNowQuery @newServiceNowQuerySplat
 
     # Table Splat
     $getServiceNowTableSplat = @{
-        Table = 'sys_user_group'
-        Query = $Query
-        Limit = $Limit
+        Table         = 'sys_user_group'
+        Query         = $Query
+        Limit         = $Limit
+        Fields        = $Properties
         DisplayValues = $DisplayValues
     }
 
     # Update the splat if the parameters have values
-    if ($null -ne $PSBoundParameters.Connection)
-    {
+    if ($null -ne $PSBoundParameters.Connection) {
         $getServiceNowTableSplat.Add('Connection',$Connection)
     }
-    elseif ($null -ne $PSBoundParameters.ServiceNowCredential -and $null -ne $PSBoundParameters.ServiceNowURL)
-    {
-         $getServiceNowTableSplat.Add('ServiceNowCredential',$ServiceNowCredential)
-         $getServiceNowTableSplat.Add('ServiceNowURL',$ServiceNowURL)
+    elseif ($null -ne $PSBoundParameters.ServiceNowCredential -and $null -ne $PSBoundParameters.ServiceNowURL) {
+        $getServiceNowTableSplat.Add('ServiceNowCredential', $ServiceNowCredential)
+        $getServiceNowTableSplat.Add('ServiceNowURL', $ServiceNowURL)
     }
 
     # Perform query and return each object in the format.ps1xml format
     $Result = Get-ServiceNowTable @getServiceNowTableSplat
-    $Result | ForEach-Object{$_.PSObject.TypeNames.Insert(0,"ServiceNow.UserAndUserGroup")}
+    If (-not $Properties) {
+        $Result | ForEach-Object{$_.PSObject.TypeNames.Insert(0,"ServiceNow.UserAndUserGroup")}
+    }
     $Result
 }
