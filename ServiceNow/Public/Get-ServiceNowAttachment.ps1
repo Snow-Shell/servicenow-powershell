@@ -124,14 +124,15 @@ Function Get-ServiceNowAttachment {
             # URI format:  https://tenant.service-now.com/api/now/v1/attachment/{sys_id}/file
             $Uri = $ServiceNowURL + '/' + $SysID + '/file'
     
-            If ($True -eq $AppendNameWithSysID) {
+            If ($True -eq $PSBoundParameters.ContainsKey('AppendNameWithSysID')) {
+                Write-Verbose "SYSID in name"
                 $FileName = "{0}_{1}{2}" -f [io.path]::GetFileNameWithoutExtension($FileName),
                 $SysID,[io.path]::GetExtension($FileName)
             }
             $OutFile = $Null
             $OutFile = Join-Path $Destination $FileName
 
-            If ((Test-Path $OutFile) -and -not $AllowOverwrite) {
+            If ((Test-Path $OutFile) -and -not $PSBoundParameters.ContainsKey('AllowOverwrite')) {
                 $ThrowMessage = "The file [{0}] already exists.  Please choose a different name, use the -AppendNameWithSysID switch parameter, or use the -AllowOverwrite switch parameter to overwrite the file." -f $OutFile
                 Throw $ThrowMessage
             }
