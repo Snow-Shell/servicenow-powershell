@@ -1,8 +1,19 @@
 Function Add-ServiceNowAttachment {
     <#
     .SYNOPSIS
+    Attaches a file to an existing ticket.
 
     .DESCRIPTION
+    Attaches a file to an existing ticket.
+
+    .PARAMETER Number
+    ServiceNow ticket number
+
+    .PARAMETER Table
+    ServiceNow ticket table name
+
+    .PARAMETER File
+    A valid path to the file to attach  
 
     .EXAMPLE
     Add-ServiceNowAttachment -Number $Number -Table $Table -File .\File01.txt, .\File02.txt

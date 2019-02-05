@@ -9,6 +9,13 @@ Function Remove-ServiceNowAttachment {
     .EXAMPLE
     Remove-ServiceNowAttachment -SysID $SysID
 
+    Removes the attachment with the associated sys_id
+
+    .EXAMPLE
+    Get-ServiceNowAttachmentDetail -Number CHG0000001 | Remove-ServiceNowAttachment
+
+    Removes all attachments from CHG0000001
+
     .NOTES
 
     #>
