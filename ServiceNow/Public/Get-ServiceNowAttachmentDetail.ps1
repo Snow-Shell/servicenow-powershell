@@ -6,6 +6,15 @@ Function Get-ServiceNowAttachmentDetail {
     .DESCRIPTION
     List details for ServiceNow attachments associated with a ticket number.
 
+    .PARAMETER Number
+    ServiceNow ticket number
+
+    .PARAMETER Table
+    ServiceNow ticket table name
+
+    .PARAMETER FileName
+    Filter for one or more file names.  Works like a 'match' where partial file names are valid. 
+
     .EXAMPLE
     Get-ServiceNowAttachmentDetail -Number $Number -Table $Table
 
@@ -14,7 +23,7 @@ Function Get-ServiceNowAttachmentDetail {
     .EXAMPLE
     Get-ServiceNowAttachmentDetail -Number $Number -Table $Table -FileName filename.txt,report.csv
 
-    List details for only filename.txt, and report.csv (if they exist).
+    List details for only filename.txt and report.csv (if they exist).
 
     .OUTPUTS
     System.Management.Automation.PSCustomObject
