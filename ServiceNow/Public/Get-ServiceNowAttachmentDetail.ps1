@@ -1,0 +1,142 @@
+Function Get-ServiceNowAttachmentDetail {
+    <#
+    .SYNOPSIS
+    List details for ServiceNow attachments associated with a ticket number.
+
+    .DESCRIPTION
+    List details for ServiceNow attachments associated with a ticket number.
+
+    .EXAMPLE
+    Get-ServiceNowAttachmentDetail -Number $Number -Table $Table
+
+    List attachment details
+
+    .EXAMPLE
+    Get-ServiceNowAttachmentDetail -Number $Number -Table $Table -FileName filename.txt,report.csv
+
+    List details for only filename.txt, and report.csv (if they exist).
+
+    .OUTPUTS
+    System.Management.Automation.PSCustomObject
+
+    .NOTES
+
+    #>
+
+    [System.Diagnostics.CodeAnalysis.SuppressMessage('PSAvoidUsingConvertToSecureStringWithPlainText','')]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage('PSAvoidGlobalVars','')]
+
+    [OutputType([System.Management.Automation.PSCustomObject[]])]
+    [CmdletBinding(DefaultParameterSetName)]
+    Param(
+        # Object number
+        [Parameter(Mandatory=$true)]
+        [string]$Number,
+
+        # Table containing the entry
+        [Parameter(Mandatory=$true)]
+        [string]$Table,
+
+        # Filter results by file name
+        [parameter(Mandatory=$false)]
+        [string[]]$FileName,
+
+        # Credential used to authenticate to ServiceNow
+        [Parameter(ParameterSetName='SpecifyConnectionFields', Mandatory=$true)]
+        [ValidateNotNullOrEmpty()]
+        [Alias('ServiceNowCredential')]
+        [PSCredential]$Credential,
+
+        # The URL for the ServiceNow instance being used
+        [Parameter(ParameterSetName='SpecifyConnectionFields', Mandatory=$true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$ServiceNowURL,
+
+        # Azure Automation Connection object containing username, password, and URL for the ServiceNow instance
+        [Parameter(ParameterSetName='UseConnectionObject', Mandatory=$true)]
+        [ValidateNotNullOrEmpty()]
+        [Hashtable]$Connection
+    )
+
+	begin {}
+	process	{
+        Try {
+            # Use the number and table to determine the sys_id
+            $getServiceNowTableEntry = @{
+                Table         = $Table
+                MatchExact    = @{number = $number}
+                ErrorAction   = 'Stop'
+            }
+
+            # Update the Table Splat if an applicable parameter set name is in use
+            Switch ($PSCmdlet.ParameterSetName) {
+                'SpecifyConnectionFields' {
+                    $getServiceNowTableEntry.Add('Credential', $Credential)
+                    $getServiceNowTableEntry.Add('ServiceNowURL', $ServiceNowURL)
+                }
+                'UseConnectionObject' {
+                    $getServiceNowTableEntry.Add('Connection', $Connection)
+                }
+                Default {
+                    If ((Test-ServiceNowAuthIsSet)) {
+                        $Credential = $Global:ServiceNowCredentials
+                        $ServiceNowURL = $Global:ServiceNowRESTURL
+                    }
+                    Else {
+                        Throw "Exception:  You must do one of the following to authenticate: `n 1. Call the Set-ServiceNowAuth cmdlet `n 2. Pass in an Azure Automation connection object `n 3. Pass in an endpoint and credential"
+                    }
+                }
+            }
+
+            Write-Verbose "Looking up the ticket number sys_id"
+            $SysID = Get-ServiceNowTableEntry @getServiceNowTableEntry | Select-Object -Expand sys_id
+
+            # Process credential steps based on parameter set name
+            Switch ($PSCmdlet.ParameterSetName) {
+                'SpecifyConnectionFields' {
+                    $ServiceNowURL = 'https://' + $ServiceNowURL + '/api/now/v1/attachment'
+                }
+                'UseConnectionObject' {
+                    $SecurePassword = ConvertTo-SecureString $Connection.Password -AsPlainText -Force
+                    $Credential = New-Object System.Management.Automation.PSCredential ($Connection.Username, $SecurePassword)
+                    $ServiceNowURL = 'https://' + $Connection.ServiceNowUri + '/api/now/v1/attachment'
+                }
+                Default {
+                    If ((Test-ServiceNowAuthIsSet)) {
+                        $Credential = $Global:ServiceNowCredentials
+                        $ServiceNowURL = $Global:ServiceNowRESTURL + '/attachment'
+                    }
+                    Else {
+                        Throw "Exception:  You must do one of the following to authenticate: `n 1. Call the Set-ServiceNowAuth cmdlet `n 2. Pass in an Azure Automation connection object `n 3. Pass in an endpoint and credential"
+                    }
+                }
+            }
+
+            # Populate the query
+            $Body = @{'sysparm_limit' = 500; 'table_name' = $Table; 'table_sys_id' = $SysID}
+            $Body.sysparm_query = 'ORDERBYfile_name^ORDERBYDESC'
+
+            # Perform table query and capture results
+            $Uri = $ServiceNowURL
+
+            $invokeRestMethodSplat = @{
+                Uri         = $Uri
+                Body        = $Body
+                Credential  = $Credential
+                ContentType = 'application/json'
+            }
+            $Result = (Invoke-RestMethod @invokeRestMethodSplat).Result
+
+            # Filter for requested file names
+            If ($FileName) {
+                $Result = $Result | Where-Object {$PSItem.file_name -match ($FileName -join '|')}
+            }
+
+            $Result
+        }
+        Catch {
+            Write-Error $PSItem
+        }
+    }
+	end {}
+}
