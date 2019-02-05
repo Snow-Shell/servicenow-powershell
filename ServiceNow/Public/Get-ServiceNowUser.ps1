@@ -13,7 +13,7 @@ function Get-ServiceNowUser{
 
         # Maximum number of records to return
         [Parameter(Mandatory = $false)]
-        [int]$Limit = 10,
+        [int]$Limit,
 
         # Fields to return
         [Parameter(Mandatory = $false)]
@@ -61,7 +61,6 @@ function Get-ServiceNowUser{
     $getServiceNowTableSplat = @{
         Table         = 'sys_user'
         Query         = $Query
-        Limit         = $Limit
         Fields        = $Properties
         DisplayValues = $DisplayValues
     }
@@ -73,6 +72,16 @@ function Get-ServiceNowUser{
     elseif ($null -ne $PSBoundParameters.ServiceNowCredential -and $null -ne $PSBoundParameters.ServiceNowURL) {
         $getServiceNowTableSplat.Add('ServiceNowCredential', $ServiceNowCredential)
         $getServiceNowTableSplat.Add('ServiceNowURL', $ServiceNowURL)
+    }
+
+    # Only add the Limit parameter if it was explicitly provided
+    if ($PSBoundParameters.ContainsKey('Limit')) {
+        $getServiceNowTableSplat.Add('Limit', $Limit)
+    }
+
+    # Add all provided paging parameters
+    ($PSCmdlet.PagingParameters | Get-Member -MemberType Property).Name | Foreach-Object {
+        $getServiceNowTableSplat.Add($_, $PSCmdlet.PagingParameters.$_)
     }
 
     # Perform query and return each object in the format.ps1xml format
