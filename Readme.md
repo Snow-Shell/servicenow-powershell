@@ -44,6 +44,9 @@ Download the [latest release](https://github.com/Sam-Martin/servicenow-powershel
 `Import-Module ServiceNow`
 Once you've done this, all the cmdlets will be at your disposal, you can see a full list using `Get-Command -Module ServiceNow`.
 
+You may need to set the PowerShell execution policy to unrestricted by running the following PowerShell Command: 
+set-executionpolicy unrestricted
+
 ### Example - Using Set-ServiceNowAuth
 
 ```PowerShell
