@@ -1,6 +1,6 @@
 function Get-ServiceNowUser{
     [OutputType([System.Management.Automation.PSCustomObject])]
-    [CmdletBinding(DefaultParameterSetName)]
+    [CmdletBinding(DefaultParameterSetName, SupportsPaging)]
     Param(
         # Machine name of the field to order by
         [Parameter(Mandatory = $false)]
