@@ -16,7 +16,7 @@ function Get-ServiceNowRequestItem {
 #>
 
     [OutputType([System.Management.Automation.PSCustomObject])]
-    [CmdletBinding(DefaultParameterSetName)]
+    [CmdletBinding(DefaultParameterSetName, SupportsPaging)]
     param(
         # Machine name of the field to order by
         [parameter(Mandatory = $false)]
@@ -29,7 +29,7 @@ function Get-ServiceNowRequestItem {
 
         # Maximum number of records to return
         [parameter(Mandatory = $false)]
-        [int]$Limit = 10,
+        [int]$Limit,
 
         # Fields to return
         [Parameter(Mandatory = $false)]
@@ -76,7 +76,6 @@ function Get-ServiceNowRequestItem {
     $getServiceNowTableSplat = @{
         Table         = 'sc_req_item'
         Query         = $Query
-        Limit         = $Limit
         Fields        = $Properties
         DisplayValues = $DisplayValues
     }
@@ -88,6 +87,16 @@ function Get-ServiceNowRequestItem {
     elseif ($null -ne $PSBoundParameters.ServiceNowCredential -and $null -ne $PSBoundParameters.ServiceNowURL) {
         $getServiceNowTableSplat.Add('ServiceNowCredential', $ServiceNowCredential)
         $getServiceNowTableSplat.Add('ServiceNowURL', $ServiceNowURL)
+    }
+
+    # Only add the Limit parameter if it was explicitly provided
+    if ($PSBoundParameters.ContainsKey('Limit')) {
+        $getServiceNowTableSplat.Add('Limit', $Limit)
+    }
+
+    # Add all provided paging parameters
+    ($PSCmdlet.PagingParameters | Get-Member -MemberType Property).Name | Foreach-Object {
+        $getServiceNowTableSplat.Add($_, $PSCmdlet.PagingParameters.$_)
     }
 
     # Perform query and return each object in the format.ps1xml format
