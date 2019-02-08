@@ -14,7 +14,7 @@ function Get-ServiceNowTable {
 #>
 
     [OutputType([System.Management.Automation.PSCustomObject])]
-    [CmdletBinding(DefaultParameterSetName)]
+    [CmdletBinding(DefaultParameterSetName, SupportsPaging)]
     Param (
         # Name of the table we're querying (e.g. incidents)
         [parameter(Mandatory = $true)]
@@ -27,7 +27,7 @@ function Get-ServiceNowTable {
 
         # Maximum number of records to return
         [Parameter(Mandatory = $false)]
-        [int]$Limit = 10,
+        [int]$Limit,
 
         # Fields to return
         [Parameter(Mandatory = $false)]
@@ -72,8 +72,48 @@ function Get-ServiceNowTable {
         throw "Exception:  You must do one of the following to authenticate: `n 1. Call the Set-ServiceNowAuth cmdlet `n 2. Pass in an Azure Automation connection object `n 3. Pass in an endpoint and credential"
     }
 
+    $Body = @{'sysparm_display_value' = $DisplayValues}
+
+    # Handle paging parameters
+    # If -Limit was provided, write a warning message, but prioritize it over -First.
+    # The value of -First defaults to [uint64]::MaxValue if not specified.
+    # If no paging information was provided, default to the legacy behavior, which was to return 10 records.
+
+    if ($PSBoundParameters.ContainsKey('Limit')) {
+        Write-Warning "The -Limit parameter is deprecated, and may be removed in a future release. Use the -First parameter instead."
+        $Body['sysparm_limit'] = $Limit
+    }
+    elseif ($PSCmdlet.PagingParameters.First -ne [uint64]::MaxValue) {
+        $Body['sysparm_limit'] = $PSCmdlet.PagingParameters.First
+    }
+    else {
+        $Body['sysparm_limit'] = 10
+    }
+
+    if ($PSCmdlet.PagingParameters.Skip) {
+        $Body['sysparm_offset'] = $PSCmdlet.PagingParameters.Skip
+    }
+
+    if ($PSCmdlet.PagingParameters.IncludeTotalCount) {
+        # Accuracy is a double between 0.0 and 1.0 representing an estimated percentage accuracy.
+        # 0.0 means we have no idea and 1.0 means the number is exact.
+
+        # ServiceNow does return this information in the X-Total-Count response header,
+        # but we're currently using Invoke-RestMethod to perform the API call, and Invoke-RestMethod
+        # does not provide the response headers, so we can't capture this info.
+
+        # To properly support this parameter, we'd need to fall back on Invoke-WebRequest, read the
+        # X-Total-Count header of the response, and update this parameter after performing the API
+        # call.
+
+        # Reference:
+        # https://developer.servicenow.com/app.do#!/rest_api_doc?v=jakarta&id=r_TableAPI-GET
+
+        [double] $accuracy = 0.0
+        $PSCmdlet.PagingParameters.NewTotalCount($PSCmdlet.PagingParameters.First, $accuracy)
+    }
+
     # Populate the query
-    $Body = @{'sysparm_limit' = $Limit; 'sysparm_display_value' = $DisplayValues}
     if ($Query) {
         $Body.sysparm_query = $Query
     }
