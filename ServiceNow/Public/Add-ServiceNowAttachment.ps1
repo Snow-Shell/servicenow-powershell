@@ -13,7 +13,7 @@ Function Add-ServiceNowAttachment {
     ServiceNow ticket table name
 
     .PARAMETER File
-    A valid path to the file to attach  
+    A valid path to the file to attach
 
     .EXAMPLE
     Add-ServiceNowAttachment -Number $Number -Table $Table -File .\File01.txt, .\File02.txt

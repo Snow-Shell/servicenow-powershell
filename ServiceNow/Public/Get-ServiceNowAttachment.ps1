@@ -120,10 +120,10 @@ Function Get-ServiceNowAttachment {
                     }
                 }
             }
-    
+
             # URI format:  https://tenant.service-now.com/api/now/v1/attachment/{sys_id}/file
             $Uri = $ServiceNowURL + '/' + $SysID + '/file'
-    
+
             If ($True -eq $PSBoundParameters.ContainsKey('AppendNameWithSysID')) {
                 Write-Verbose "SYSID in name"
                 $FileName = "{0}_{1}{2}" -f [io.path]::GetFileNameWithoutExtension($FileName),
@@ -136,13 +136,13 @@ Function Get-ServiceNowAttachment {
                 $ThrowMessage = "The file [{0}] already exists.  Please choose a different name, use the -AppendNameWithSysID switch parameter, or use the -AllowOverwrite switch parameter to overwrite the file." -f $OutFile
                 Throw $ThrowMessage
             }
-    
+
             $invokeRestMethodSplat = @{
                 Uri         = $Uri
                 Credential  = $Credential
                 OutFile     = $OutFile
             }
-    
+
             If ($PSCmdlet.ShouldProcess($Uri,$MyInvocation.MyCommand)) {
                 Invoke-RestMethod @invokeRestMethodSplat
             }
