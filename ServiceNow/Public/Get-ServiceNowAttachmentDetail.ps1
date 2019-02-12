@@ -13,7 +13,7 @@ Function Get-ServiceNowAttachmentDetail {
     ServiceNow ticket table name
 
     .PARAMETER FileName
-    Filter for one or more file names.  Works like a 'match' where partial file names are valid. 
+    Filter for one or more file names.  Works like a 'match' where partial file names are valid.
 
     .EXAMPLE
     Get-ServiceNowAttachmentDetail -Number $Number -Table $Table
@@ -141,7 +141,7 @@ Function Get-ServiceNowAttachmentDetail {
                 $Result = $Result | Where-Object {$PSItem.file_name -match ($FileName -join '|')}
             }
 
-            $Result
+            $Result | Update-ServiceNowDateTimeField
         }
         Catch {
             Write-Error $PSItem
