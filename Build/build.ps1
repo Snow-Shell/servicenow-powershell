@@ -29,7 +29,7 @@ ForEach ($Module in $Modules) {
 }
 
 $Path = (Resolve-Path $PSScriptRoot\..).Path
-Set-BuildEnvironment -Path $Path
+Set-BuildEnvironment -Path $Path -Force
 
 $invokepsakeSplat = @{
     buildFile  = "$PSScriptRoot\psake.ps1"
