@@ -88,6 +88,7 @@ Function Get-ServiceNowAttachment {
 
         # The URL for the ServiceNow instance being used
         [Parameter(ParameterSetName='SpecifyConnectionFields', Mandatory=$true)]
+        [ValidateScript({Test-ServiceNowURL -Url $_})]
         [ValidateNotNullOrEmpty()]
         [string]$ServiceNowURL,
 

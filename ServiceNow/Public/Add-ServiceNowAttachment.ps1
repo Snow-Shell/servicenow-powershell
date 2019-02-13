@@ -70,6 +70,7 @@ Function Add-ServiceNowAttachment {
 
         # The URL for the ServiceNow instance being used
         [Parameter(ParameterSetName='SpecifyConnectionFields', Mandatory=$true)]
+        [ValidateScript({Test-ServiceNowURL -Url $_})]
         [ValidateNotNullOrEmpty()]
         [string]$ServiceNowURL,
 
@@ -94,6 +95,7 @@ Function Add-ServiceNowAttachment {
             }
 
             # Update the Table Splat if an applicable parameter set name is in use
+            Write-Verbose $PSCmdlet.ParameterSetName
             Switch ($PSCmdlet.ParameterSetName) {
                 'SpecifyConnectionFields' {
                     $getServiceNowTableEntry.Add('Credential', $Credential)
@@ -115,6 +117,7 @@ Function Add-ServiceNowAttachment {
 
             Write-Verbose "Looking up the ticket number sys_id"
             $TableSysID = Get-ServiceNowTableEntry @getServiceNowTableEntry | Select-Object -Expand sys_id
+            Write-Verbose "Returned $TableSysID"
 
             # Process credential steps based on parameter set name
             Switch ($PSCmdlet.ParameterSetName) {
