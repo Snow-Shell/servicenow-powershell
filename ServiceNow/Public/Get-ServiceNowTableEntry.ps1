@@ -94,7 +94,7 @@ function Get-ServiceNowTableEntry {
         # Update the Table Splat if an applicable parameter set name is in use
         Switch ($PSCmdlet.ParameterSetName) {
             'SpecifyConnectionFields' {
-                $getServiceNowTableSplat.Add('ServiceNowCredential', $Credential)
+                $getServiceNowTableSplat.Add('Credential', $Credential)
                 $getServiceNowTableSplat.Add('ServiceNowURL', $ServiceNowURL)
             }
             'UseConnectionObject' {
