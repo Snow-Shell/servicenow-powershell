@@ -67,10 +67,10 @@ function Get-ServiceNowUser{
 
     # Update the splat if the parameters have values
     if ($null -ne $PSBoundParameters.Connection) {
-        $getServiceNowTableSplat.Add('Connection',$Connection)
+        $getServiceNowTableSplat.Add('Connection', $Connection)
     }
     elseif ($null -ne $PSBoundParameters.ServiceNowCredential -and $null -ne $PSBoundParameters.ServiceNowURL) {
-        $getServiceNowTableSplat.Add('ServiceNowCredential', $ServiceNowCredential)
+        $getServiceNowTableSplat.Add('Credential', $Credential)
         $getServiceNowTableSplat.Add('ServiceNowURL', $ServiceNowURL)
     }
 
