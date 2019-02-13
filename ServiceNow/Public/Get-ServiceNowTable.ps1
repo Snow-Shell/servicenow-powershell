@@ -57,15 +57,20 @@ function Get-ServiceNowTable {
     # Get credential and ServiceNow REST URL
     if ($null -ne $Connection) {
         $SecurePassword = ConvertTo-SecureString $Connection.Password -AsPlainText -Force
-        $ServiceNowCredential = New-Object System.Management.Automation.PSCredential ($Connection.Username, $SecurePassword)
+        $Credential = New-Object System.Management.Automation.PSCredential ($Connection.Username, $SecurePassword)
         $ServiceNowURL = 'https://' + $Connection.ServiceNowUri + '/api/now/v1'
     }
-    elseif ($null -ne $ServiceNowCredential -and $null -ne $ServiceNowURL) {
-        Test-ServiceNowURL -Url $ServiceNowURL
-        $ServiceNowURL = 'https://' + $ServiceNowURL + '/api/now/v1'
+    elseif ($null -ne $Credential -and $null -ne $ServiceNowURL) {
+        Try {
+            $null = Test-ServiceNowURL -Url $ServiceNowURL -ErrorAction Stop
+            $ServiceNowURL = 'https://' + $ServiceNowURL + '/api/now/v1'
+        }
+        Catch {
+            Throw $PSItem
+        }
     }
     elseif ((Test-ServiceNowAuthIsSet)) {
-        $ServiceNowCredential = $Global:ServiceNowCredentials
+        $Credential = $Global:ServiceNowCredentials
         $ServiceNowURL = $global:ServiceNowRESTURL
     }
     else {
@@ -124,7 +129,7 @@ function Get-ServiceNowTable {
 
     # Perform table query and capture results
     $Uri = $ServiceNowURL + "/table/$Table"
-    $Result = (Invoke-RestMethod -Uri $Uri -Credential $ServiceNowCredential -Body $Body -ContentType "application/json").Result
+    $Result = (Invoke-RestMethod -Uri $Uri -Credential $Credential -Body $Body -ContentType "application/json").Result
 
     # Convert specific fields to DateTime format
     $ConvertToDateField = @('closed_at', 'expected_start', 'follow_up', 'opened_at', 'sys_created_on', 'sys_updated_on', 'work_end', 'work_start')
