@@ -39,6 +39,11 @@ Describe "ServiceNow-Module" {
         Remove-ServiceNowAuth
     }
 
+    # Validate Environment
+    It "ServiceNow url has Test-Connection connectivity" {
+        Test-Connection $Defaults.ServiceNowURL -Quiet | Should -Be $true
+    }
+
     # Auth Functions
     It "Test-ServiceNowAuthIsSet not set" {
         Test-ServiceNowAuthIsSet | Should -Be $false
@@ -61,7 +66,7 @@ Describe "ServiceNow-Module" {
         $getServiceNowTableSplat = @{
             Table                = 'incident'
             Query                = 'ORDERBYDESCopened_at'
-            ServiceNowCredential = $Defaults.Creds
+            Credential           = $Defaults.Creds
             ServiceNowURL        = $Defaults.ServiceNowURL
         }
         ([array](Get-ServiceNowTable @getServiceNowTableSplat)).Count -gt 0  | Should -Match $true
@@ -119,7 +124,7 @@ Describe "ServiceNow-Module" {
 
     # Update functions
     It "Update-ServiceNowChangeRequest works" {
-        $TestTicket = Get-ServiceNowChangeRequest -Limit 1
+        $TestTicket = Get-ServiceNowChangeRequest -First 1
 
         $Values = @{
             description = 'Pester Comment:  Update-ServiceNowChangeRequest works'
@@ -243,7 +248,7 @@ Describe "ServiceNow-Module" {
 
     # Remove Functions
     It "Remove-ServiceNowTable works" {
-        $TestTicket = Get-ServiceNowIncident -Limit 1
+        $TestTicket = Get-ServiceNowIncident -First 1
         $removeServiceNowTableEntrySplat = @{
             SysId = $TestTicket.sys_id
             Table = 'incident'
