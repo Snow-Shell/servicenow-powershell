@@ -163,7 +163,7 @@ function New-ServiceNowIncident{
     {
         $newServiceNowTableEntrySplat.Add('Connection',$Connection)
     }
-    elseif ($null -ne $PSBoundParameters.Credential -and $null -ne $PSBoundParameters.ServiceNowURL)
+    elseif ($null -ne $PSBoundParameters.ServiceNowCredential -and $null -ne $PSBoundParameters.ServiceNowURL)
     {
         $newServiceNowTableEntrySplat.Add('ServiceNowCredential',$ServiceNowCredential)
         $newServiceNowTableEntrySplat.Add('ServiceNowURL',$ServiceNowURL)
