@@ -16,21 +16,21 @@ function New-ServiceNowIncident{
 .EXAMPLE
     Generate an Incident by "Splatting" all fields used in the 1st example plus some additional custom ServiceNow fields (These must exist in your ServiceNow Instance):
 
-        $IncidentParams = @{Caller = "UserName" 
-            ShortDescription = "New PS Incident" 
-            Description = "This incident was created from Powershell" 
-            AssignmentGroup "ServiceDesk" 
-            Comment "Inline Comment" 
-            Category "Office" 
-            Subcategory "Outlook" 
+        $IncidentParams = @{Caller = "UserName"
+            ShortDescription = "New PS Incident"
+            Description = "This incident was created from Powershell"
+            AssignmentGroup "ServiceDesk"
+            Comment "Inline Comment"
+            Category "Office"
+            Subcategory "Outlook"
             ConfigurationItem UserPC1
             CustomFields = @{u_custom1 = "Custom Field Entry"
                             u_another_custom = "Related Test"}
-            }                            
+            }
         New-ServiceNowIncident @Params
 
  #>
- 
+
     Param(
 
         # sys_id of the caller of the incident (user Get-ServiceNowUser to retrieve this)
@@ -39,7 +39,7 @@ function New-ServiceNowIncident{
         [parameter(ParameterSetName='UseConnectionObject')]
         [parameter(ParameterSetName='SetGlobalAuth')]
         [string]$Caller,
-        
+
         # Short description of the incident
         [parameter(Mandatory=$true)]
         [parameter(ParameterSetName='SpecifyConnectionFields')]
@@ -62,14 +62,14 @@ function New-ServiceNowIncident{
         [string]$AssignmentGroup,
 
         # Comment to include in the ticket
-        [parameter(mandatory=$false)]        
+        [parameter(mandatory=$false)]
         [parameter(ParameterSetName='SpecifyConnectionFields')]
         [parameter(ParameterSetName='UseConnectionObject')]
         [parameter(ParameterSetName='SetGlobalAuth')]
         [string]$Comment,
 
         # Category of the incident (e.g. 'Network')
-        [parameter(mandatory=$false)]        
+        [parameter(mandatory=$false)]
         [parameter(ParameterSetName='SpecifyConnectionFields')]
         [parameter(ParameterSetName='UseConnectionObject')]
         [parameter(ParameterSetName='SetGlobalAuth')]
@@ -89,25 +89,25 @@ function New-ServiceNowIncident{
         [parameter(ParameterSetName='SetGlobalAuth')]
         [string]$ConfigurationItem,
 
-        # custom fields as hashtable 
+        # custom fields as hashtable
         [parameter(mandatory=$false)]
         [parameter(ParameterSetName='SpecifyConnectionFields')]
         [parameter(ParameterSetName='UseConnectionObject')]
         [parameter(ParameterSetName='SetGlobalAuth')]
         [hashtable]$CustomFields,
 
-        # Credential used to authenticate to ServiceNow  
+        # Credential used to authenticate to ServiceNow
         [Parameter(ParameterSetName='SpecifyConnectionFields', Mandatory=$True)]
         [ValidateNotNullOrEmpty()]
-        [PSCredential]$ServiceNowCredential, 
+        [PSCredential]$ServiceNowCredential,
 
         # The URL for the ServiceNow instance being used (eg: instancename.service-now.com)
         [Parameter(ParameterSetName='SpecifyConnectionFields', Mandatory=$True)]
         [ValidateNotNullOrEmpty()]
-        [string]$ServiceNowURL, 
+        [string]$ServiceNowURL,
 
         #Azure Automation Connection object containing username, password, and URL for the ServiceNow instance
-        [Parameter(ParameterSetName='UseConnectionObject', Mandatory=$True)] 
+        [Parameter(ParameterSetName='UseConnectionObject', Mandatory=$True)]
         [ValidateNotNullOrEmpty()]
         [Hashtable]$Connection
     )
@@ -131,7 +131,7 @@ function New-ServiceNowIncident{
             $TableEntryValues.Add($KeyToAdd,$PSBoundParameters.$Parameter)
         }
     }
-    
+
     # Add CustomFields hash pairs to the Table Entry Values hash table
     If ($null -ne $PSBoundParameters.CustomFields) {
         $DuplicateTableEntryValues = ForEach ($Key in $CustomFields.Keys) {
@@ -151,7 +151,7 @@ function New-ServiceNowIncident{
         $DuplicateKeyList = $DuplicateTableEntryValues -join ","
         Throw "Ticket fields may only be used once:  $DuplicateKeyList"
     }
-    
+
     # Table Entry Splat
     $newServiceNowTableEntrySplat = @{
         Table = 'incident'
@@ -160,15 +160,15 @@ function New-ServiceNowIncident{
 
     # Update the splat if the parameters have values
     if ($null -ne $PSBoundParameters.Connection)
-    {     
+    {
         $newServiceNowTableEntrySplat.Add('Connection',$Connection)
     }
-    elseif ($null -ne $PSBoundParameters.ServiceNowCredential -and $null -ne $PSBoundParameters.ServiceNowURL) 
+    elseif ($null -ne $PSBoundParameters.Credential -and $null -ne $PSBoundParameters.ServiceNowURL)
     {
         $newServiceNowTableEntrySplat.Add('ServiceNowCredential',$ServiceNowCredential)
         $newServiceNowTableEntrySplat.Add('ServiceNowURL',$ServiceNowURL)
     }
-       
+
     # Create the table entry
     New-ServiceNowTableEntry @newServiceNowTableEntrySplat
 }

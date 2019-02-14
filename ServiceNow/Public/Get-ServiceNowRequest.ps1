@@ -69,7 +69,7 @@ function Get-ServiceNowRequest {
     if ($null -ne $PSBoundParameters.Connection) {
         $getServiceNowTableSplat.Add('Connection', $Connection)
     }
-    elseif ($null -ne $PSBoundParameters.ServiceNowCredential -and $null -ne $PSBoundParameters.ServiceNowURL) {
+    elseif ($null -ne $PSBoundParameters.Credential -and $null -ne $PSBoundParameters.ServiceNowURL) {
         $getServiceNowTableSplat.Add('Credential', $Credential)
         $getServiceNowTableSplat.Add('ServiceNowURL', $ServiceNowURL)
     }
