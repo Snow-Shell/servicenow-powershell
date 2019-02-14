@@ -95,7 +95,6 @@ Function Add-ServiceNowAttachment {
             }
 
             # Update the Table Splat if an applicable parameter set name is in use
-            Write-Verbose $PSCmdlet.ParameterSetName
             Switch ($PSCmdlet.ParameterSetName) {
                 'SpecifyConnectionFields' {
                     $getServiceNowTableEntry.Add('Credential', $Credential)
@@ -115,24 +114,22 @@ Function Add-ServiceNowAttachment {
                 }
             }
 
-            Write-Verbose "Looking up the ticket number sys_id"
             $TableSysID = Get-ServiceNowTableEntry @getServiceNowTableEntry | Select-Object -Expand sys_id
-            Write-Verbose "Returned $TableSysID"
 
             # Process credential steps based on parameter set name
             Switch ($PSCmdlet.ParameterSetName) {
                 'SpecifyConnectionFields' {
-                    $ServiceNowURL = 'https://' + $ServiceNowURL + '/api/now/v1/attachment'
+                    $ApiUrl = 'https://' + $ServiceNowURL + '/api/now/v1/attachment'
                 }
                 'UseConnectionObject' {
                     $SecurePassword = ConvertTo-SecureString $Connection.Password -AsPlainText -Force
                     $Credential = New-Object System.Management.Automation.PSCredential ($Connection.Username, $SecurePassword)
-                    $ServiceNowURL = 'https://' + $Connection.ServiceNowUri + '/api/now/v1/attachment'
+                    $ApiUrl = 'https://' + $Connection.ServiceNowUri + '/api/now/v1/attachment'
                 }
                 Default {
                     If ((Test-ServiceNowAuthIsSet)) {
                         $Credential = $Global:ServiceNowCredentials
-                        $ServiceNowURL = $Global:ServiceNowRESTURL + '/attachment'
+                        $ApiUrl = $Global:ServiceNowRESTURL + '/attachment'
                     }
                     Else {
                         Throw "Exception:  You must do one of the following to authenticate: `n 1. Call the Set-ServiceNowAuth cmdlet `n 2. Pass in an Azure Automation connection object `n 3. Pass in an endpoint and credential"
@@ -148,7 +145,7 @@ Function Add-ServiceNowAttachment {
                 }
 
                 # POST: https://instance.service-now.com/api/now/attachment/file?table_name=incident&table_sys_id=d71f7935c0a8016700802b64c67c11c6&file_name=Issue_screenshot
-                $URI = "{0}/file?table_name={1}&table_sys_id={2}&file_name={3}" -f $ServiceNowURL,$Table,$TableSysID,$FileData.Name
+                $Uri = "{0}/file?table_name={1}&table_sys_id={2}&file_name={3}" -f $ApiUrl,$Table,$TableSysID,$FileData.Name
 
                 $invokeRestMethodSplat = @{
                     Uri        = $Uri

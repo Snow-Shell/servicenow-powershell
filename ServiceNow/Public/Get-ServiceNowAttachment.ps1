@@ -104,17 +104,17 @@ Function Get-ServiceNowAttachment {
             # Process credential steps based on parameter set name
             Switch ($PSCmdlet.ParameterSetName) {
                 'SpecifyConnectionFields' {
-                    $ServiceNowURL = 'https://' + $ServiceNowURL + '/api/now/v1/attachment'
+                    $ApiUrl = 'https://' + $ServiceNowURL + '/api/now/v1/attachment'
                 }
                 'UseConnectionObject' {
                     $SecurePassword = ConvertTo-SecureString $Connection.Password -AsPlainText -Force
                     $Credential = New-Object System.Management.Automation.PSCredential ($Connection.Username, $SecurePassword)
-                    $ServiceNowURL = 'https://' + $Connection.ServiceNowUri + '/api/now/v1/attachment'
+                    $ApiUrl = 'https://' + $Connection.ServiceNowUri + '/api/now/v1/attachment'
                 }
                 Default {
                     If ((Test-ServiceNowAuthIsSet)) {
                         $Credential = $Global:ServiceNowCredentials
-                        $ServiceNowURL = $Global:ServiceNowRESTURL + '/attachment'
+                        $ApiUrl = $Global:ServiceNowRESTURL + '/attachment'
                     }
                     Else {
                         Throw "Exception:  You must do one of the following to authenticate: `n 1. Call the Set-ServiceNowAuth cmdlet `n 2. Pass in an Azure Automation connection object `n 3. Pass in an endpoint and credential"
@@ -123,10 +123,9 @@ Function Get-ServiceNowAttachment {
             }
 
             # URI format:  https://tenant.service-now.com/api/now/v1/attachment/{sys_id}/file
-            $Uri = $ServiceNowURL + '/' + $SysID + '/file'
+            $Uri = $ApiUrl + '/' + $SysID + '/file'
 
             If ($True -eq $PSBoundParameters.ContainsKey('AppendNameWithSysID')) {
-                Write-Verbose "SYSID in name"
                 $FileName = "{0}_{1}{2}" -f [io.path]::GetFileNameWithoutExtension($FileName),
                 $SysID,[io.path]::GetExtension($FileName)
             }

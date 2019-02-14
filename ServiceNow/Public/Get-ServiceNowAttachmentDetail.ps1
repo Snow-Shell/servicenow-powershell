@@ -98,23 +98,22 @@ Function Get-ServiceNowAttachmentDetail {
                 }
             }
 
-            Write-Verbose "Looking up the ticket number sys_id"
-            $SysID = Get-ServiceNowTableEntry @getServiceNowTableEntry | Select-Object -Expand sys_id
+            $TableSysID = Get-ServiceNowTableEntry @getServiceNowTableEntry | Select-Object -Expand sys_id
 
             # Process credential steps based on parameter set name
             Switch ($PSCmdlet.ParameterSetName) {
                 'SpecifyConnectionFields' {
-                    $ServiceNowURL = 'https://' + $ServiceNowURL + '/api/now/v1/attachment'
+                    $ApiUrl = 'https://' + $ServiceNowURL + '/api/now/v1/attachment'
                 }
                 'UseConnectionObject' {
                     $SecurePassword = ConvertTo-SecureString $Connection.Password -AsPlainText -Force
                     $Credential = New-Object System.Management.Automation.PSCredential ($Connection.Username, $SecurePassword)
-                    $ServiceNowURL = 'https://' + $Connection.ServiceNowUri + '/api/now/v1/attachment'
+                    $ApiUrl = 'https://' + $Connection.ServiceNowUri + '/api/now/v1/attachment'
                 }
                 Default {
                     If ((Test-ServiceNowAuthIsSet)) {
                         $Credential = $Global:ServiceNowCredentials
-                        $ServiceNowURL = $Global:ServiceNowRESTURL + '/attachment'
+                        $ApiUrl = $Global:ServiceNowRESTURL + '/attachment'
                     }
                     Else {
                         Throw "Exception:  You must do one of the following to authenticate: `n 1. Call the Set-ServiceNowAuth cmdlet `n 2. Pass in an Azure Automation connection object `n 3. Pass in an endpoint and credential"
@@ -123,11 +122,11 @@ Function Get-ServiceNowAttachmentDetail {
             }
 
             # Populate the query
-            $Body = @{'sysparm_limit' = 500; 'table_name' = $Table; 'table_sys_id' = $SysID}
+            $Body = @{'sysparm_limit' = 500; 'table_name' = $Table; 'table_sys_id' = $TableSysID}
             $Body.sysparm_query = 'ORDERBYfile_name^ORDERBYDESC'
 
             # Perform table query and capture results
-            $Uri = $ServiceNowURL
+            $Uri = $ApiUrl
 
             $invokeRestMethodSplat = @{
                 Uri         = $Uri
