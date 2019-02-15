@@ -44,7 +44,7 @@ Else {
 }
 
 Describe "$ThisCommand" -Tag Attachment {
-    # It "Test It" {}
+    $null = Set-ServiceNowAuth -Url $Defaults.ServiceNowUrl -Credentials $Credential
 
     It "Create incident with New-ServiceNowIncident" {
         $ShortDescription = "Testing Ticket Creation with Pester:  $ThisCommand"
@@ -62,7 +62,7 @@ Describe "$ThisCommand" -Tag Attachment {
     }
 
     It 'Attachment test file exist' {
-        $FileValue = "{0}`t{1}" -f (Get-Date),$($MyInvocation.MyCommand)
+        $FileValue = "{0}`t{1}" -f (Get-Date), $ThisCommand
         $FileName = "{0}.txt" -f 'GetServiceNowAttachment'
         $newItemSplat = @{
             Name     = $FileName
@@ -94,11 +94,22 @@ Describe "$ThisCommand" -Tag Attachment {
         $File.FullName | Should -Not -Exist
     }
 
-    It 'Attachment detail works' {
+    It 'Attachment detail works (Global Credentials)' {
         $getServiceNowAttachmentDetailSplat = @{
-            Number = $TestTicket.Number
-            Table = 'incident'
+            Number   = $TestTicket.Number
+            Table    = 'incident'
             FileName = $Attachment.file_name
+        }
+        $AttachmentDetail = Get-ServiceNowAttachmentDetail @getServiceNowAttachmentDetailSplat
+
+        $AttachmentDetail.sys_id | Should -Be $Attachment.sys_id
+    }
+
+    It 'Attachment detail works (Specify Credentials)' {
+        $getServiceNowAttachmentDetailSplat = @{
+            Number        = $TestTicket.Number
+            Table         = 'incident'
+            FileName      = $Attachment.file_name
             Credential    = $Credential
             ServiceNowURL = $Defaults.ServiceNowURL
         }
@@ -106,4 +117,6 @@ Describe "$ThisCommand" -Tag Attachment {
 
         $AttachmentDetail.sys_id | Should -Be $Attachment.sys_id
     }
+
+    $null = Remove-ServiceNowAuth
 }

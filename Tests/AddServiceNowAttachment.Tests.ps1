@@ -34,7 +34,7 @@ If (Test-Path $DefaultsFile) {
 }
 Else {
     # Write example file
-   @{
+    @{
         ServiceNowURL = 'testingurl.service-now.com'
         TestCategory  = 'Internal'
         TestUserGroup = '8a4dde73c6112278017a6a4baf547aa7'
@@ -44,25 +44,24 @@ Else {
 }
 
 Describe "$ThisCommand" -Tag Attachment {
-    # It "Test It" {}
+
+    $null = Set-ServiceNowAuth -Url $Defaults.ServiceNowUrl -Credentials $Credential
 
     It "Create incident with New-ServiceNowIncident" {
         $ShortDescription = "Testing Ticket Creation with Pester:  $ThisCommand"
         $newServiceNowIncidentSplat = @{
-            Caller               = $Defaults.TestUser
-            ShortDescription     = $ShortDescription
-            Description          = 'Long description'
-            Comment              = 'Test Comment'
-            ServiceNowCredential = $Credential
-            ServiceNowURL        = $Defaults.ServiceNowURL
+            Caller           = $Defaults.TestUser
+            ShortDescription = $ShortDescription
+            Description      = 'Long description'
+            Comment          = 'Test Comment'
         }
-        $Script:TestTicket = New-ServiceNowIncident @newServiceNowIncidentSplat
 
+        {$Script:TestTicket = New-ServiceNowIncident @newServiceNowIncidentSplat} | Should -Not -Throw
         $TestTicket.short_description | Should -Be $ShortDescription
     }
 
     It 'Attachment test file exist' {
-        $FileValue = "{0}`t{1}" -f (Get-Date),$($MyInvocation.MyCommand)
+        $FileValue = "{0}`t{1}" -f (Get-Date), $ThisCommand
         $FileName = "{0}.txt" -f 'GetServiceNowAttachment'
         $newItemSplat = @{
             Name     = $FileName
@@ -74,7 +73,19 @@ Describe "$ThisCommand" -Tag Attachment {
         $File.FullName | Should -Exist
     }
 
-    It "File is attached to $($TestTicket.Number)" {
+    It "File is attached to $($TestTicket.Number) (Global Credentials)" {
+        $addServiceNowAttachmentSplat = @{
+            Number   = $TestTicket.Number
+            Table    = 'incident'
+            File     = $File.FullName
+            PassThru = $true
+        }
+        $Attachment = Add-ServiceNowAttachment @addServiceNowAttachmentSplat
+
+        $Attachment.file_name | Should -Be $File.Name
+    }
+
+    It "File is attached to $($TestTicket.Number) (Specified Credentials)" {
         $addServiceNowAttachmentSplat = @{
             Number        = $TestTicket.Number
             Table         = 'incident'
@@ -93,4 +104,6 @@ Describe "$ThisCommand" -Tag Attachment {
 
         $File.FullName | Should -Not -Exist
     }
+
+    $null = Remove-ServiceNowAuth
 }

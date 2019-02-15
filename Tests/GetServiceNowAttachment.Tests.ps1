@@ -34,7 +34,7 @@ If (Test-Path $DefaultsFile) {
 }
 Else {
     # Write example file
-   @{
+    @{
         ServiceNowURL = 'testingurl.service-now.com'
         TestCategory  = 'Internal'
         TestUserGroup = '8a4dde73c6112278017a6a4baf547aa7'
@@ -44,7 +44,7 @@ Else {
 }
 
 Describe "$ThisCommand" -Tag Attachment {
-    # It "Test It" {}
+    $null = Set-ServiceNowAuth -Url $Defaults.ServiceNowUrl -Credentials $Credential
 
     It "Create incident with New-ServiceNowIncident" {
         $ShortDescription = "Testing Ticket Creation with Pester:  $ThisCommand"
@@ -62,8 +62,8 @@ Describe "$ThisCommand" -Tag Attachment {
     }
 
     It 'Attachment test file exist' {
-        $FileValue = "{0}`t{1}" -f (Get-Date),$($MyInvocation.MyCommand)
-        $FileName = "{0}.txt" -f 'GetServiceNowAttachment'
+        $FileValue = "{0}`t{1}" -f (Get-Date), $ThisCommand
+        $FileName = "{0}.txt" -f ('GetServiceNowAttachment')
         $newItemSplat = @{
             Name     = $FileName
             ItemType = 'File'
@@ -94,26 +94,42 @@ Describe "$ThisCommand" -Tag Attachment {
         $File.FullName | Should -Not -Exist
     }
 
-    It 'Attachment downloaded successfully' {
-        $FileName = 'DownloadServiceNowAttachment.txt'
-        $Script:ExpectedOutput = "{0}_{1}{2}" -f [io.path]::GetFileNameWithoutExtension($FileName),
-        $Attachment.sys_id,[io.path]::GetExtension($FileName)
+    $Script:FileName = 'DownloadServiceNowAttachment.txt'
+    $Script:ExpectedOutput = "{0}_{1}{2}" -f [io.path]::GetFileNameWithoutExtension($FileName),$Attachment.sys_id, [io.path]::GetExtension($FileName)
 
+    It 'Attachment download successful (Global Credentials, Append Name)' {
         $getServiceNowAttachmentSplat = @{
             FileName            = $FileName
             SysId               = $Attachment.sys_id
             AppendNameWithSysID = $true
-            Credential          = $Credential
-            ServiceNowURL       = $Defaults.ServiceNowURL
         }
-        Get-ServiceNowAttachment @getServiceNowAttachmentSplat
-
+        {Get-ServiceNowAttachment @getServiceNowAttachmentSplat} | Should -Not -Throw
         $ExpectedOutput | Should -Exist
     }
 
+    It 'Attachment download successful (Specify Credentials, Allow Overwrite)' {
+        $getServiceNowAttachmentSplat = @{
+            FileName            = $FileName
+            SysId               = $Attachment.sys_id
+            AppendNameWithSysID = $true
+            AllowOverwrite      = $true
+            Credential          = $Credential
+            ServiceNowURL       = $Defaults.ServiceNowURL
+        }
+
+        {Get-ServiceNowAttachment @getServiceNowAttachmentSplat} | Should -Not -Throw
+    }
+
     It 'Attachment test file removed' {
-        Remove-Item $ExpectedOutput -Force
+        Try {
+            Remove-Item $ExpectedOutput -Force -ErrorAction Stop
+        }
+        Catch {
+            Write-Error $PSItem
+        }
 
         $ExpectedOutput | Should -Not -Exist
     }
+
+    $null = Remove-ServiceNowAuth
 }
