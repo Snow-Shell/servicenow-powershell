@@ -72,6 +72,7 @@ Function Add-ServiceNowAttachment {
         [Parameter(ParameterSetName='SpecifyConnectionFields', Mandatory=$true)]
         [ValidateScript({Test-ServiceNowURL -Url $_})]
         [ValidateNotNullOrEmpty()]
+        [Alias('Url')]
         [string]$ServiceNowURL,
 
         # Azure Automation Connection object containing username, password, and URL for the ServiceNow instance
@@ -104,11 +105,7 @@ Function Add-ServiceNowAttachment {
                     $getServiceNowTableEntry.Add('Connection', $Connection)
                 }
                 Default {
-                    If ((Test-ServiceNowAuthIsSet)) {
-                        $Credential = $Global:ServiceNowCredentials
-                        $ServiceNowURL = $Global:ServiceNowRESTURL
-                    }
-                    Else {
+                    If (-not (Test-ServiceNowAuthIsSet)) {
                         Throw "Exception:  You must do one of the following to authenticate: `n 1. Call the Set-ServiceNowAuth cmdlet `n 2. Pass in an Azure Automation connection object `n 3. Pass in an endpoint and credential"
                     }
                 }

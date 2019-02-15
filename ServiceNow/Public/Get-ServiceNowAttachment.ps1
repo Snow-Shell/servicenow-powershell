@@ -90,6 +90,7 @@ Function Get-ServiceNowAttachment {
         [Parameter(ParameterSetName='SpecifyConnectionFields', Mandatory=$true)]
         [ValidateScript({Test-ServiceNowURL -Url $_})]
         [ValidateNotNullOrEmpty()]
+        [Alias('Url')]
         [string]$ServiceNowURL,
 
         # Azure Automation Connection object containing username, password, and URL for the ServiceNow instance

@@ -43,6 +43,7 @@ Function Remove-ServiceNowAttachment {
         [Parameter(ParameterSetName='SpecifyConnectionFields', Mandatory=$true)]
         [ValidateScript({Test-ServiceNowURL -Url $_})]
         [ValidateNotNullOrEmpty()]
+        [Alias('Url')]
         [string]$ServiceNowURL,
 
         # Azure Automation Connection object containing username, password, and URL for the ServiceNow instance
@@ -58,17 +59,17 @@ Function Remove-ServiceNowAttachment {
         # Process credential steps based on parameter set name
         Switch ($PSCmdlet.ParameterSetName) {
             'SpecifyConnectionFields' {
-                $ServiceNowURL = 'https://' + $ServiceNowURL + '/api/now/v1/attachment'
+                $ApiUrl = 'https://' + $ServiceNowURL + '/api/now/v1/attachment'
             }
             'UseConnectionObject' {
                 $SecurePassword = ConvertTo-SecureString $Connection.Password -AsPlainText -Force
                 $Credential = New-Object System.Management.Automation.PSCredential ($Connection.Username, $SecurePassword)
-                $ServiceNowURL = 'https://' + $Connection.ServiceNowUri + '/api/now/v1/attachment'
+                $ApiUrl = 'https://' + $Connection.ServiceNowUri + '/api/now/v1/attachment'
             }
             Default {
-                If ((Test-ServiceNowAuthIsSet)) {
+                If (Test-ServiceNowAuthIsSet) {
                     $Credential = $Global:ServiceNowCredentials
-                    $ServiceNowURL = $Global:ServiceNowRESTURL + '/attachment'
+                    $ApiUrl = $Global:ServiceNowRESTURL + '/attachment'
                 }
                 Else {
                     Throw "Exception:  You must do one of the following to authenticate: `n 1. Call the Set-ServiceNowAuth cmdlet `n 2. Pass in an Azure Automation connection object `n 3. Pass in an endpoint and credential"
@@ -76,7 +77,7 @@ Function Remove-ServiceNowAttachment {
             }
         }
 
-        $Uri = $ServiceNowURL + '/' + $SysID
+        $Uri = $ApiUrl + '/' + $SysID
         Write-Verbose "URI:  $Uri"
 
         $invokeRestMethodSplat = @{
