@@ -1,37 +1,44 @@
-$projectRoot = Resolve-Path "$PSScriptRoot\.."
-$moduleRoot = Split-Path (Resolve-Path "$projectRoot\*\*.psd1")
-$moduleName = Split-Path $moduleRoot -Leaf
-$DefaultsFile = Join-Path $projectRoot "Tests\$($ModuleName).Pester.Defaults.json"
+[CmdletBinding()]
+Param(
+    [Parameter(Mandatory = $true)]
+    [ValidateNotNullorEmpty()]
+    [PSCredential]$Credential
+)
 
-# Load defaults from file
-if (Test-Path $DefaultsFile) {
-    $Defaults = @{}
-    # Add properties to the defaults hash
-    (Get-Content $DefaultsFile | Out-String | ConvertFrom-Json).psobject.properties | ForEach-Object {
-        $Defaults."$($_.Name)" = $_.Value
-    }
+$ProjectRoot = Resolve-Path "$PSScriptRoot\.."
+$ModuleRoot = Split-Path (Resolve-Path "$ProjectRoot\*\*.psd1")
+$ModuleName = Split-Path $ModuleRoot -Leaf
+$ModulePsd = (Resolve-Path "$ProjectRoot\*\$ModuleName.psd1").Path
+$ModulePsm = (Resolve-Path "$ProjectRoot\*\$ModuleName.psm1").Path
+$DefaultsFile = Join-Path $ProjectRoot "Tests\$($ModuleName).Pester.Defaults.json"
 
-    # Prompt for credentials
-    $Defaults.Creds = if ($Defaults.Creds) {
-        $Defaults.Creds
-    } else {
-        Get-Credential
-    }
-} else {
-    # Write example file
-   @{
-        ServiceNowURL = 'testingurl.service-now.com'
-        TestCategory  = 'Internal'
-        TestUserGroup = 'e9e9a2406f4c35001855fa0dba3ee4f3'
-        TestUser      = "7a4b573a6f3725001855fa0dba3ee485"
-    } | ConvertTo-Json | Set-Content $DefaultsFile
-    Write-Error "$DefaultsFile does not exist. Created example file. Please populate with your values"
-    Return
+$ModuleLoaded = Get-Module $ModuleName
+If ($null -eq $ModuleLoaded) {
+    Import-Module $ModulePSD -Force
+}
+ElseIf ($null -ne $ModuleLoaded -and $ModuleLoaded -ne $ModulePSM) {
+    Remove-Module $ModuleName -Force -ErrorAction SilentlyContinue
+    Import-Module $ModulePSD -Force
 }
 
-# Load the module (unload it first in case we've made changes since loading it previously)
-Remove-Module $ModuleName -ErrorAction SilentlyContinue
-Import-Module (Join-Path $moduleRoot "$moduleName.psd1") -Force
+# Load defaults from file
+If (Test-Path $DefaultsFile) {
+    $Script:Defaults = Get-Content $DefaultsFile -Raw | ConvertFrom-Json
+
+    If ('testingurl.service-now.com' -eq $Defaults.ServiceNowUrl) {
+        Throw 'Please populate the *.Pester.Defaults.json file with your values'
+    }
+}
+Else {
+    # Write example file
+    @{
+        ServiceNowURL = 'testingurl.service-now.com'
+        TestCategory  = 'Internal'
+        TestUserGroup = '8a4dde73c6112278017a6a4baf547aa7'
+        TestUser      = '6816f79cc0a8016401c5a33be04be441'
+    } | ConvertTo-Json | Set-Content $DefaultsFile
+    Throw "$DefaultsFile does not exist. Created example file. Please populate with your values"
+}
 
 Describe "ServiceNow-Module" {
     # Ensure auth is not set (not a test)
@@ -50,7 +57,7 @@ Describe "ServiceNow-Module" {
     }
 
     It "Set-ServiceNowAuth works" {
-        Set-ServiceNowAuth -url $Defaults.ServiceNowURL -Credentials $Defaults.Creds | Should -Be $true
+        Set-ServiceNowAuth -url $Defaults.ServiceNowURL -Credentials $Credential | Should -Be $true
     }
 
     It "Test-ServiceNowAuthIsSet set" {
@@ -66,7 +73,7 @@ Describe "ServiceNow-Module" {
         $getServiceNowTableSplat = @{
             Table                = 'incident'
             Query                = 'ORDERBYDESCopened_at'
-            Credential           = $Defaults.Creds
+            Credential           = $Credential
             ServiceNowURL        = $Defaults.ServiceNowURL
         }
         ([array](Get-ServiceNowTable @getServiceNowTableSplat)).Count -gt 0  | Should -Match $true
@@ -236,7 +243,7 @@ Describe "ServiceNow-Module" {
             Number        = $TestTicket.Number
             Table         = 'incident'
             Values        = $Values
-            Credential    = $Defaults.Creds
+            Credential    = $Credential
             ServiceNowURL = $Defaults.ServiceNowURL
         }
         Update-ServiceNowNumber @updateServiceNowNumberSplat

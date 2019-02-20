@@ -7,8 +7,7 @@ Properties {
         $ProjectRoot = Resolve-Path "$PSScriptRoot\.."
     }
 
-    #
-    $StepVersionBy = 'Build'
+    $StepVersionBy = $null
 
     $Timestamp = Get-date -uformat "%Y%m%d-%H%M%S"
     $PSVersion = $PSVersionTable.PSVersion.Major
@@ -60,7 +59,21 @@ Task Test -Depends UnitTests  {
     $CodeFiles = Get-ChildItem $ENV:BHModulePath -Recurse -Include "*.psm1","*.ps1"
     $CodeCoverage = New-Object System.Collections.ArrayList
     $CodeCoverage.AddRange($CodeFiles.FullName)
-    $Script:TestResults = Invoke-Pester -Path $ProjectRoot\Tests -CodeCoverage $CodeCoverage -PassThru -OutputFormat NUnitXml -OutputFile $TestFilePath
+    $Credential = Get-Credential
+    $invokePesterScript = @{
+        Path       = "$ProjectRoot\Tests"
+        Parameters = @{
+            Credential = $Credential
+        }
+    }
+    $invokePesterSplat = @{
+        Script       = $invokePesterScript
+        CodeCoverage = $CodeCoverage
+        OutputFile   = $TestFilePath
+        OutputFormat = 'NUnitXml'
+        PassThru     = $true
+    }
+    $Script:TestResults = Invoke-Pester @invokePesterSplat
 
     [xml]$content = Get-Content $TestFilePath
     $content.'test-results'.'test-suite'.type = "Powershell"
@@ -94,7 +107,13 @@ Task Build -Depends Test {
     Set-ModuleFunctions -Name $env:BHPSModuleManifest -FunctionsToExport $functions
 
     # Bump the module version
-    $version = [version] (Step-Version -Version (Get-Metadata -Path $env:BHPSModuleManifest) -By $StepVersionBy)
+    $stepVersionSplat = @{
+        Version = (Get-Metadata -Path $env:BHPSModuleManifest)
+    }
+    If ($null -ne $StepVersionBy) {
+        $stepVersionSplat.Add('By',$StepVersionBy)
+    }
+    $version = [version](Step-Version @stepVersionSplat)
     $galleryVersion = Get-NextPSGalleryVersion -Name $env:BHProjectName
     if($version -lt $galleryVersion)
     {
