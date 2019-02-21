@@ -1,10 +1,11 @@
 function Set-ServiceNowAuth {
-<#
+    <#
     .SYNOPSIS
     Set your Service-Now authentication credentials
 
     .DESCRIPTION
-    This cmdlet will set your Service-Now authentication credentials which will enable you to interact with Service-Now using the other cmdlets in the module
+    This cmdlet will set your Service-Now authentication credentials.
+    This will enable you to interact with Service-Now using the other cmdlets in the module
 
     .PARAMETER Url
     The URL of your Service-Now instance
@@ -12,39 +13,50 @@ function Set-ServiceNowAuth {
     .PARAMETER Credentials
     Credentials to authenticate you to the Service-Now instance provided in the Url parameter
 
-    .EXAMPLE
-    Set-ServiceNowAuth -Url tenant.service-now.com
+    .PARAMETER ClientCredential
+    Client PSCredential Object consisting of ClientID/Client Secret.
+    Requires an OAuth API endpoint for external clients setup in ServiceNow
 
-    .NOTES
-    The URL should be the instance name portion of the FQDN for your instance. If you browse to https://yourinstance.service-now.com the URL required for the module is yourinstance.service-now.com
-#>
-    [CmdletBinding()]
+    .PARAMETER UserCredential
+    User PSCredential Object consisting of UserID/User Password of a standard user with roles in ServiceNow
+
+    .EXAMPLE
+    Set-ServiceNowAuth -Url $domain -ClientCredential $clientcreds -UserCredential $usercreds
+    #>
+
+    [CmdletBinding(DefaultParameterSetName = 'AccessToken')]
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseDeclaredVarsMoreThanAssignments','')]
     Param (
         [Parameter(Mandatory = $true)]
         [ValidateScript({Test-ServiceNowURL -Url $_})]
         [Alias('ServiceNowUrl')]
         [string]$Url,
 
-        [Parameter(Mandatory = $true)]
-        [ValidateNotNullOrEmpty()]
+        [Parameter(Mandatory = $true,
+            ParameterSetName = 'Credential')]
+        [Alias('Credentials')]
         [System.Management.Automation.PSCredential]
-        $Credentials,
+        $Credential,
 
-        [string]$ClientID,
+        [Parameter(Mandatory = $true,
+            ParameterSetName = 'AccessToken')]
+        [System.Management.Automation.PSCredential]
+        $ClientCredential,
 
-        [string]$ClientSecret
+        [Parameter(Mandatory = $true,
+            ParameterSetName = 'AccessToken')]
+        [System.Management.Automation.PSCredential]
+        $UserCredential
     )
-    $Global:serviceNowUrl = 'https://' + $Url
-    $Global:serviceNowRestUrl = $serviceNowUrl + '/api/now/v1'
-    $Global:serviceNowCredentials = $Credentials
-    $Global:Client_ID = $ClientID
-    $Global:Client_Secret = $ClientSecret
 
+    $Global:serviceNowUrl = 'https://{0}' -f $Url
+    $Global:serviceNowRestUrl = 'https://{0}/api/now/v1' -f $Url
 
-    if ($client_id -ne $null -and $client_secret -ne $null){
-        $result = Set-ServiceNowAuthToken -ClientID $client_id -ClientSecret $client_secret
-        return $result
+    if ($Pscmdlet.ParameterSetName -eq 'AccessToken') {
+        $AccessToken = Get-ServiceNowOAuthToken -Url $Url -ClientCredential $ClientCredential -UserCredential $UserCredential -Verbose
+        $Global:AccessToken =  $AccessToken
     }
-
-    return $true
+    else {
+        $Global:Credential = $Credential
+    }
 }

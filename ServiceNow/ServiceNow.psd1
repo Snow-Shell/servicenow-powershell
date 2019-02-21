@@ -66,7 +66,7 @@ FormatsToProcess = @('ServiceNow.format.ps1xml')
 NestedModules = @()
 
 # Functions to export from this module
-FunctionsToExport = @('Add-ServiceNowAttachment','Get-ServiceNowAttachment','Get-ServiceNowAttachmentDetail','Get-ServiceNowChangeRequest','Get-ServiceNowConfigurationItem','Get-ServiceNowIncident','Get-ServiceNowRequest','Get-ServiceNowRequestItem','Get-ServiceNowTable','Get-ServiceNowTableEntry','Get-ServiceNowUser','Get-ServiceNowUserGroup','New-ServiceNowIncident','New-ServiceNowQuery','New-ServiceNowTableEntry','Remove-ServiceNowAttachment','Remove-ServiceNowAuth','Remove-ServiceNowTableEntry','Set-ServiceNowAuth','Test-ServiceNowAuthIsSet','Update-ServiceNowChangeRequest','Update-ServiceNowIncident','Update-ServiceNowNumber','Update-ServiceNowTableEntry')
+FunctionsToExport = @()
 
 # List of all modules packaged with this module
 # ModuleList = @()
@@ -80,13 +80,13 @@ PrivateData = @{
     PSData = @{
 
         # Tags applied to this module. These help with module discovery in online galleries.
-         Tags = @('Azure','Automation','ServiceNow','PSModule')
+        Tags = @('Azure','Automation','ServiceNow','PSModule')
 
         # A URL to the license for this module.
-         LicenseUri = 'https://github.com/Sam-Martin/servicenow-powershell/blob/master/LICENSE'
+        LicenseUri = 'https://github.com/Sam-Martin/servicenow-powershell/blob/master/LICENSE'
 
         # A URL to the main website for this project.
-         ProjectUri = 'https://github.com/Sam-Martin/servicenow-powershell'
+        ProjectUri = 'https://github.com/Sam-Martin/servicenow-powershell'
 
     } # End of PSData hashtable
 
@@ -99,33 +99,3 @@ PrivateData = @{
 # DefaultCommandPrefix = ''
 
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

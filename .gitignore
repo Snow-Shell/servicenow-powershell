@@ -1,2 +1,4 @@
 *.Pester.Defaults.json
 *.zip
+output
+.vscode

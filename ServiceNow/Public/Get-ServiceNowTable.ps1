@@ -1,81 +1,52 @@
 function Get-ServiceNowTable {
-<#
-    .SYNOPSIS
-        Retrieves records for the specified table
-    .DESCRIPTION
-        The Get-ServiceNowTable function retrieves records for the specified table
-    .INPUTS
-        None
-    .OUTPUTS
-        System.Management.Automation.PSCustomObject
-    .LINK
-        Service-Now Kingston REST Table API: https://docs.servicenow.com/bundle/kingston-application-development/page/integrate/inbound-rest/concept/c_TableAPI.html
-        Service-Now Table API FAQ: https://hi.service-now.com/kb_view.do?sysparm_article=KB0534905
-#>
-
+    <#
+        .SYNOPSIS
+            Retrieves records for the specified table
+        .DESCRIPTION
+            The Get-ServiceNowTable function retrieves records for the specified table
+        .INPUTS
+            None
+        .OUTPUTS
+            System.Management.Automation.PSCustomObject
+        .LINK
+            Service-Now Kingston REST Table API: https://docs.servicenow.com/bundle/kingston-application-development/page/integrate/inbound-rest/concept/c_TableAPI.html
+            Service-Now Table API FAQ: https://hi.service-now.com/kb_view.do?sysparm_article=KB0534905
+    #>
+    [CmdletBinding(DefaultParameterSetName= 'UseConnectionObject', SupportsPaging)]
     [OutputType([System.Management.Automation.PSCustomObject])]
-    [CmdletBinding(DefaultParameterSetName, SupportsPaging)]
     Param (
         # Name of the table we're querying (e.g. incidents)
         [parameter(Mandatory = $true)]
-        [ValidateNotNullOrEmpty()]
         [string]$Table,
 
         # sysparm_query param in the format of a ServiceNow encoded query string (see http://wiki.servicenow.com/index.php?title=Encoded_Query_Strings)
-        [Parameter(Mandatory = $false)]
         [string]$Query,
 
         # Maximum number of records to return
-        [Parameter(Mandatory = $false)]
         [int]$Limit,
 
         # Fields to return
-        [Parameter(Mandatory = $false)]
         [Alias('Fields')]
         [string[]]$Properties,
 
         # Whether or not to show human readable display values instead of machine values
-        [Parameter(Mandatory = $false)]
         [ValidateSet('true', 'false', 'all')]
         [string]$DisplayValues = 'true',
 
-        [Parameter(ParameterSetName = 'SpecifyConnectionFields', Mandatory = $true)]
-        [ValidateNotNullOrEmpty()]
+        [Parameter(Mandatory = $true,
+            ParameterSetName = 'SpecifyConnectionFields')]
         [Alias('ServiceNowCredential')]
         [PSCredential]$Credential,
 
-        [Parameter(ParameterSetName = 'SpecifyConnectionFields', Mandatory = $true)]
-        [ValidateNotNullOrEmpty()]
-        [Alias('Url')]
+        [Parameter(Mandatory = $true,
+            ParameterSetName = 'SpecifyConnectionFields')]
+        [Alias('Url', 'Uri')]
         [string]$ServiceNowURL,
 
-        [Parameter(ParameterSetName = 'UseConnectionObject', Mandatory = $true)]
-        [ValidateNotNullOrEmpty()]
-        [hashtable]$Connection
+        [Parameter(
+            ParameterSetName = 'UseConnectionObject')]
+        [hashtable]$Connection = $Script:ConnectionObj
     )
-
-    # Get credential and ServiceNow REST URL
-    if ($null -ne $Connection) {
-        $SecurePassword = ConvertTo-SecureString $Connection.Password -AsPlainText -Force
-        $Credential = New-Object System.Management.Automation.PSCredential ($Connection.Username, $SecurePassword)
-        $ServiceNowURL = 'https://' + $Connection.ServiceNowUri + '/api/now/v1'
-    }
-    elseif ($null -ne $Credential -and $null -ne $ServiceNowURL) {
-        Try {
-            $null = Test-ServiceNowURL -Url $ServiceNowURL -ErrorAction Stop
-            $ServiceNowURL = 'https://' + $ServiceNowURL + '/api/now/v1'
-        }
-        Catch {
-            Throw $PSItem
-        }
-    }
-    elseif ((Test-ServiceNowAuthIsSet)) {
-        $Credential = $Global:ServiceNowCredentials
-        $ServiceNowURL = $global:ServiceNowRESTURL
-    }
-    else {
-        throw "Exception:  You must do one of the following to authenticate: `n 1. Call the Set-ServiceNowAuth cmdlet `n 2. Pass in an Azure Automation connection object `n 3. Pass in an endpoint and credential"
-    }
 
     $Body = @{'sysparm_display_value' = $DisplayValues}
 
@@ -127,47 +98,32 @@ function Get-ServiceNowTable {
         $Body.sysparm_fields = ($Properties -join ',').ToLower()
     }
 
-    # Perform table query and capture results
-    $Uri = $ServiceNowURL + "/table/$Table"
+    $invokeRestMethodSplat = @{
+        Method      = 'Get'
+        Body        = $Body
+        ContentType = 'application/json'
+    }
 
-    $tokenSuccess = 0
-    $Result = $null
+    # Use Connection Object or credentials passed directly but default to access token if nothing passed
     
-    #Use OAuth token if available
-    if($accessToken -ne $null){
-        
-        #Attempt Query with Token
-        
-        $Result = (Invoke-RestMethod -Uri $Uri -Body $Body -ContentType "application/json" -Headers @{Authorization="Bearer $accessToken"}).Result
-        
-        if($Result -ne $null){
-            $tokenSuccess = 1
+    if ($PSCmdlet.ParameterSetName -eq 'UseConnectionObject') {
+        $connectionOutput = New-ServiceNowConnection -ConnectionObject $Connection -Table $Table
+        $connectionOutput.GetEnumerator() | ForEach-Object {
+            $invokeRestMethodSplat.Add($_.Key, $_.Value)
         }
-        
-        else{
-            
-            #Invalid Token (401)
-            if($error[0] | Select-String -Pattern "401"){
-                Set-ServiceNowAuthToken -ClientID $Client_ID -ClientSecret $Client_Secret -renewToken
-                $Result = (Invoke-RestMethod -Uri $Uri -Body $Body -ContentType "application/json" -Headers @{Authorization="Bearer $accessToken"}).Result
-
-                if($Result -ne $null){
-                    $tokenSuccess = 1
-                }
-            }
-        }
-
+    }
+    elseif ($PSCmdlet.ParameterSetName -eq 'SpecifyConnectionFields') {
+        $uri = Get-ServiceNowFullUri -Uri $ServiceNowURL -Table $Table
+        $invokeRestMethodSplat.Add('Uri', $uri)
+        $invokeRestMethodSplat.Add('Credential',$Credential)
     }
 
-    if($tokenSuccess -eq 0){
-        #Fall back to credentials if token request fails
-        $Result = (Invoke-RestMethod -Uri $Uri -Credential $ServiceNowCredential -Body $Body -ContentType "application/json").Result
-    }
+    $Result = (Invoke-RestMethod @invokeRestMethodSplat).Result
 
     # Convert specific fields to DateTime format
     $ConvertToDateField = @('closed_at', 'expected_start', 'follow_up', 'opened_at', 'sys_created_on', 'sys_updated_on', 'work_end', 'work_start')
-    ForEach ($SNResult in $Result) {
-        ForEach ($Property in $ConvertToDateField) {
+    foreach ($SNResult in $Result) {
+        foreach ($Property in $ConvertToDateField) {
             If (-not [string]::IsNullOrEmpty($SNResult.$Property)) {
                 Try {
                     # Extract the default Date/Time formatting from the local computer's "Culture" settings, and then create the format to use when parsing the date/time from Service-Now
