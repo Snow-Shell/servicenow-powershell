@@ -28,10 +28,23 @@ function Set-ServiceNowAuth {
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         [System.Management.Automation.PSCredential]
-        $Credentials
+        $Credentials,
+
+        [string]$ClientID,
+
+        [string]$ClientSecret
     )
     $Global:serviceNowUrl = 'https://' + $Url
     $Global:serviceNowRestUrl = $serviceNowUrl + '/api/now/v1'
     $Global:serviceNowCredentials = $Credentials
+    $Global:Client_ID = $ClientID
+    $Global:Client_Secret = $ClientSecret
+
+
+    if ($client_id -ne $null -and $client_secret -ne $null){
+        $result = Set-ServiceNowAuthToken -ClientID $client_id -ClientSecret $client_secret
+        return $result
+    }
+
     return $true
 }
