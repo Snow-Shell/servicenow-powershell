@@ -48,15 +48,16 @@ function Set-ServiceNowAuth {
         [System.Management.Automation.PSCredential]
         $UserCredential
     )
-
-    $Global:serviceNowUrl = 'https://{0}' -f $Url
-    $Global:serviceNowRestUrl = 'https://{0}/api/now/v1' -f $Url
-
-    if ($Pscmdlet.ParameterSetName -eq 'AccessToken') {
-        $AccessToken = Get-ServiceNowOAuthToken -Url $Url -ClientCredential $ClientCredential -UserCredential $UserCredential -Verbose
-        $Global:AccessToken =  $AccessToken
+    if ($PSCmdlet.ParameterSetName -eq 'Credential') {
+        Connect-ServiceNow -Url $Url -Credential $Credential
     }
-    else {
-        $Global:Credential = $Credential
+    elseif ($PSCmdlet.ParameterSetName -eq 'AccessToken') {
+        $connectServiceNowSplat = @{
+            Url = $Url
+            ClientCredential = $ClientCredential
+            UserCredential = $UserCredential
+        }
+
+        Connect-ServiceNow @connectServiceNowSplat
     }
 }
