@@ -80,13 +80,13 @@ PrivateData = @{
     PSData = @{
 
         # Tags applied to this module. These help with module discovery in online galleries.
-         Tags = @('Azure','Automation','ServiceNow','PSModule')
+        Tags = @('Azure','Automation','ServiceNow','PSModule')
 
         # A URL to the license for this module.
-         LicenseUri = 'https://github.com/Sam-Martin/servicenow-powershell/blob/master/LICENSE'
+        LicenseUri = 'https://github.com/Sam-Martin/servicenow-powershell/blob/master/LICENSE'
 
         # A URL to the main website for this project.
-         ProjectUri = 'https://github.com/Sam-Martin/servicenow-powershell'
+        ProjectUri = 'https://github.com/Sam-Martin/servicenow-powershell'
 
     } # End of PSData hashtable
 

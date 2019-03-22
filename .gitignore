@@ -1,2 +1,5 @@
 *.Pester.Defaults.json
 *.zip
+output
+.vscode
+brettbuild.ps1
