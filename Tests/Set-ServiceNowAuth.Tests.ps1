@@ -7,8 +7,8 @@ InModuleScope "ServiceNow" {
             BeforeAll {
                 $setServiceNowAuthSplat = @{
                     Url              = 'dev123.service.now.com'
+                    Credential       = ([pscredential]::new('testuser', ('Password1' | ConvertTo-SecureString -AsPlainText -Force)))
                     ClientCredential = ([pscredential]::new('testuser', ('Password1' | ConvertTo-SecureString -AsPlainText -Force)))
-                    UserCredential   = ([pscredential]::new('testuser', ('Password1' | ConvertTo-SecureString -AsPlainText -Force)))
                 }
                 Set-ServiceNowAuth @setServiceNowAuthSplat
             }

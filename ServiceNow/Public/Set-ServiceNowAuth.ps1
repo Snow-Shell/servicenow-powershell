@@ -24,7 +24,7 @@ function Set-ServiceNowAuth {
     Set-ServiceNowAuth -Url $domain -Credental $usercreds -ClientCredential $clientcreds
     #>
 
-    [CmdletBinding(DefaultParameterSetName = 'AccessToken')]
+    [CmdletBinding(DefaultParameterSetName = 'BasicAuth')]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseDeclaredVarsMoreThanAssignments','')]
     Param (
         [Parameter(Mandatory = $true,
@@ -53,7 +53,7 @@ function Set-ServiceNowAuth {
     }
 
     if ($Pscmdlet.ParameterSetName -eq 'AccessToken') {
-        $AccessToken = Get-ServiceNowOAuthToken -Url $Url -ClientCredential $ClientCredential -UserCredential $UserCredential -Verbose
+        $AccessToken = Get-ServiceNowOAuthToken -Url $Url -Credential $Credential -ClientCredential $ClientCredential -Verbose
         $Script:ConnectionObj.Add('AccessToken', $AccessToken)
     }
     else {

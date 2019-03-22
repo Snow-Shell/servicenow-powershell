@@ -8,20 +8,20 @@
 
         [Parameter(Mandatory = $true)]
         [System.Management.Automation.PSCredential]
-        $ClientCredential,
+        $Credential,
         
         [Parameter(Mandatory = $true)]
         [System.Management.Automation.PSCredential]
-        $UserCredential
+        $ClientCredential
     )
 
     $invokeRestMethodSplat = @{
         Uri     = 'https://{0}/oauth_token.do' -f $Url
         Body    = 'grant_type=password&client_id={0}&client_secret={1}&username={2}&password={3}&' -f @(
+            $Credential.UserName,
+            $Credential.GetNetworkCredential().Password,
             $ClientCredential.UserName,
-            $ClientCredential.GetNetworkCredential().Password,
-            $UserCredential.UserName
-            $UserCredential.GetNetworkCredential().Password
+            $ClientCredential.GetNetworkCredential().Password
         )
         Method  = 'Post'
     }
