@@ -18,10 +18,10 @@
     $invokeRestMethodSplat = @{
         Uri     = 'https://{0}/oauth_token.do' -f $Url
         Body    = 'grant_type=password&client_id={0}&client_secret={1}&username={2}&password={3}&' -f @(
-            $Credential.UserName,
-            $Credential.GetNetworkCredential().Password,
             $ClientCredential.UserName,
-            $ClientCredential.GetNetworkCredential().Password
+            $ClientCredential.GetNetworkCredential().Password,
+            $Credential.UserName,
+            $Credential.GetNetworkCredential().Password
         )
         Method  = 'Post'
     }
