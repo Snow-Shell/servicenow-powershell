@@ -12,9 +12,8 @@ function Get-ServiceNowTable {
         Service-Now Kingston REST Table API: https://docs.servicenow.com/bundle/kingston-application-development/page/integrate/inbound-rest/concept/c_TableAPI.html
         Service-Now Table API FAQ: https://hi.service-now.com/kb_view.do?sysparm_article=KB0534905
 #>
-
+    [CmdletBinding(DefaultParameterSetName= 'UseConnectionObject', SupportsPaging)]
     [OutputType([System.Management.Automation.PSCustomObject])]
-    [CmdletBinding(DefaultParameterSetName, SupportsPaging)]
     Param (
         # Name of the table we're querying (e.g. incidents)
         [parameter(Mandatory = $true)]
@@ -46,36 +45,13 @@ function Get-ServiceNowTable {
 
         [Parameter(ParameterSetName = 'SpecifyConnectionFields', Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        [Alias('Url')]
+        [Alias('Url', 'Uri')]
         [string]$ServiceNowURL,
 
-        [Parameter(ParameterSetName = 'UseConnectionObject', Mandatory = $true)]
-        [ValidateNotNullOrEmpty()]
-        [hashtable]$Connection
+        [Parameter(
+            ParameterSetName = 'UseConnectionObject')]
+        [hashtable]$Connection = $Script:ConnectionObj
     )
-
-    # Get credential and ServiceNow REST URL
-    if ($null -ne $Connection) {
-        $SecurePassword = ConvertTo-SecureString $Connection.Password -AsPlainText -Force
-        $Credential = New-Object System.Management.Automation.PSCredential ($Connection.Username, $SecurePassword)
-        $ServiceNowURL = 'https://' + $Connection.ServiceNowUri + '/api/now/v1'
-    }
-    elseif ($null -ne $Credential -and $null -ne $ServiceNowURL) {
-        Try {
-            $null = Test-ServiceNowURL -Url $ServiceNowURL -ErrorAction Stop
-            $ServiceNowURL = 'https://' + $ServiceNowURL + '/api/now/v1'
-        }
-        Catch {
-            Throw $PSItem
-        }
-    }
-    elseif ((Test-ServiceNowAuthIsSet)) {
-        $Credential = $Global:ServiceNowCredentials
-        $ServiceNowURL = $global:ServiceNowRESTURL
-    }
-    else {
-        throw "Exception:  You must do one of the following to authenticate: `n 1. Call the Set-ServiceNowAuth cmdlet `n 2. Pass in an Azure Automation connection object `n 3. Pass in an endpoint and credential"
-    }
 
     $Body = @{'sysparm_display_value' = $DisplayValues}
 
@@ -127,9 +103,30 @@ function Get-ServiceNowTable {
         $Body.sysparm_fields = ($Properties -join ',').ToLower()
     }
 
-    # Perform table query and capture results
-    $Uri = $ServiceNowURL + "/table/$Table"
-    $Result = (Invoke-RestMethod -Uri $Uri -Credential $Credential -Body $Body -ContentType "application/json").Result
+    $invokeRestMethodSplat = @{
+        Method      = 'Get'
+        Body        = $Body
+        ContentType = 'application/json'
+    }
+
+    # Use Connection Object or credentials passed directly but default to access token if nothing passed
+    
+    if ($PSCmdlet.ParameterSetName -eq 'UseConnectionObject' -and $Script:ConnectionObj) {
+        $connectionOutput = New-ServiceNowConnection -ConnectionObject $Connection -Table $Table
+        $connectionOutput.GetEnumerator() | ForEach-Object {
+            $invokeRestMethodSplat.Add($_.Key, $_.Value)
+        }
+    }
+    elseif ($PSCmdlet.ParameterSetName -eq 'SpecifyConnectionFields') {
+        $uri = Get-ServiceNowFullUri -ServiceNowUrl $ServiceNowURL -Table $Table
+        $invokeRestMethodSplat.Add('Uri', $ServiceNowURL)
+        $invokeRestMethodSplat.Add('Credential',$Credential)
+    }
+    else {
+        throw "Exception: You need to use Set-ServiceNowAuth or provide the -Credential and -ServiceNowUrl parameter"
+    }
+
+    $Result = (Invoke-RestMethod @invokeRestMethodSplat).Result
 
     # Convert specific fields to DateTime format
     $ConvertToDateField = @('closed_at', 'expected_start', 'follow_up', 'opened_at', 'sys_created_on', 'sys_updated_on', 'work_end', 'work_start')

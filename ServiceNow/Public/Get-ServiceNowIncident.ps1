@@ -1,7 +1,7 @@
 function Get-ServiceNowIncident{
     [OutputType([System.Management.Automation.PSCustomObject])]
-    [CmdletBinding(DefaultParameterSetName, SupportsPaging)]
-    Param(
+    [CmdletBinding(DefaultParameterSetName = 'UseConnectionObject', SupportsPaging)]
+    Param (
         # Machine name of the field to order by
         [Parameter(Mandatory = $false)]
         [string]$OrderBy = 'opened_at',
@@ -43,9 +43,9 @@ function Get-ServiceNowIncident{
         [Alias('Url')]
         [string]$ServiceNowURL,
 
-        [Parameter(ParameterSetName = 'UseConnectionObject', Mandatory = $true)]
-        [ValidateNotNullOrEmpty()]
-        [hashtable]$Connection
+        [Parameter(
+            ParameterSetName = 'UseConnectionObject')]
+        [hashtable]$Connection = $Script:ConnectionObj
     )
 
     # Query Splat
