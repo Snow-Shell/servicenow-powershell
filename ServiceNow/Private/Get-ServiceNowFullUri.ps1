@@ -1,6 +1,7 @@
 function Get-ServiceNowFullUri {
     param (
         [Parameter(Mandatory = $true)]
+        [Alias('ServiceNowUrl')]
         [string]$Uri,
 
         [Parameter(Mandatory = $true)]

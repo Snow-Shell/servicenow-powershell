@@ -118,8 +118,8 @@ function Get-ServiceNowTable {
         }
     }
     elseif ($PSCmdlet.ParameterSetName -eq 'SpecifyConnectionFields') {
-        $uri = Get-ServiceNowFullUri -ServiceNowUrl $ServiceNowURL -Table $Table
-        $invokeRestMethodSplat.Add('Uri', $ServiceNowURL)
+        $uri = Get-ServiceNowFullUri -Uri $ServiceNowURL -Table $Table
+        $invokeRestMethodSplat.Add('Uri', $uri)
         $invokeRestMethodSplat.Add('Credential',$Credential)
     }
     else {
