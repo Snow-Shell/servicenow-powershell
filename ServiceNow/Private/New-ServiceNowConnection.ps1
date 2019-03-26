@@ -7,8 +7,9 @@ function New-ServiceNowConnection {
         [hashtable]$ConnectionObject = $Script:ConnectionObj
     )
 
+    $uri = Get-ServiceNowFullUri -Uri $ConnectionObject['Uri'] -Table $Table
+
     if ($ConnectionObject.ContainsKey('AccessToken')) {
-        $uri = Get-ServiceNowFullUri -Uri $ConnectionObject['Uri'] -Table $Table
         @{
             Headers = @{
                 Accept        = 'application/json'
@@ -23,7 +24,6 @@ function New-ServiceNowConnection {
             $ConnectionObject['UserName']
             $securePassword
         )
-        $uri = Get-ServiceNowFullUri -Uri $ConnectionObject['Uri'] -Table $Table
         @{
             Credential = $credObject
             Uri = $uri
@@ -31,7 +31,7 @@ function New-ServiceNowConnection {
         }
     }
     else {
-        $ConnectionObject.uri = Get-ServiceNowFullUri -Uri $ConnectionObject['Uri'] -Table $Table
+        $ConnectionObject.uri = $uri
         $ConnectionObject
     }
 }
