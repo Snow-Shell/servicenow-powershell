@@ -42,8 +42,8 @@ Else {
 
 Describe "ServiceNow-Module" {
     # Ensure auth is not set (not a test)
-    If (Test-ServiceNowAuthisSet) {
-        Remove-ServiceNowAuth
+    If ($Script:ConnectionObj) {
+        $Script:ConnectionObj = $null
     }
 
     # Validate Environment
@@ -51,19 +51,13 @@ Describe "ServiceNow-Module" {
         Test-Connection $Defaults.ServiceNowURL -Quiet | Should -Be $true
     }
 
-    # Auth Functions
-    It "Test-ServiceNowAuthIsSet not set" {
-        Test-ServiceNowAuthIsSet | Should -Be $false
-    }
-
     It "Set-ServiceNowAuth works" {
-        Set-ServiceNowAuth -url $Defaults.ServiceNowURL -Credentials $Credential | Should -Be $true
+        BeforeAll {
+            Set-ServiceNowAuth -url $Defaults.ServiceNowURL -Credentials $Credential
+        }
+        Test-Path Variable:Script:ConnectionObj | Should -Be $true
     }
-
-    It "Test-ServiceNowAuthIsSet set" {
-        Test-ServiceNowAuthIsSet | Should -Be $true
-    }
-
+    
     # Get Functions
     It "Get-ServiceNowTable returns records" {
         ([array](Get-ServiceNowTable -Table 'incident' -Query 'ORDERBYDESCopened_at')).Count -gt 0  | Should -Match $true
