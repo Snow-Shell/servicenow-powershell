@@ -65,9 +65,28 @@ Get-ServiceNowIncident -MatchContains @{short_description='PowerShell'}
 ```PowerShell
 Import-Module ServiceNow
 Get-ServiceNowIncident -MatchContains @{short_description='PowerShell'} -ServiceNowCredential $PSCredential -ServiceNowURL $ServiceNowURL
+
+```
+
+### Example - Retrieving an Incident Containing the Word 'PowerShell' and 'Admin'
+
+```PowerShell
+Import-Module ServiceNow
+@(
+        [pscustomobject]@{MatchContains=@{short_description='PowerShell'}},
+        [pscustomobject]@{MatchContains=@{short_description='Admin'}}
+)| Get-ServiceNowIncident
+
 ```
 
 ### Example - Update a Ticket
+
+```PowerShell
+$Incident = Get-ServiceNowIncident -Limit 1 -MatchContains @{short_description='PowerShell'}
+Update-ServiceNowIncident -SysID $Incident.Sys_ID -Values @{comments='Updated via PowerShell'}
+```
+
+### Example - Update many tickets
 
 ```PowerShell
 $Incident = Get-ServiceNowIncident -Limit 1 -MatchContains @{short_description='PowerShell'}
