@@ -66,7 +66,32 @@ FormatsToProcess = @('ServiceNow.format.ps1xml')
 NestedModules = @()
 
 # Functions to export from this module
-FunctionsToExport = @('Add-ServiceNowAttachment','Get-ServiceNowAttachment','Get-ServiceNowAttachmentDetail','Get-ServiceNowChangeRequest','Get-ServiceNowConfigurationItem','Get-ServiceNowIncident','Get-ServiceNowRequest','Get-ServiceNowRequestItem','Get-ServiceNowTable','Get-ServiceNowTableEntry','Get-ServiceNowUser','Get-ServiceNowUserGroup','New-ServiceNowChangeRequest','New-ServiceNowIncident','New-ServiceNowQuery','New-ServiceNowTableEntry','Remove-ServiceNowAttachment','Remove-ServiceNowAuth','Remove-ServiceNowTableEntry','Set-ServiceNowAuth','Test-ServiceNowAuthIsSet','Update-ServiceNowChangeRequest','Update-ServiceNowIncident','Update-ServiceNowNumber','Update-ServiceNowRequestItem','Update-ServiceNowTableEntry')
+FunctionsToExport = @(
+    'Add-ServiceNowAttachment'
+    'Get-ServiceNowAttachment'
+    'Get-ServiceNowAttachmentDetail'
+    'Get-ServiceNowChangeRequest'
+    'Get-ServiceNowConfigurationItem'
+    'Get-ServiceNowIncident'
+    'Get-ServiceNowRequest'
+    'Get-ServiceNowRequestItem'
+    'Get-ServiceNowTable'
+    'Get-ServiceNowTableEntry'
+    'Get-ServiceNowUser'
+    'Get-ServiceNowUserGroup'
+    'New-ServiceNowIncident'
+    'New-ServiceNowQuery'
+    'New-ServiceNowTableEntry'
+    'Remove-ServiceNowAttachment'
+    'Remove-ServiceNowAuth'
+    'Remove-ServiceNowTableEntry'
+    'Set-ServiceNowAuth'
+    'Update-ServiceNowChangeRequest'
+    'Update-ServiceNowIncident'
+    'Update-ServiceNowNumber'
+    'Update-ServiceNowTableEntry'
+)
+
 
 # List of all modules packaged with this module
 # ModuleList = @()
