@@ -73,12 +73,14 @@ Function Update-ServiceNowNumber {
                     $getServiceNowTableEntry.Add('ServiceNowCredential',$Credential)
                     $getServiceNowTableEntry.Add('ServiceNowURL',$ServiceNowURL)
                     $ServiceNowURL = 'https://' + $ServiceNowURL + '/api/now/v1'
+                    break
                 }
                 'UseConnectionObject' {
                     $getServiceNowTableEntry.Add('Connection',$Connection)
                     $SecurePassword = ConvertTo-SecureString $Connection.Password -AsPlainText -Force
                     $Credential = New-Object System.Management.Automation.PSCredential ($Connection.Username, $SecurePassword)
                     $ServiceNowURL = 'https://' + $Connection.ServiceNowUri + '/api/now/v1'
+                    break
                 }
                 Default {
                     If ((Test-ServiceNowAuthIsSet)) {
