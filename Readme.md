@@ -92,19 +92,25 @@ The module can use the `Connection` parameter in conjunction with the included `
 
 The `Connection` parameter accepts a hashtable object that requires a username, password, and ServiceNowURL.
 
-## Cmdlets
+## Functions
 
+* Add-ServiceNowAttachment
+* Get-ServiceNowAttachment
+* Get-ServiceNowAttachmentDetail
 * Get-ServiceNowChangeRequest
-* Get-ServiceNowConfigurationIte
+* Get-ServiceNowConfigurationItem
 * Get-ServiceNowIncident
 * Get-ServiceNowRequest
+* Get-ServiceNowRequestItem
 * Get-ServiceNowTable
 * Get-ServiceNowTableEntry
 * Get-ServiceNowUser
 * Get-ServiceNowUserGroup
+* New-ServiceNowChangeRequest
 * New-ServiceNowIncident
 * New-ServiceNowQuery
 * New-ServiceNowTableEntry
+* Remove-ServiceNowAttachment
 * Remove-ServiceNowAuth
 * Remove-ServiceNowTableEntry
 * Set-ServiceNowAuth
@@ -112,6 +118,7 @@ The `Connection` parameter accepts a hashtable object that requires a username, 
 * Update-ServiceNowChangeRequest
 * Update-ServiceNowIncident
 * Update-ServiceNowNumber
+* Update-ServiceNowRequestItem
 * Update-ServiceNowTableEntry
 
 ## Tests
