@@ -129,14 +129,14 @@ function New-ServiceNowChangeRequest {
                 If ($null -ne $PSBoundParameters.$Parameter) {
                     # Turn the defined parameter name into the ServiceNow attribute name
                     $KeyToAdd = Switch ($Parameter) {
-                        AssignmentGroup { 'assignment_group' }
-                        Caller { 'caller_id' }
-                        Category { 'category' }
-                        Comment { 'comments' }
-                        ConfigurationItem { 'cmdb_ci' }
-                        Description { 'description' }
-                        ShortDescription { 'short_description' }
-                        Subcategory { 'subcategory' }
+                        AssignmentGroup { 'assignment_group'; break}
+                        Caller { 'caller_id'; break}
+                        Category { 'category'; break}
+                        Comment { 'comments'; break}
+                        ConfigurationItem { 'cmdb_ci'; break}
+                        Description { 'description'; break}
+                        ShortDescription { 'short_description'; break}
+                        Subcategory { 'subcategory'; break}
                     }
                     $TableEntryValues.Add($KeyToAdd, $PSBoundParameters.$Parameter)
                 }

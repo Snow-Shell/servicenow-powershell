@@ -49,7 +49,7 @@ function New-ServiceNowQuery {
 
         # Start the query off with a order direction
         $Order = Switch ($OrderDirection) {
-            'Asc'   {'ORDERBY'}
+            'Asc'   {'ORDERBY'; break}
             Default {'ORDERBYDESC'}
         }
         [void]$Query.Append($Order)
