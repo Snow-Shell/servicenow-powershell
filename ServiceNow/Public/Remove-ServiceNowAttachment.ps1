@@ -60,11 +60,13 @@ Function Remove-ServiceNowAttachment {
         Switch ($PSCmdlet.ParameterSetName) {
             'SpecifyConnectionFields' {
                 $ApiUrl = 'https://' + $ServiceNowURL + '/api/now/v1/attachment'
+                break
             }
             'UseConnectionObject' {
                 $SecurePassword = ConvertTo-SecureString $Connection.Password -AsPlainText -Force
                 $Credential = New-Object System.Management.Automation.PSCredential ($Connection.Username, $SecurePassword)
                 $ApiUrl = 'https://' + $Connection.ServiceNowUri + '/api/now/v1/attachment'
+                break
             }
             Default {
                 If (Test-ServiceNowAuthIsSet) {
