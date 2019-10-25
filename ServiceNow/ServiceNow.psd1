@@ -12,11 +12,7 @@
 RootModule = 'ServiceNow.psm1'
 
 # Version number of this module.
-<<<<<<< HEAD
 ModuleVersion = '1.8.2'
-=======
-ModuleVersion = '1.8.0'
->>>>>>> upstream/master
 
 # ID used to uniquely identify this module
 GUID = 'b90d67da-f8d0-4406-ad74-89d169cd0633'
