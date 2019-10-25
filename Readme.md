@@ -106,6 +106,7 @@ The `Connection` parameter accepts a hashtable object that requires a username, 
 * Get-ServiceNowTableEntry
 * Get-ServiceNowUser
 * Get-ServiceNowUserGroup
+* New-ServiceNowRequest
 * New-ServiceNowChangeRequest
 * New-ServiceNowIncident
 * New-ServiceNowQuery
