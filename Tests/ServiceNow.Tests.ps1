@@ -253,6 +253,45 @@ Describe "ServiceNow-Module" {
         $TestTicket.description | Should -Be 'Updated by Pester test Update-ServiceNowNumber with SpecifyConnectionFields works'
     }
 
+    It "Update-ServiceNowRequestItem No PassThru works" {
+        # Due to a lack of ServiceNow request (REQ) commands this test only works consistently in a developer instance
+        $TestTicket = Get-ServiceNowRequestItem -MatchExact @{number='RITM0000001';short_description='Apple iPad 3';state=1} -ErrorAction SilentlyContinue
+        $TestTicket.number | Should -Be 'RITM0000001' -Because 'This test only works in a ServiceNow developer instance for RITM0000001'
+
+        $Values = @{
+            'description' = 'Updated by Pester test Update-ServiceNowRequestItem No PassThru works'
+        }
+
+        $CommandOutput = Update-ServiceNowRequestItem -SysId $TestTicket.sys_id -Values $Values
+
+        $TestTicket = Get-ServiceNowRequestItem -MatchExact @{sys_id=$TestTicket.sys_id}
+        $TestTicket.description | Should -Be 'Updated by Pester test Update-ServiceNowRequestItem No PassThru works'
+        $CommandOutput | Should -BeNullOrEmpty
+    }
+
+    It "Update-ServiceNowRequestItem with SpecifyConnectionFields and PassThru works" {
+        # Due to a lack of ServiceNow request (REQ) commands this test only works consistently in a developer instance
+        $TestTicket = Get-ServiceNowRequestItem -MatchExact @{number='RITM0000001';short_description='Apple iPad 3';state=1} -ErrorAction SilentlyContinue
+        $TestTicket.number | Should -Be 'RITM0000001' -Because 'This test only works in a ServiceNow developer instance for RITM0000001'
+
+        $Values = @{
+            'description' = 'Updated by Pester test Update-ServiceNowRequestItem with SpecifyConnectionFields works'
+        }
+
+        $updateServiceNowRequestItemSplat = @{
+            SysID         = $TestTicket.sys_id
+            Values        = $Values
+            Credential    = $Credential
+            ServiceNowURL = $Defaults.ServiceNowURL
+            PassThru      = $true
+        }
+        $CommandOutput = Update-ServiceNowRequestItem @updateServiceNowRequestItemSplat
+
+        $TestTicket = Get-ServiceNowRequestItem -MatchExact @{sys_id=$TestTicket.sys_id}
+        $TestTicket.description | Should -Be 'Updated by Pester test Update-ServiceNowRequestItem with SpecifyConnectionFields works'
+        $CommandOutput | Should -Not -BeNullOrEmpty
+    }
+
     # Remove Functions
     It "Remove-ServiceNowTable works" {
         $TestTicket = Get-ServiceNowIncident -First 1
@@ -270,6 +309,6 @@ Describe "ServiceNow-Module" {
     }
 
     It "Remove-ServiceNowAuth works" {
-        Remove-ServiceNowAuth | Should be $true
+        Remove-ServiceNowAuth | Should -Be $true
     }
 }

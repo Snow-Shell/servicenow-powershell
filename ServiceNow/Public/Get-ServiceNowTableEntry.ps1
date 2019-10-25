@@ -96,9 +96,11 @@ function Get-ServiceNowTableEntry {
             'SpecifyConnectionFields' {
                 $getServiceNowTableSplat.Add('Credential', $Credential)
                 $getServiceNowTableSplat.Add('ServiceNowURL', $ServiceNowURL)
+                break
             }
             'UseConnectionObject' {
                 $getServiceNowTableSplat.Add('Connection', $Connection)
+                break
             }
             Default {}
         }
