@@ -122,6 +122,22 @@ This module comes with [Pester](https://github.com/pester/Pester/) tests for uni
 
 This module has been created as an abstraction layer to suit my immediate requirements. Contributions are gratefully received however, so please feel free to submit a pull request with additional features or amendments.
 
+## Development
+
+### Building
+
+To build the default build.
+
+```Powershell
+.\build.ps1
+```
+
+To build a specific task.
+
+```Powershell
+.\build.ps1 -Test Build
+```
+
 ## Author
 
 Author:: Sam Martin
