@@ -106,6 +106,7 @@ The `Connection` parameter accepts a hashtable object that requires a username, 
 * Get-ServiceNowTableEntry
 * Get-ServiceNowUser
 * Get-ServiceNowUserGroup
+* New-ServiceNowRequest
 * New-ServiceNowChangeRequest
 * New-ServiceNowIncident
 * New-ServiceNowQuery
@@ -128,6 +129,22 @@ This module comes with [Pester](https://github.com/pester/Pester/) tests for uni
 ## Scope & Contributing
 
 This module has been created as an abstraction layer to suit my immediate requirements. Contributions are gratefully received however, so please feel free to submit a pull request with additional features or amendments.
+
+## Development
+
+### Building
+
+To build the default build.
+
+```Powershell
+.\build.ps1
+```
+
+To build a specific task.
+
+```Powershell
+.\build.ps1 -Test Build
+```
 
 ## Author
 
