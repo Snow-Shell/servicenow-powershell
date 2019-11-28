@@ -48,8 +48,7 @@ function Get-ServiceNowTable {
         [Alias('Url', 'Uri')]
         [string]$ServiceNowURL,
 
-        [Parameter(
-            ParameterSetName = 'UseConnectionObject')]
+        [Parameter(ParameterSetName = 'UseConnectionObject')]
         [hashtable]$Connection = $Script:ConnectionObj
     )
 

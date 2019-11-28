@@ -19,7 +19,7 @@ function Get-ServiceNowTableEntry {
 
     #>
 
-    [CmdletBinding(DefaultParameterSetName, SupportsPaging)]
+    [CmdletBinding(DefaultParameterSetName = 'UseConnectionObject', SupportsPaging)]
     param(
         # Table containing the entry we're deleting
         [parameter(mandatory = $true)]
@@ -68,7 +68,7 @@ function Get-ServiceNowTableEntry {
 
         [Parameter(ParameterSetName = 'UseConnectionObject', Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        [hashtable]$Connection
+        [hashtable]$Connection = $script:ConnectionObj
     )
 
     Try {

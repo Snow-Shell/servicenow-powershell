@@ -43,8 +43,7 @@ function Get-ServiceNowIncident{
         [Alias('Url')]
         [string]$ServiceNowURL,
 
-        [Parameter(
-            ParameterSetName = 'UseConnectionObject')]
+        [Parameter(ParameterSetName = 'UseConnectionObject')]
         [hashtable]$Connection = $Script:ConnectionObj
     )
 

@@ -16,7 +16,7 @@ function Get-ServiceNowRequestItem {
 #>
 
     [OutputType([System.Management.Automation.PSCustomObject])]
-    [CmdletBinding(DefaultParameterSetName, SupportsPaging)]
+    [CmdletBinding(DefaultParameterSetName = 'UseConnectionObject', SupportsPaging)]
     param(
         # Machine name of the field to order by
         [parameter(Mandatory = $false)]
@@ -60,7 +60,7 @@ function Get-ServiceNowRequestItem {
 
         [Parameter(ParameterSetName = 'UseConnectionObject', Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        [hashtable]$Connection
+        [hashtable]$Connection = $Script:ConnectionObj
     )
 
     # Query Splat
