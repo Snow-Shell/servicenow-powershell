@@ -1,4 +1,5 @@
 function New-ServiceNowTableEntry{
+    [CmdletBinding(DefaultParameterSetName = 'UseConnectionObject')]
     Param
     (
         # Name of the table we're inserting into (e.g. incidents)
@@ -28,7 +29,7 @@ function New-ServiceNowTableEntry{
         $ServiceNowURL, 
 
         #Azure Automation Connection object containing username, password, and URL for the ServiceNow instance
-        [Parameter(ParameterSetName='UseConnectionObject', Mandatory=$True)] 
+        [Parameter(ParameterSetName='UseConnectionObject')] 
         [ValidateNotNullOrEmpty()]
         [Hashtable]
         $Connection

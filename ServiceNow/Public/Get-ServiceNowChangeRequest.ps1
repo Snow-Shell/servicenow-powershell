@@ -43,7 +43,7 @@ function Get-ServiceNowChangeRequest {
         [Alias('Url')]
         [string]$ServiceNowURL,
 
-        [Parameter(ParameterSetName = 'UseConnectionObject', Mandatory = $true)]
+        [Parameter(ParameterSetName = 'UseConnectionObject')]
         [ValidateNotNullOrEmpty()]
         [hashtable]$Connection = $Script:ConnectionObj
     )

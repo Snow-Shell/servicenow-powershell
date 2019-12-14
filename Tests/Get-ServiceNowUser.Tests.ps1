@@ -1,26 +1,26 @@
 InModuleScope "ServiceNow" {
-    Describe "Get-ServiceNowIncident" {
+    Describe "Get-ServiceNowUser" {
         BeforeAll {
             Mock New-ServiceNowQuery {} -Verifiable
         }
-        Context "Testing Get-ServiceNowIncident with no script scoped Auth set and no explicit credentials passed" {
-            It "Should Throw if Script scoped Auth not set and no explicit Credentials passed" {
-                {Get-ServiceNowIncident} | Should -Throw
+        Context "Testing Get-ServiceNowUser - No Script Scoped Auth or Explicit Credentials Passed as arguments" {
+            It "Should throw if no authentication set or passed as parameters" {
+                {Get-ServiceNowUser} | Should -Throw
             }
         }
-        Context "Get-ServicenowIncident - Script Scoped Access Token Set" {
+        Context "Get-ServiceNowUser - Script Scoped Access Token Set" {
             Mock Get-ServiceNowTable {} -Verifiable
-            $Script:ConnectionObj = @{
-                uri = 'dev123.service-now.com'
+            $script:ConnectionObj = @{
+                uri         = 'dev123.service-now.com'
                 AccessToken = -join ((0..9 + 'a'..'z' + 'A'..'Z') | Get-Random -Count 32)
             }
-            It "Should not throw" {
-                {Get-ServiceNowIncident} | Should -Not -Throw
+            It "Should Not Throw When Auth Set" {
+                {Get-ServiceNowUser} | Should -Not -Throw
                 Assert-MockCalled New-ServiceNowQuery -Times 1
                 Assert-MockCalled Get-ServiceNowTable -Times 1
             }
         }
-        Context "Get-ServiceNowIncident Script Scoped PSCredential Set" {
+        Context "Get-ServiceNowUser - Script Scoped Credential Set" {
             Mock Get-ServiceNowTable {} -Verifiable
             $setServiceNowAuthSplat = @{
                 Url        = 'dev123.service-now.com'
@@ -28,21 +28,24 @@ InModuleScope "ServiceNow" {
             }
             Set-ServiceNowAuth @setServiceNowAuthSplat
             It "Should not throw when no parameters provided" {
-                {Get-ServiceNowIncident} | Should -Not -Throw
+                {Get-ServiceNowUser} | Should -Not -Throw
 
                 Assert-MockCalled New-ServiceNowQuery -Times 1
                 Assert-MockCalled Get-ServiceNowTable -Times 1
             }
+            AfterAll {
+                $script:ConnectionObj = $null
+            }
         }
-        Context "Get-ServiceNowIncident - Explicitly passing Credential Parameters" {
+        Context "Get-ServiceNowUser - Explicitly Passing Credential Parameters" {
             Mock Get-ServiceNowTable {} -Verifiable
-            
+
             $Uri = 'dev123.service-now.com'
             $Creds = ([pscredential]::new('testuser', ('Password1' | ConvertTo-SecureString -AsPlainText -Force)))
-            It "Get-ServiceNowIncident - Should not throw when credentials passed as parameters" {
-                {Get-ServiceNowIncident -ServiceNowURL $Uri -Credential $Creds} | Should -Not -Throw
 
-                Assert-MockCalled New-ServiceNowQuery -Times 1
+            It "Get-ServiceNowUser - Should not thow when credentials passed as parameters" {
+                {Get-ServiceNowUser -ServiceNowURL $uri -Credential $Creds} | Should -Not -Throw
+
                 Assert-MockCalled Get-ServiceNowTable -Times 1
             }
         }
