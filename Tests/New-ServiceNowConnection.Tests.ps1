@@ -1,5 +1,5 @@
 InModuleScope "ServiceNow" {
-    Describe "New-ServiceNowConnection" {
+    Describe "New-ServiceNowConnection" -Tag @('unit') {
         Context "New-ServiceNowConnection - Should Throw if Script Scoped Auth Not Set" {
             It "Should Throw if Script Scoped Auth Not Set and ConnectionObject Not Passed as Parameter" {
                 {New-ServiceNowConnection -Table 'incident'} | Should -Throw

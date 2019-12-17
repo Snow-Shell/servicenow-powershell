@@ -1,5 +1,5 @@
 InModuleScope "ServiceNow" {
-    Describe "Set-ServiceNowAuth" {
+    Describe "Set-ServiceNowAuth" -Tag @('unit') {
         BeforeAll {
             Mock Get-ServiceNowOAuthToken {(-join ((33..126) | Get-Random -Count 32 | ForEach-Object {[char]$_}))} -Verifiable
         }

@@ -1,9 +1,9 @@
 InModuleScope "ServiceNow" {
-    Describe "Get-ServiceNowChangeRequest" {
+    Describe "Get-ServiceNowChangeRequest" -Tag @('unit') {
         BeforeAll {
             Mock New-ServiceNowQuery {} -Verifiable
         }
-        Context "Get-ServiceNowChangeRequest with no script scoped Auth set and no explicit credentials passed" {
+        Context "Get-ServiceNowChangeRequest with no script scoped Auth set and no explicit credentials passed"{
             It "Should Throw if script scoped auth not set and no explicit credentials passed" {
                 {Get-ServiceNowChangeRequest} | Should -Throw
             }

@@ -1,6 +1,6 @@
 [CmdletBinding()]
 Param(
-    [Parameter(Mandatory = $true)]
+    [Parameter()]
     [ValidateNotNullorEmpty()]
     [PSCredential]$Credential
 )
@@ -24,26 +24,26 @@ ElseIf ($null -ne $ModuleLoaded -and $ModuleLoaded -ne $ModulePSM) {
     Import-Module $ModulePSD -Force
 }
 
-# Load defaults from file
-If (Test-Path $DefaultsFile) {
-    $Script:Defaults = Get-Content $DefaultsFile -Raw | ConvertFrom-Json
 
-    If ('testingurl.service-now.com' -eq $Defaults.ServiceNowUrl) {
-        Throw 'Please populate the *.Pester.Defaults.json file with your values'
+Describe "$ThisCommand" -Tag @('Integration') {
+    # Load defaults from file
+    If (Test-Path $DefaultsFile) {
+        $Script:Defaults = Get-Content $DefaultsFile -Raw | ConvertFrom-Json
+    
+        If ('testingurl.service-now.com' -eq $Defaults.ServiceNowUrl) {
+            Throw 'Please populate the *.Pester.Defaults.json file with your values'
+        }
     }
-}
-Else {
-    # Write example file
-    @{
-        ServiceNowURL = 'testingurl.service-now.com'
-        TestCategory  = 'Internal'
-        TestUserGroup = '8a4dde73c6112278017a6a4baf547aa7'
-        TestUser      = '6816f79cc0a8016401c5a33be04be441'
-    } | ConvertTo-Json | Set-Content $DefaultsFile
-    Throw "$DefaultsFile does not exist. Created example file. Please populate with your values"
-}
-
-Describe "$ThisCommand" -Tag Attachment {
+    Else {
+        # Write example file
+        @{
+            ServiceNowURL = 'testingurl.service-now.com'
+            TestCategory  = 'Internal'
+            TestUserGroup = '8a4dde73c6112278017a6a4baf547aa7'
+            TestUser      = '6816f79cc0a8016401c5a33be04be441'
+        } | ConvertTo-Json | Set-Content $DefaultsFile
+        Throw "$DefaultsFile does not exist. Created example file. Please populate with your values"
+    }
     $null = Set-ServiceNowAuth -Url $Defaults.ServiceNowUrl -Credentials $Credential
 
     It "Create incident with New-ServiceNowIncident" {

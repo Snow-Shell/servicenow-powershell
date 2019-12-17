@@ -59,12 +59,12 @@ Task Test -Depends UnitTests  {
     $CodeFiles = Get-ChildItem $ENV:BHModulePath -Recurse -Include "*.psm1","*.ps1"
     $CodeCoverage = New-Object System.Collections.ArrayList
     $CodeCoverage.AddRange($CodeFiles.FullName)
-    $Credential = Get-Credential
+    # $Credential = Get-Credential
     $invokePesterScript = @{
         Path       = "$ProjectRoot\Tests"
-        Parameters = @{
-            Credential = $Credential
-        }
+        # Parameters = @{
+        #     Credential = $Credential
+        # }
     }
     $invokePesterSplat = @{
         Script       = $invokePesterScript
@@ -72,6 +72,8 @@ Task Test -Depends UnitTests  {
         OutputFile   = $TestFilePath
         OutputFormat = 'NUnitXml'
         PassThru     = $true
+        Tag          = @('unit')
+        ExcludeTag   = @('Integration')
     }
     $Script:TestResults = Invoke-Pester @invokePesterSplat
 

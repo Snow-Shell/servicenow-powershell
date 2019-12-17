@@ -1,5 +1,5 @@
 InModuleScope "ServiceNow" {
-    Describe "Get-ServiceNowOAuthToken" {
+    Describe "Get-ServiceNowOAuthToken" -Tag @('unit') {
         BeforeAll {
             Mock Invoke-RestMethod {} -Verifiable
             $uri = 'dev123.service-now.com'

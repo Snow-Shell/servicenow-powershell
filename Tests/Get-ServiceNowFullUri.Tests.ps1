@@ -1,5 +1,5 @@
 InModuleScope "ServiceNow" {
-    Describe "Get-ServiceNowFullUri" {
+    Describe "Get-ServiceNowFullUri" -Tag @('unit') {
         BeforeAll {
             $uri = 'test.service-now.com'
         }

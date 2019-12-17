@@ -1,9 +1,10 @@
 InModuleScope "ServiceNow" {
-    Describe "Get-ServiceNowTable" {
+    Describe "Get-ServiceNowTable" -Tag @('unit') {
         BeforeAll {
             Mock Invoke-RestMethod {} -Verifiable
         }
         Context "Get-ServiceNowTable - Calling with no script scoped Auth set and no explicity credentials passed" {
+            $Script:ConnectionObj = $null
             It "Should Throw if Script scoped Auth not set and no explicit Credentials Passed" {
                 {Get-ServiceNowtable -Table 'incident'} | Should -Throw
             }

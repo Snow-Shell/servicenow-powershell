@@ -1,5 +1,5 @@
 InModuleScope "ServiceNow" {
-    Describe "Get-ServiceNowRequest" {
+    Describe "Get-ServiceNowRequest" -Tag @('unit') {
         BeforeAll {
             Mock New-ServiceNowQuery {} -Verifiable
         }
