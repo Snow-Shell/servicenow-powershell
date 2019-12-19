@@ -4,7 +4,7 @@ Properties {
     $ProjectRoot = Resolve-Path $ENV:BHProjectPath
     if(-not $ProjectRoot)
     {
-        $ProjectRoot = Resolve-Path "$PSScriptRoot\.."
+        $ProjectRoot = Resolve-Path "$PSScriptRoot/.."
     }
 
     $StepVersionBy = $null
@@ -42,7 +42,7 @@ Task Analyze -Depends Init {
 Task UnitTests -Depends Init {
     $lines
     'Running quick unit tests to fail early if there is an error'
-    $TestResults = Invoke-Pester -Path $ProjectRoot\Tests\*unit* -PassThru -Tag Build
+    $TestResults = Invoke-Pester -Path $ProjectRoot/Tests/*unit* -PassThru -Tag Build
 
     if($TestResults.FailedCount -gt 0) {
         Write-Error "Failed '$($TestResults.FailedCount)' tests, build failed"
@@ -61,7 +61,7 @@ Task Test -Depends UnitTests  {
     $CodeCoverage.AddRange($CodeFiles.FullName)
     # $Credential = Get-Credential
     $invokePesterScript = @{
-        Path       = "$ProjectRoot\Tests"
+        Path       = "$ProjectRoot/Tests"
         # Parameters = @{
         #     Credential = $Credential
         # }
@@ -83,12 +83,12 @@ Task Test -Depends UnitTests  {
 
     # In Appveyor?  Upload our tests! #Abstract this into a function?
     If($ENV:BHBuildSystem -eq 'AppVeyor') {
-        "Uploading $ProjectRoot\$TestFile to AppVeyor"
+        "Uploading $ProjectRoot/$TestFile to AppVeyor"
         "JobID: $env:APPVEYOR_JOB_ID"
         (New-Object 'System.Net.WebClient').UploadFile("https://ci.appveyor.com/api/testresults/nunit/$($env:APPVEYOR_JOB_ID)", (Resolve-Path $TestFilePath))
     }
 
-    Remove-Item $TestFilePath -Force -ErrorAction SilentlyContinue
+    #Remove-Item $TestFilePath -Force -ErrorAction SilentlyContinue
 
     # Failed tests?
     # Need to tell psake or it will proceed to the deployment. Danger!
@@ -101,7 +101,7 @@ Task Test -Depends UnitTests  {
 Task Build -Depends Test {
     $lines
 
-    $functions = Get-ChildItem "$ENV:BHModulePath\Public\*.ps1" |
+    $functions = Get-ChildItem "$ENV:BHModulePath/Public/*.ps1" |
         Where-Object {$_.name -notmatch 'Tests'} |
         Select-Object -ExpandProperty basename
 
@@ -130,7 +130,7 @@ Task Build -Depends Test {
     Function Update-CodeCoveragePercent {
         param(
             [int]$CodeCoverage=0,
-            [string]$TextFilePath="$Env:BHProjectPath\Readme.md"
+            [string]$TextFilePath = (Join-Path -Path $Env:BHProjectPath -ChildPath Readme.md)
         )
 
         $BadgeColor = Switch ($CodeCoverage) {
@@ -157,11 +157,17 @@ Task MakePackage -Depends Build,Test {
     $lines
 
     function ZipFiles {
-        param( $zipfilename, $sourcedir )
-        Add-Type -Assembly System.IO.Compression.FileSystem
+        param (
+            $zipfilename,
+            $sourcedir
+        )
         $compressionLevel = [System.IO.Compression.CompressionLevel]::Optimal
-        [System.IO.Compression.ZipFile]::CreateFromDirectory($sourcedir,
-            $zipfilename, $compressionLevel, $true)
+        [System.IO.Compression.ZipFile]::CreateFromDirectory(
+            $sourcedir,
+            $zipfilename,
+            $compressionLevel,
+            $true
+        )
     }
 
     function New-MakePackage {
@@ -171,7 +177,7 @@ Task MakePackage -Depends Build,Test {
             [string]$ModuleName
         )
 
-        $ZipFile = "$PackagePath\$PackageName"
+        $ZipFile = Join-Path -Path $PackagePath -ChildPath $PackageName
         Remove-Item $ZipFile -Force -ErrorAction SilentlyContinue | Out-Null
         ZipFiles $ZipFile $ModuleName
     }

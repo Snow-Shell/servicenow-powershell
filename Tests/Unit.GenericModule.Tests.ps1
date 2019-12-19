@@ -10,7 +10,7 @@ Write-Host "ModulePath:  $ModulePath" -f cyan
 
 $ModuleManifestContent = Get-Content $modulePath
 
-Describe "Generic Module Tests" -Tag @('Unit', 'Build') {
+Describe "Generic Module Tests" -Tag @('Build') {
     # Unload the module so it's loaded fresh for testing
     Remove-Module $ModuleName -ErrorAction SilentlyContinue
 

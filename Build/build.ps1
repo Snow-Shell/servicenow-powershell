@@ -28,11 +28,11 @@ ForEach ($Module in $Modules) {
     Import-Module $Module
 }
 
-$Path = (Resolve-Path $PSScriptRoot\..).Path
+$Path = (Resolve-Path $PSScriptRoot/..).Path
 Set-BuildEnvironment -Path $Path -Force
 
 $invokepsakeSplat = @{
-    buildFile  = "$PSScriptRoot\psake.ps1"
+    buildFile  = "$PSScriptRoot/psake.ps1"
     taskList   = $Task
     properties = @{'StepVersionBy' = $StepVersionBy}
     nologo     = $true
