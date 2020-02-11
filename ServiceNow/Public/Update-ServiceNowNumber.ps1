@@ -57,72 +57,44 @@ Function Update-ServiceNowNumber {
         [switch]$PassThru
     )
 
-    begin {}
     process {
-        Try {
-            # Prep a splat to use the provided number to find the sys_id
-            $getServiceNowTableEntry = @{
-                Table         = $Table
-                MatchExact    = @{number = $number}
-                ErrorAction   = 'Stop'
+        # Prep a splat to use the provided number to find the sys_id
+        $getServiceNowTableEntry = @{
+            Table         = $Table
+            MatchExact    = @{number = $number}
+            ErrorAction   = 'Stop'
+        }
+
+        # Update the splat if the parameters have values
+        if ($null -ne $PSBoundParameters.Connection) {
+            $getServiceNowTableEntry.Add('Connection', $Connection)
+        }
+        elseif ($null -ne $PSBoundParameters.Credential -and $null -ne $PSBoundParameters.ServiceNowURL) {
+            $getServiceNowTableEntry.Add('Credential', $Credential)
+            $getServiceNowTableEntry.Add('ServiceNowURL', $ServiceNowURL)
+        }
+
+        # Use the number and table to determine the sys_id
+        $SysID = Get-ServiceNowTableEntry @getServiceNowTableEntry | Select-Object -Expand sys_id
+
+        # Re-purpose the existing Splat
+        $getServiceNowTableEntry.Remove('MatchExact')
+        $getServiceNowTableEntry.Add('SysId', $SysID)
+        $getServiceNowTableEntry.Add('Values', $Values)
+
+        If ($PSCmdlet.ShouldProcess("$Table/$SysID", $MyInvocation.MyCommand)) {
+            try {
+                $Result = (Update-ServiceNowTableEntry @getServiceNowTableEntry).Result
+            }
+            Catch {
+                Write-Error $PSItem
             }
 
-            # Process credential steps based on parameter set name
-            Switch ($PSCmdlet.ParameterSetName) {
-                'SpecifyConnectionFields' {
-                    $getServiceNowTableEntry.Add('ServiceNowCredential',$Credential)
-                    $getServiceNowTableEntry.Add('ServiceNowURL',$ServiceNowURL)
-                    $ServiceNowURL = 'https://' + $ServiceNowURL + '/api/now/v1'
-                    break
-                }
-                'UseConnectionObject' {
-                    $getServiceNowTableEntry.Add('Connection',$Connection)
-                    $SecurePassword = ConvertTo-SecureString $Connection.Password -AsPlainText -Force
-                    $Credential = New-Object System.Management.Automation.PSCredential ($Connection.Username, $SecurePassword)
-                    $ServiceNowURL = 'https://' + $Connection.ServiceNowUri + '/api/now/v1'
-                    break
-                }
-                Default {
-                    If ((Test-ServiceNowAuthIsSet)) {
-                        $Credential = $Global:ServiceNowCredentials
-                        $ServiceNowURL = $Global:ServiceNowRESTURL
-                    }
-                    Else {
-                        Throw "Exception:  You must do one of the following to authenticate: `n 1. Call the Set-ServiceNowAuth cmdlet `n 2. Pass in an Azure Automation connection object `n 3. Pass in an endpoint and credential"
-                    }
-                }
-            }
-
-            # Use the number and table to determine the sys_id
-            $SysID = Get-ServiceNowTableEntry @getServiceNowTableEntry | Select-Object -Expand sys_id
-
-            # Convert the values to Json and encode them to an UTF8 array to support special chars
-            $Body = $Values | ConvertTo-Json
-            $utf8Bytes = [System.Text.Encoding]::Utf8.GetBytes($Body)
-
-            # Setup splat
-            $Uri = $ServiceNowURL + "/table/$Table/$SysID"
-            $invokeRestMethodSplat = @{
-                Uri         = $uri
-                Method      = 'Patch'
-                Credential  = $Credential
-                Body        = $utf8Bytes
-                ContentType = 'application/json'
-            }
-
-            If ($PSCmdlet.ShouldProcess("$Table/$SysID",$MyInvocation.MyCommand)) {
-                # Send REST call
-                $Result = (Invoke-RestMethod @invokeRestMethodSplat).Result
-
-                # Option to return results
-                If ($PSBoundParameters.ContainsKey('Passthru')) {
-                    $Result
-                }
+            # Option to return results
+            If ($PSBoundParameters.ContainsKey('Passthru')) {
+                $Result
             }
         }
-        Catch {
-            Write-Error $PSItem
-        }
+        
     }
-    end {}
 }
