@@ -30,7 +30,7 @@ function New-ServiceNowIncident{
         New-ServiceNowIncident @Params
 
  #>
-
+    [CmdletBinding(DefaultParameterSetName = 'UseConnectionObject')]
     Param(
 
         # sys_id of the caller of the incident (user Get-ServiceNowUser to retrieve this)
@@ -107,9 +107,9 @@ function New-ServiceNowIncident{
         [string]$ServiceNowURL,
 
         #Azure Automation Connection object containing username, password, and URL for the ServiceNow instance
-        [Parameter(ParameterSetName='UseConnectionObject', Mandatory=$True)]
+        [Parameter(ParameterSetName='UseConnectionObject')]
         [ValidateNotNullOrEmpty()]
-        [Hashtable]$Connection
+        [Hashtable]$Connection = $Script:ConnectionObj
     )
 
     # Create a hash table of any defined parameters (not CustomFields) that have values

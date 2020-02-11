@@ -5,7 +5,15 @@ function Get-ServiceNowFullUri {
         [string]$Uri,
 
         [Parameter(Mandatory = $true)]
-        [string]$Table
+        [string]$Table,
+
+        [Parameter()]
+        $SysId
     )
-    'https://{0}/api/now/v1/table/{1}' -f $Uri, $Table
+    if ($SysId) {
+        'https://{0}/api/now/v1/table/{1}/{2}' -f $Uri, $Table, $SysId
+    }
+    else {
+        'https://{0}/api/now/v1/table/{1}' -f $Uri, $Table
+    }
 }

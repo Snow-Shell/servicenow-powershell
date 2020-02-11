@@ -66,7 +66,7 @@ function Get-ServiceNowTableEntry {
         [Alias('Url')]
         [string]$ServiceNowURL,
 
-        [Parameter(ParameterSetName = 'UseConnectionObject', Mandatory = $true)]
+        [Parameter(ParameterSetName = 'UseConnectionObject')]
         [ValidateNotNullOrEmpty()]
         [hashtable]$Connection = $script:ConnectionObj
     )

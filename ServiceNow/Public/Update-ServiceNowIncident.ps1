@@ -1,4 +1,5 @@
 function Update-ServiceNowIncident {
+    [CmdletBinding(DefaultParameterSetName = 'UseConnectionObject')]
     Param
     (   # sys_id of the caller of the incident (use Get-ServiceNowUser to retrieve this)
         [parameter(mandatory=$true)]        
@@ -22,9 +23,9 @@ function Update-ServiceNowIncident {
         [string]$ServiceNowURL, 
 
         #Azure Automation Connection object containing username, password, and URL for the ServiceNow instance
-        [Parameter(ParameterSetName='UseConnectionObject', Mandatory=$True)] 
+        [Parameter(ParameterSetName='UseConnectionObject')] 
         [ValidateNotNullOrEmpty()]
-        [Hashtable]$Connection
+        [Hashtable]$Connection = $Script:ConnectionObj
     )                      
 
     $updateServiceNowTableEntrySplat = @{

@@ -4,10 +4,16 @@ function New-ServiceNowConnection {
     Param (
         [string]$Table,
 
-        [hashtable]$ConnectionObject = $Script:ConnectionObj
-    )
+        [hashtable]$ConnectionObject = $Script:ConnectionObj,
 
-    $uri = Get-ServiceNowFullUri -Uri $ConnectionObject['Uri'] -Table $Table
+        [string]$SysId
+    )
+    If ($SysId) {
+        $uri = Get-ServiceNowFullUri -Uri $ConnectionObject['Uri'] -Table $Table -SysId $SysId
+    }
+    else {
+        $uri = Get-ServiceNowFullUri -Uri $ConnectionObject['Uri'] -Table $Table
+    }
 
     if ($ConnectionObject.ContainsKey('AccessToken')) {
         @{
