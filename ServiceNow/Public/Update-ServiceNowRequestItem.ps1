@@ -24,7 +24,7 @@ function Update-ServiceNowRequestItem {
     [System.Diagnostics.CodeAnalysis.SuppressMessage('PSAvoidGlobalVars','')]
 
     [OutputType([void],[System.Management.Automation.PSCustomObject])]
-    [CmdletBinding(DefaultParameterSetName,SupportsShouldProcess=$true)]
+    [CmdletBinding(DefaultParameterSetName = 'UseConnectionObject',SupportsShouldProcess=$true)]
     Param (
         # sys_id of the ticket to update
         [Parameter(mandatory=$true)]
@@ -46,9 +46,9 @@ function Update-ServiceNowRequestItem {
         [string]$ServiceNowURL,
 
         #Azure Automation Connection object containing username, password, and URL for the ServiceNow instance
-        [Parameter(ParameterSetName='UseConnectionObject', Mandatory=$True)]
+        [Parameter(ParameterSetName='UseConnectionObject')]
         [ValidateNotNullOrEmpty()]
-        [Hashtable]$Connection,
+        [Hashtable]$Connection = $script:ConnectionObj,
 
         # Switch to allow the results to be passed back
         [Parameter(Mandatory=$false)]

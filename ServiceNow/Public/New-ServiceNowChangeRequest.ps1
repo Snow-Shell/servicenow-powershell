@@ -73,7 +73,7 @@ function New-ServiceNowChangeRequest {
         New-ServiceNowChangeRequest @newServiceNowChangeRequestSplat
      #>
 
-    [CmdletBinding(DefaultParameterSetName, SupportsShouldProcess)]
+    [CmdletBinding(DefaultParameterSetName = 'UseConnectionObject', SupportsShouldProcess)]
     Param(
         [parameter(Mandatory = $true)]
         [string]$Caller,
@@ -110,10 +110,10 @@ function New-ServiceNowChangeRequest {
         [ValidateNotNullOrEmpty()]
         [string]$ServiceNowURL,
 
-        [Parameter(ParameterSetName = 'UseConnectionObject', Mandatory = $True)]
+        [Parameter(ParameterSetName = 'UseConnectionObject')]
         [ValidateNotNullOrEmpty()]
-        [Hashtable]$Connection,
-
+        [Hashtable]$Connection = $script:ConnectionObj,
+        
         # Switch to allow the results to be passed back
         [Parameter(Mandatory = $false)]
         [switch]$PassThru
@@ -188,7 +188,7 @@ function New-ServiceNowChangeRequest {
             }
         }
         Catch {
-            Write-Error $PSItem
+            throw $PSItem
         }
     }
     end { }
