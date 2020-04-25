@@ -28,6 +28,10 @@ function Get-ServiceNowConfigurationItem {
         [Parameter(Mandatory = $false)]
         [hashtable]$MatchContains = @{},
 
+        # Hashtable containing machine field names and values returned rows must contain (will be combined with AND)
+        [Parameter(Mandatory = $false)]
+        [hashtable]$MatchIn = @{},
+
         # Whether or not to show human readable display values instead of machine values
         [Parameter(Mandatory = $false)]
         [ValidateSet('true', 'false', 'all')]
@@ -54,6 +58,7 @@ function Get-ServiceNowConfigurationItem {
         MatchExact      = $MatchExact
         OrderDirection  = $OrderDirection
         MatchContains   = $MatchContains
+        MatchIn         = $MatchIn
     }
     $Query = New-ServiceNowQuery @newServiceNowQuerySplat
 
