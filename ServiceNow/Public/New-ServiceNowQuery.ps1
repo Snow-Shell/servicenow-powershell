@@ -40,7 +40,11 @@ function New-ServiceNowQuery {
 
         # Hashtable containing machine field names and values returned rows must contain (will be combined with AND)
         [parameter(mandatory=$false)]
-        [hashtable]$MatchContains
+        [hashtable]$MatchContains,
+    
+        # Hashtable containing machine field names and values returned rows must contain (will be combined with AND)
+        [parameter(mandatory=$false)]
+        [hashtable]$MatchIn
     )
 
     Try {
