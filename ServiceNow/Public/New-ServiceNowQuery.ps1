@@ -73,6 +73,14 @@ function New-ServiceNowQuery {
             }
         }
 
+        # Add the values in MatchIn - have to be separated by " , " if in same field ex. Incident=INC0000001,INC0000002 and so on
+        If ($MatchIn) {
+            ForEach ($Field in $MatchIn.keys) {
+                $InString = "^{0}IN{1}" -f $Field.ToString().ToLower(), ($MatchIn.$Field)
+                [void]$Query.Append($InString)
+            }
+        }
+
         # Output StringBuilder to string
         $Query.ToString()
     }

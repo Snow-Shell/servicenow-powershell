@@ -27,6 +27,10 @@ function Get-ServiceNowUser{
         # Hashtable containing machine field names and values returned rows must contain (will be combined with AND)
         [Parameter(Mandatory = $false)]
         [hashtable]$MatchContains = @{},
+        
+        # Hashtable containing machine field names and values returned rows must contain (will be combined with AND)
+        [Parameter(Mandatory = $false)]
+        [hashtable]$MatchIn = @{},
 
         # Whether or not to show human readable display values instead of machine values
         [Parameter(Mandatory = $false)]
@@ -54,6 +58,7 @@ function Get-ServiceNowUser{
         OrderDirection = $OrderDirection
         MatchExact     = $MatchExact
         MatchContains  = $MatchContains
+        MatchIn        = $MatchIn
     }
     $Query = New-ServiceNowQuery @newServiceNowQuerySplat
 
