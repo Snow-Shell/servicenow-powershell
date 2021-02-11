@@ -36,7 +36,7 @@ Function Get-ServiceNowAttachmentDetail {
     [System.Diagnostics.CodeAnalysis.SuppressMessage('PSAvoidGlobalVars','')]
 
     [OutputType([System.Management.Automation.PSCustomObject[]])]
-    [CmdletBinding(DefaultParameterSetName)]
+    [CmdletBinding(DefaultParameterSetName = 'UseConnectionObject')]
     Param(
         # Object number
         [Parameter(Mandatory=$true)]
@@ -64,76 +64,54 @@ Function Get-ServiceNowAttachmentDetail {
         [string]$ServiceNowURL,
 
         # Azure Automation Connection object containing username, password, and URL for the ServiceNow instance
-        [Parameter(ParameterSetName='UseConnectionObject', Mandatory=$true)]
+        [Parameter(ParameterSetName='UseConnectionObject')]
         [ValidateNotNullOrEmpty()]
-        [Hashtable]$Connection
+        [Hashtable]$Connection = $script:ConnectionObj
     )
 
 	begin {}
 	process	{
         Try {
             # Use the number and table to determine the sys_id
-            $getServiceNowTableEntry = @{
+            $getServiceNowTableEntrySplat = @{
                 Table         = $Table
                 MatchExact    = @{number = $number}
                 ErrorAction   = 'Stop'
             }
 
-            # Update the Table Splat if an applicable parameter set name is in use
-            Switch ($PSCmdlet.ParameterSetName) {
-                'SpecifyConnectionFields' {
-                    $getServiceNowTableEntry.Add('Credential', $Credential)
-                    $getServiceNowTableEntry.Add('ServiceNowURL', $ServiceNowURL)
-                    break
-                }
-                'UseConnectionObject' {
-                    $getServiceNowTableEntry.Add('Connection', $Connection)
-                    break
-                }
-                Default {
-                    If (-not (Test-ServiceNowAuthIsSet)) {
-                        Throw "Exception:  You must do one of the following to authenticate: `n 1. Call the Set-ServiceNowAuth cmdlet `n 2. Pass in an Azure Automation connection object `n 3. Pass in an endpoint and credential"
-                    }
-                }
+            # Update the splat if the parameters have values
+            if ($null -ne $PSBoundParameters.Connection) {
+                $getServiceNowTableEntrySplat.Add('Connection', $Connection)
+            }
+            elseif ($null -ne $PSBoundParameters.Credential -and $null -ne $PSBoundParameters.ServiceNowURL) {
+                $getServiceNowTableEntrySplat.Add('Credential', $Credential)
+                $getServiceNowTableEntrySplat.Add('ServiceNowURL', $ServiceNowURL)
             }
 
-            $TableSysID = Get-ServiceNowTableEntry @getServiceNowTableEntry | Select-Object -Expand sys_id
-
-            # Process credential steps based on parameter set name
-            Switch ($PSCmdlet.ParameterSetName) {
-                'SpecifyConnectionFields' {
-                    $ApiUrl = 'https://' + $ServiceNowURL + '/api/now/v1/attachment'
-                    break
-                }
-                'UseConnectionObject' {
-                    $SecurePassword = ConvertTo-SecureString $Connection.Password -AsPlainText -Force
-                    $Credential = New-Object System.Management.Automation.PSCredential ($Connection.Username, $SecurePassword)
-                    $ApiUrl = 'https://' + $Connection.ServiceNowUri + '/api/now/v1/attachment'
-                    break
-                }
-                Default {
-                    If ((Test-ServiceNowAuthIsSet)) {
-                        $Credential = $Global:ServiceNowCredentials
-                        $ApiUrl = $Global:ServiceNowRESTURL + '/attachment'
-                    }
-                    Else {
-                        Throw "Exception:  You must do one of the following to authenticate: `n 1. Call the Set-ServiceNowAuth cmdlet `n 2. Pass in an Azure Automation connection object `n 3. Pass in an endpoint and credential"
-                    }
-                }
-            }
+            $TableSysID = Get-ServiceNowTableEntry @getServiceNowTableEntrySplat | Select-Object -Expand sys_id
 
             # Populate the query
-            $Body = @{'sysparm_limit' = 500; 'table_name' = $Table; 'table_sys_id' = $TableSysID}
-            $Body.sysparm_query = 'ORDERBYfile_name^ORDERBYDESC'
+            $Body = @{
+                'sysparm_limit' = 500
+                'table_name'    = $Table
+                'table_sys_id'  = $TableSysID
+                'sysparm_query' = 'ORDERBYfile_name^ORDERBYDESC'
+            }
 
-            # Perform table query and capture results
-            $Uri = $ApiUrl
+            # Build Attachment URI because table endpoint not used for this API call
+            $Uri = 'https://{0}/api/now/v1/attachment' -f $connection.uri
+
+            $headers = @{
+                Accept        = 'application/json'
+                Authorization = 'Bearer {0}' -f $Connection['AccessToken']
+            }
 
             $invokeRestMethodSplat = @{
                 Uri         = $Uri
                 Body        = $Body
                 Credential  = $Credential
                 ContentType = 'application/json'
+                Headers     = $headers
             }
             $Result = (Invoke-RestMethod @invokeRestMethodSplat).Result
 

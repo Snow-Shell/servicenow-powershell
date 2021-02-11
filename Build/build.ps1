@@ -21,7 +21,7 @@ $Modules = @("Psake", "PSDeploy","BuildHelpers","PSScriptAnalyzer", "Pester")
 ForEach ($Module in $Modules) {
     If (-not (Get-Module -Name $Module -ListAvailable)) {
         Switch ($Module) {
-            Pester  {Install-Module $Module -Force -SkipPublisherCheck}
+            Pester  {Install-Module $Module -Force -SkipPublisherCheck -MaximumVersion '4.99.99'}
             Default {Install-Module $Module -Force}
         }
     }

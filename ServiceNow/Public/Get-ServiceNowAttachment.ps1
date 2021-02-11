@@ -48,7 +48,7 @@ Function Get-ServiceNowAttachment {
     [System.Diagnostics.CodeAnalysis.SuppressMessage('PSAvoidUsingConvertToSecureStringWithPlainText','')]
     [System.Diagnostics.CodeAnalysis.SuppressMessage('PSAvoidGlobalVars','')]
 
-    [CmdletBinding(DefaultParameterSetName,SupportsShouldProcess=$true)]
+    [CmdletBinding(DefaultParameterSetName = 'UseConnectionObject',SupportsShouldProcess=$true)]
     Param(
         # Object number
         [Parameter(
@@ -94,9 +94,9 @@ Function Get-ServiceNowAttachment {
         [string]$ServiceNowURL,
 
         # Azure Automation Connection object containing username, password, and URL for the ServiceNow instance
-        [Parameter(ParameterSetName='UseConnectionObject', Mandatory=$true)]
+        [Parameter(ParameterSetName='UseConnectionObject')]
         [ValidateNotNullOrEmpty()]
-        [Hashtable]$Connection
+        [Hashtable]$Connection = $script:ConnectionObj
     )
 
 	begin {}

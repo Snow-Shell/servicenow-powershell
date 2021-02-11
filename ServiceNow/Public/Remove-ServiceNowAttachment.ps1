@@ -23,7 +23,7 @@ Function Remove-ServiceNowAttachment {
     [System.Diagnostics.CodeAnalysis.SuppressMessage('PSAvoidUsingConvertToSecureStringWithPlainText','')]
     [System.Diagnostics.CodeAnalysis.SuppressMessage('PSAvoidGlobalVars','')]
 
-    [CmdletBinding(DefaultParameterSetName,SupportsShouldProcess=$true)]
+    [CmdletBinding(DefaultParameterSetName = 'UseConnectionObject',SupportsShouldProcess=$true)]
     Param(
         # Attachment sys_id
         [Parameter(
@@ -49,7 +49,7 @@ Function Remove-ServiceNowAttachment {
         # Azure Automation Connection object containing username, password, and URL for the ServiceNow instance
         [Parameter(ParameterSetName='UseConnectionObject', Mandatory=$true)]
         [ValidateNotNullOrEmpty()]
-        [Hashtable]$Connection
+        [Hashtable]$Connection = $script:ConnectionObj
     )
 
 	begin {}
