@@ -7,7 +7,7 @@ function New-ServiceNowIncident{
     Generates a new ServiceNow Incident using predefined or custom fields by invoking the ServiceNow API
 
 .LINK
-    https://github.com/Sam-Martin/servicenow-powershell
+    https://github.com/Snow-Shell/servicenow-powershell
 
 .EXAMPLE
     Generate a basic Incident attributed to the caller "UserName" with descriptions, categories, assignment groups and CMDB items set.

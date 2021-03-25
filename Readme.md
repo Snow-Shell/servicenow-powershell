@@ -1,6 +1,6 @@
 # ServiceNow
 
-[![GitHub release](https://img.shields.io/github/release/Sam-Martin/servicenow-powershell.svg)](https://github.com/Sam-Martin/servicenow-powershell/releases/latest) [![GitHub license](https://img.shields.io/github/license/Sam-Martin/servicenow-powershell.svg)](LICENSE) ![Test Coverage](https://img.shields.io/badge/coverage-75%25-yellow.svg)
+[![GitHub release](https://img.shields.io/github/release/Snow-Shell/servicenow-powershell.svg)](https://github.com/Snow-Shell/servicenow-powershell/releases/latest) [![GitHub license](https://img.shields.io/github/license/Snow-Shell/servicenow-powershell.svg)](LICENSE) ![Test Coverage](https://img.shields.io/badge/coverage-75%25-yellow.svg)
 
 This PowerShell module provides a series of cmdlets for interacting with the [ServiceNow REST API](http://wiki.servicenow.com/index.php?title=REST_API), performed by wrapping `Invoke-RestMethod` for the API calls.
 
@@ -40,7 +40,7 @@ Requires authorization in your ServiceNow tenant.  Due to the custom nature of S
 
 ## Usage
 
-Download the [latest release](https://github.com/Sam-Martin/servicenow-powershell/releases/latest) and  extract the .psm1 and .psd1 files to your PowerShell profile directory (i.e. the `Modules` directory under wherever `$profile` points to in your PS console) and run:
+Download the [latest release](https://github.com/Snow-Shell/servicenow-powershell/releases/latest) and  extract the .psm1 and .psd1 files to your PowerShell profile directory (i.e. the `Modules` directory under wherever `$profile` points to in your PS console) and run:
 `Import-Module ServiceNow`
 Once you've done this, all the cmdlets will be at your disposal, you can see a full list using `Get-Command -Module ServiceNow`.
 
@@ -77,9 +77,9 @@ Update-ServiceNowIncident -SysID $Incident.Sys_ID -Values @{comments='Updated vi
 ### Example - Creating a Incident with custom table entries
 
 ```PowerShell
-$IncidentParams = @{Caller = "UserName" 
-            ShortDescription = "New PS Incident" 
-            Description = "This incident was created from Powershell" 
+$IncidentParams = @{Caller = "UserName"
+            ShortDescription = "New PS Incident"
+            Description = "This incident was created from Powershell"
             CustomFields = @{u_service = "MyService"
                             u_incident_type = "Request"}
             }
@@ -129,6 +129,8 @@ This module comes with [Pester](https://github.com/pester/Pester/) tests for uni
 
 This module has been created as an abstraction layer to suit my immediate requirements. Contributions are gratefully received however, so please feel free to submit a pull request with additional features or amendments.
 
-## Author
+## Authors
 
-Author:: Sam Martin
+- [Sam Martin](https://github.com/Sam-Martin)
+- [Rick Arroues](https://github.com/Rick-2CA)
+- [Greg Brownstein](https://github.com/gdbarron)

@@ -46,7 +46,7 @@ function New-ServiceNowChangeRequest {
         Returns the ticket values after creation
 
     .LINK
-        https://github.com/Sam-Martin/servicenow-powershell
+        https://github.com/Snow-Shell/servicenow-powershell
 
     .EXAMPLE
         Generate a basic change request attributed to the caller "UserName" with descriptions, categories, assignment groups and CMDB items set.
