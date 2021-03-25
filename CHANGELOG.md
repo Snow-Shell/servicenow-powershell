@@ -1,3 +1,6 @@
+## v1.8.1
+- Update links to reference the new GitHub organization this project will be moved to.  Module functionality unchanged.
+
 ## v1.8.0
 - Add Update-ServiceNowRequestItem
 - Fix switch statements by adding breaks to each condition
