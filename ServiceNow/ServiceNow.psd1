@@ -81,6 +81,7 @@ PrivateData = @{
         # A URL to the main website for this project.
          ProjectUri = 'https://github.com/Snow-Shell/servicenow-powershell'
 
+            ReleaseNotes = 'https://github.com/Snow-Shell/servicenow-powershell/blob/master/CHANGELOG.md'
     } # End of PSData hashtable
 
 } # End of PrivateData hashtable
