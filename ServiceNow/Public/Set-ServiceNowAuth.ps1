@@ -20,12 +20,12 @@ function Set-ServiceNowAuth {
 #>
     [CmdletBinding()]
     Param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory)]
         [ValidateScript({$_ | Test-ServiceNowURL})]
         [Alias('ServiceNowUrl')]
         [string] $Url,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory)]
         [ValidateNotNullOrEmpty()]
         [System.Management.Automation.PSCredential] $Credentials
     )

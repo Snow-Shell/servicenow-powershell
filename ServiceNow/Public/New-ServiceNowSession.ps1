@@ -33,6 +33,8 @@ function New-ServiceNowSession {
         [switch] $PassThru
     )
 
+    Write-Verbose $PSCmdLet.ParameterSetName
+
     if ( $ApiVersion -le 0 ) {
         $version = ''
     } else {
@@ -75,6 +77,8 @@ function New-ServiceNowSession {
 
         }
     }
+
+    Write-Verbose ($newSession | Out-String)
 
     if ( $PassThru ) {
         $newSession
