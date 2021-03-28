@@ -21,17 +21,15 @@ function Set-ServiceNowAuth {
     [CmdletBinding()]
     Param (
         [Parameter(Mandatory = $true)]
-        [ValidateScript({Test-ServiceNowURL -Url $_})]
+        [ValidateScript({$_ | Test-ServiceNowURL})]
         [Alias('ServiceNowUrl')]
-        [string]$Url,
+        [string] $Url,
 
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        [System.Management.Automation.PSCredential]
-        $Credentials
+        [System.Management.Automation.PSCredential] $Credentials
     )
-    $Global:serviceNowUrl = 'https://' + $Url
-    $Global:serviceNowRestUrl = $serviceNowUrl + '/api/now/v1'
-    $Global:serviceNowCredentials = $Credentials
+    Write-Warning -Message 'Set-ServiceNowAuth will be deprecated in a future release.  Please use New-ServiceNowSession.'
+    New-ServiceNowSession -Url $Url -Credential $Credentials
     return $true
 }

@@ -9,31 +9,27 @@ Function Test-ServiceNowURL {
     .EXAMPLE
     Test-ServiceNowURL -Url tenant.domain.com
 
-    This example can have text
-
     .OUTPUTS
     System.Boolean
-
     #>
 
     [OutputType([System.Boolean])]
     [CmdletBinding()]
     param (
         # Pipeline variable
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory, ValueFromPipeline)]
         [ValidateNotNullOrEmpty()]
-        [string]$Url
+        [string] $Url
     )
 
-	begin {}
-	process	{
+    begin {}
+    process	{
         Write-Verbose "Testing url:  $Url"
-		if ($Url -match '^\w+\..*\.\w+') {
+        if ($Url -match '^\w+\..*\.\w+') {
             $true
-        }
-        else {
+        } else {
             Throw "The expected URL format is tenant.domain.com"
         }
     }
-	end {}
+    end {}
 }

@@ -1,6 +1,6 @@
 function Get-ServiceNowUser{
     [OutputType([System.Management.Automation.PSCustomObject])]
-    [CmdletBinding(DefaultParameterSetName, SupportsPaging)]
+    [CmdletBinding(DefaultParameterSetName = 'Session', SupportsPaging)]
     Param(
         # Machine name of the field to order by
         [Parameter(Mandatory = $false)]
@@ -45,49 +45,17 @@ function Get-ServiceNowUser{
 
         [Parameter(ParameterSetName = 'UseConnectionObject', Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        [hashtable]$Connection
+        [hashtable]$Connection,
+
+        [Parameter(ParameterSetName = 'Session')]
+        [ValidateNotNullOrEmpty()]
+        [hashtable] $ServiceNowSession = $script:ServiceNowSession
     )
 
-    # Query Splat
-    $newServiceNowQuerySplat = @{
-        OrderBy        = $OrderBy
-        OrderDirection = $OrderDirection
-        MatchExact     = $MatchExact
-        MatchContains  = $MatchContains
-    }
-    $Query = New-ServiceNowQuery @newServiceNowQuerySplat
+    $result = Get-ServiceNowTable @PSBoundParameters -Table 'sys_user'
 
-    # Table Splat
-    $getServiceNowTableSplat = @{
-        Table         = 'sys_user'
-        Query         = $Query
-        Fields        = $Properties
-        DisplayValues = $DisplayValues
-    }
-
-    # Update the splat if the parameters have values
-    if ($null -ne $PSBoundParameters.Connection) {
-        $getServiceNowTableSplat.Add('Connection', $Connection)
-    }
-    elseif ($null -ne $PSBoundParameters.Credential -and $null -ne $PSBoundParameters.ServiceNowURL) {
-        $getServiceNowTableSplat.Add('Credential', $Credential)
-        $getServiceNowTableSplat.Add('ServiceNowURL', $ServiceNowURL)
-    }
-
-    # Only add the Limit parameter if it was explicitly provided
-    if ($PSBoundParameters.ContainsKey('Limit')) {
-        $getServiceNowTableSplat.Add('Limit', $Limit)
-    }
-
-    # Add all provided paging parameters
-    ($PSCmdlet.PagingParameters | Get-Member -MemberType Property).Name | Foreach-Object {
-        $getServiceNowTableSplat.Add($_, $PSCmdlet.PagingParameters.$_)
-    }
-
-    # Perform query and return each object in the format.ps1xml format
-    $Result = Get-ServiceNowTable @getServiceNowTableSplat
     If (-not $Properties) {
-        $Result | ForEach-Object{$_.PSObject.TypeNames.Insert(0,"ServiceNow.UserAndUserGroup")}
+        $result | ForEach-Object { $_.PSObject.TypeNames.Insert(0, "ServiceNow.UserAndUserGroup") }
     }
-    $Result
+    $result
 }

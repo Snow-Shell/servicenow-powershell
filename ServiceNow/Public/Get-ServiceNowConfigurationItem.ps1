@@ -48,46 +48,10 @@ function Get-ServiceNowConfigurationItem {
         [hashtable]$Connection
     )
 
-    # Query Splat
-    $newServiceNowQuerySplat = @{
-        OrderBy         = $OrderBy
-        MatchExact      = $MatchExact
-        OrderDirection  = $OrderDirection
-        MatchContains   = $MatchContains
-    }
-    $Query = New-ServiceNowQuery @newServiceNowQuerySplat
+    $result = Get-ServiceNowTable @PSBoundParameters -Table 'cmdb_ci'
 
-    # Table Splat
-    $getServiceNowTableSplat = @{
-        Table         = 'cmdb_ci'
-        Query         = $Query
-        Fields        = $Properties
-        DisplayValues = $DisplayValues
-    }
-
-    # Update the Table Splat if the parameters have values
-    if ($null -ne $PSBoundParameters.Connection) {
-        $getServiceNowTableSplat.Add('Connection', $Connection)
-    }
-    elseif ($null -ne $PSBoundParameters.Credential -and $null -ne $PSBoundParameters.ServiceNowURL) {
-        $getServiceNowTableSplat.Add('Credential', $Credential)
-        $getServiceNowTableSplat.Add('ServiceNowURL', $ServiceNowURL)
-    }
-
-    # Only add the Limit parameter if it was explicitly provided
-    if ($PSBoundParameters.ContainsKey('Limit')) {
-        $getServiceNowTableSplat.Add('Limit', $Limit)
-    }
-
-    # Add all provided paging parameters
-    ($PSCmdlet.PagingParameters | Get-Member -MemberType Property).Name | Foreach-Object {
-        $getServiceNowTableSplat.Add($_, $PSCmdlet.PagingParameters.$_)
-    }
-
-    # Perform query and return each object in the format.ps1xml format
-    $Result = Get-ServiceNowTable @getServiceNowTableSplat
     If (-not $Properties) {
-        $Result | ForEach-Object{$_.PSObject.TypeNames.Insert(0,"ServiceNow.ConfigurationItem")}
+        $result | ForEach-Object { $_.PSObject.TypeNames.Insert(0, "ServiceNow.ConfigurationItem") }
     }
-    $Result
+    $result
 }
