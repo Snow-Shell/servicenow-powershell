@@ -69,7 +69,7 @@ function Invoke-ServiceNowRestMethod {
     }
 
     # Get credential and ServiceNow REST URL
-    if ( $ServiceNowSession ) {
+    if ( $ServiceNowSession.Count -gt 0 ) {
         $uri = $ServiceNowSession.BaseUri
         if ( $ServiceNowSession.AccessToken ) {
             $params.Headers = @{

@@ -39,7 +39,7 @@ function Get-ServiceNowIncident {
         [PSCredential]$Credential,
 
         [Parameter(ParameterSetName = 'SpecifyConnectionFields', Mandatory)]
-        [ValidateScript( { Test-ServiceNowURL -Url $_ })]
+        [ValidateScript( { $_ | Test-ServiceNowURL })]
         [Alias('Url')]
         [string]$ServiceNowURL,
 

@@ -99,7 +99,6 @@ Function Get-ServiceNowAttachment {
 
     begin {}
     process	{
-        # Try {
         $params = @{}
 
         if ( $ServiceNowSession ) {
@@ -122,29 +121,8 @@ Function Get-ServiceNowAttachment {
             throw "Exception:  You must do one of the following to authenticate: `n 1. Call the New-ServiceNowSession cmdlet `n 2. Pass in an Azure Automation connection object `n 3. Pass in an endpoint and credential"
         }
 
-        # Process credential steps based on parameter set name
-        # Switch ($PSCmdlet.ParameterSetName) {
-        #     'SpecifyConnectionFields' {
-        #         $ApiUrl = 'https://' + $ServiceNowURL + '/api/now/v1/attachment'
-        #         break
-        #     }
-        #     'UseConnectionObject' {
-        #         $SecurePassword = ConvertTo-SecureString $Connection.Password -AsPlainText -Force
-        #         $Credential = New-Object System.Management.Automation.PSCredential ($Connection.Username, $SecurePassword)
-        #         $ApiUrl = 'https://' + $Connection.ServiceNowUri + '/api/now/v1/attachment'
-        #         break
-        #     }
-        #     Default {
-        #         If ((Test-ServiceNowAuthIsSet)) {
-        #             $Credential = $Global:ServiceNowCredentials
-        #             $ApiUrl = $Global:ServiceNowRESTURL + '/attachment'
-        #         } Else {
-        #             Throw "Exception:  You must do one of the following to authenticate: `n 1. Call the Set-ServiceNowAuth cmdlet `n 2. Pass in an Azure Automation connection object `n 3. Pass in an endpoint and credential"
-        #         }
-        #     }
-        # }
 
-        # URI format:  https://tenant.service-now.com/api/now/v1/attachment/{sys_id}/file
+        # URI format:  https://tenant.service-now.com/api/now/attachment/{sys_id}/file
         $params.uri += '/attachment/' + $SysID + '/file'
 
         If ($AppendNameWithSysID.IsPresent) {
@@ -154,25 +132,16 @@ Function Get-ServiceNowAttachment {
         $OutFile = $Null
         $OutFile = Join-Path $Destination $FileName
 
-        If ((Test-Path $OutFile) -and -not $PSBoundParameters.ContainsKey('AllowOverwrite')) {
+        If ((Test-Path $OutFile) -and -not $AllowOverwrite.IsPresent) {
             $ThrowMessage = "The file [{0}] already exists.  Please choose a different name, use the -AppendNameWithSysID switch parameter, or use the -AllowOverwrite switch parameter to overwrite the file." -f $OutFile
             Throw $ThrowMessage
         }
 
         $params.OutFile = $OutFile
-        # $invokeRestMethodSplat = @{
-        #     Uri        = $Uri
-        #     Credential = $Credential
-        #     OutFile    = $OutFile
-        # }
 
         If ($PSCmdlet.ShouldProcess("SysId $SysId", "Save attachment to file $OutFile")) {
             Invoke-RestMethod @params
         }
-        # }
-        # Catch {
-        #     Write-Error $PSItem
-        # }
 
     }
     end {}

@@ -14,7 +14,7 @@ function Get-ServiceNowTable {
 #>
 
     [OutputType([System.Management.Automation.PSCustomObject])]
-    [CmdletBinding(DefaultParameterSetName, SupportsPaging)]
+    [CmdletBinding(DefaultParameterSetName = 'Session', SupportsPaging)]
     Param (
         # Name of the table we're querying (e.g. incidents)
         [parameter(Mandatory = $true)]
@@ -88,5 +88,6 @@ function Get-ServiceNowTable {
         $getServiceNowTableSplat.Add($_, $PSCmdlet.PagingParameters.$_)
     }
 
+    Write-Verbose ($getServiceNowTableSplat | Out-String)
     Invoke-ServiceNowRestMethod @getServiceNowTableSplat
 }
