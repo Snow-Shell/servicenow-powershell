@@ -1,6 +1,6 @@
 function Get-ServiceNowConfigurationItem {
     [OutputType([System.Management.Automation.PSCustomObject])]
-    [CmdletBinding(DefaultParameterSetName, SupportsPaging)]
+    [CmdletBinding(DefaultParameterSetName = 'Session', SupportsPaging)]
     Param(
         # Machine name of the field to order by
         [Parameter(Mandatory = $false)]
@@ -33,19 +33,23 @@ function Get-ServiceNowConfigurationItem {
         [ValidateSet('true', 'false', 'all')]
         [string]$DisplayValues = 'true',
 
-        [Parameter(ParameterSetName = 'SpecifyConnectionFields', Mandatory = $true)]
+        [Parameter(ParameterSetName = 'SpecifyConnectionFields', Mandatory)]
         [ValidateNotNullOrEmpty()]
         [Alias('ServiceNowCredential')]
         [PSCredential]$Credential,
 
-        [Parameter(ParameterSetName = 'SpecifyConnectionFields', Mandatory = $true)]
+        [Parameter(ParameterSetName = 'SpecifyConnectionFields', Mandatory)]
         [ValidateScript({Test-ServiceNowURL -Url $_})]
         [Alias('Url')]
         [string]$ServiceNowURL,
 
-        [Parameter(ParameterSetName = 'UseConnectionObject', Mandatory = $true)]
+        [Parameter(ParameterSetName = 'UseConnectionObject', Mandatory)]
         [ValidateNotNullOrEmpty()]
-        [hashtable]$Connection
+        [hashtable]$Connection,
+
+        [Parameter(ParameterSetName = 'Session')]
+        [ValidateNotNullOrEmpty()]
+        [hashtable] $ServiceNowSession = $script:ServiceNowSession
     )
 
     $result = Get-ServiceNowTable @PSBoundParameters -Table 'cmdb_ci'

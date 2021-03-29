@@ -89,7 +89,11 @@ function Invoke-ServiceNowRestMethod {
         throw "Exception:  You must do one of the following to authenticate: `n 1. Call the New-ServiceNowSession cmdlet `n 2. Pass in an Azure Automation connection object `n 3. Pass in an endpoint and credential"
     }
 
-    $uri += "/table/$Table"
+    if ( $Table -eq 'attachment' ) {
+        $uri += '/attachment'
+    } else {
+        $uri += "/table/$Table"
+    }
     if ( $SysId ) {
         $uri += "/$SysId"
     }
@@ -164,30 +168,35 @@ function Invoke-ServiceNowRestMethod {
 
     switch ($Method) {
         'Get' {
-            $result = $response | Select-Object -ExpandProperty result
-            $ConvertToDateField = @('closed_at', 'expected_start', 'follow_up', 'opened_at', 'sys_created_on', 'sys_updated_on', 'work_end', 'work_start')
-            ForEach ($SNResult in $Result) {
-                ForEach ($Property in $ConvertToDateField) {
-                    If (-not [string]::IsNullOrEmpty($SNResult.$Property)) {
-                        Try {
-                            # Extract the default Date/Time formatting from the local computer's "Culture" settings, and then create the format to use when parsing the date/time from Service-Now
-                            $CultureDateTimeFormat = (Get-Culture).DateTimeFormat
-                            $DateFormat = $CultureDateTimeFormat.ShortDatePattern
-                            $TimeFormat = $CultureDateTimeFormat.LongTimePattern
-                            $DateTimeFormat = "$DateFormat $TimeFormat"
-                            $SNResult.$Property = [DateTime]::ParseExact($($SNResult.$Property), $DateTimeFormat, [System.Globalization.DateTimeFormatInfo]::InvariantInfo, [System.Globalization.DateTimeStyles]::None)
-                        } Catch {
+            if ( $response.result ) {
+
+                $result = $response | Select-Object -ExpandProperty result
+                $ConvertToDateField = @('closed_at', 'expected_start', 'follow_up', 'opened_at', 'sys_created_on', 'sys_updated_on', 'work_end', 'work_start')
+                ForEach ($SNResult in $Result) {
+                    ForEach ($Property in $ConvertToDateField) {
+                        If (-not [string]::IsNullOrEmpty($SNResult.$Property)) {
                             Try {
-                                # Universal Format
-                                $DateTimeFormat = 'yyyy-MM-dd HH:mm:ss'
+                                # Extract the default Date/Time formatting from the local computer's "Culture" settings, and then create the format to use when parsing the date/time from Service-Now
+                                $CultureDateTimeFormat = (Get-Culture).DateTimeFormat
+                                $DateFormat = $CultureDateTimeFormat.ShortDatePattern
+                                $TimeFormat = $CultureDateTimeFormat.LongTimePattern
+                                $DateTimeFormat = "$DateFormat $TimeFormat"
                                 $SNResult.$Property = [DateTime]::ParseExact($($SNResult.$Property), $DateTimeFormat, [System.Globalization.DateTimeFormatInfo]::InvariantInfo, [System.Globalization.DateTimeStyles]::None)
                             } Catch {
-                                # If the local culture and universal formats both fail keep the property as a string (Do nothing)
-                                $null = 'Silencing a PSSA alert with this line'
+                                Try {
+                                    # Universal Format
+                                    $DateTimeFormat = 'yyyy-MM-dd HH:mm:ss'
+                                    $SNResult.$Property = [DateTime]::ParseExact($($SNResult.$Property), $DateTimeFormat, [System.Globalization.DateTimeFormatInfo]::InvariantInfo, [System.Globalization.DateTimeStyles]::None)
+                                } Catch {
+                                    # If the local culture and universal formats both fail keep the property as a string (Do nothing)
+                                    $null = 'Silencing a PSSA alert with this line'
+                                }
                             }
                         }
                     }
                 }
+            } else {
+                $response
             }
         }
 

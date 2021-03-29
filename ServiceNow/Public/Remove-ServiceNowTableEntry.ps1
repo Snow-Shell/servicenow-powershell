@@ -3,7 +3,7 @@ function Remove-ServiceNowTableEntry {
     Param(
         # Table containing the entry we're deleting
         [parameter(Mandatory)]
-        [string]$Table,
+        [string] $Table,
 
         # sys_id of the entry we're deleting
         [parameter(Mandatory)]

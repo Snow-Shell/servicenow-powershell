@@ -45,115 +45,135 @@ Function Get-ServiceNowAttachment {
 
     #>
 
-    [System.Diagnostics.CodeAnalysis.SuppressMessage('PSAvoidUsingConvertToSecureStringWithPlainText','')]
-    [System.Diagnostics.CodeAnalysis.SuppressMessage('PSAvoidGlobalVars','')]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage('PSAvoidUsingConvertToSecureStringWithPlainText', '')]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage('PSAvoidGlobalVars', '')]
 
-    [CmdletBinding(DefaultParameterSetName,SupportsShouldProcess=$true)]
+    [CmdletBinding(DefaultParameterSetName, SupportsShouldProcess = $true)]
     Param(
         # Object number
-        [Parameter(
-            Mandatory=$true,
-            ValueFromPipelineByPropertyName = $true
-        )]
+        [Parameter(Mandatory, ValueFromPipelineByPropertyName)]
         [Alias('sys_id')]
-        [string]$SysID,
+        [string]$SysId,
 
-        [Parameter(
-            Mandatory=$true,
-            ValueFromPipelineByPropertyName = $true
-        )]
+        [Parameter(Mandatory, ValueFromPipelineByPropertyName)]
         [Alias('file_name')]
         [string]$FileName,
 
         # Out path to download files
-        [parameter(Mandatory=$false)]
-        [ValidateScript({
-            Test-Path $_
-        })]
+        [parameter()]
+        [ValidateScript( {
+                Test-Path $_
+            })]
         [string]$Destination = $PWD.Path,
 
         # Options impacting downloads
-        [parameter(Mandatory=$false)]
+        [parameter()]
         [switch]$AllowOverwrite,
 
         # Options impacting downloads
-        [parameter(Mandatory=$false)]
+        [parameter()]
         [switch]$AppendNameWithSysID,
 
         # Credential used to authenticate to ServiceNow
-        [Parameter(ParameterSetName='SpecifyConnectionFields', Mandatory=$true)]
+        [Parameter(ParameterSetName = 'SpecifyConnectionFields', Mandatory)]
         [ValidateNotNullOrEmpty()]
         [Alias('ServiceNowCredential')]
         [PSCredential]$Credential,
 
         # The URL for the ServiceNow instance being used
-        [Parameter(ParameterSetName='SpecifyConnectionFields', Mandatory=$true)]
-        [ValidateScript({Test-ServiceNowURL -Url $_})]
+        [Parameter(ParameterSetName = 'SpecifyConnectionFields', Mandatory)]
+        [ValidateScript( { $_ | Test-ServiceNowURL })]
         [ValidateNotNullOrEmpty()]
         [Alias('Url')]
         [string]$ServiceNowURL,
 
         # Azure Automation Connection object containing username, password, and URL for the ServiceNow instance
-        [Parameter(ParameterSetName='UseConnectionObject', Mandatory=$true)]
+        [Parameter(ParameterSetName = 'UseConnectionObject', Mandatory)]
         [ValidateNotNullOrEmpty()]
-        [Hashtable]$Connection
+        [Hashtable]$Connection,
+
+        [Parameter(ParameterSetName = 'Session')]
+        [ValidateNotNullOrEmpty()]
+        [hashtable] $ServiceNowSession = $script:ServiceNowSession
     )
 
-	begin {}
-	process	{
-        Try {
-            # Process credential steps based on parameter set name
-            Switch ($PSCmdlet.ParameterSetName) {
-                'SpecifyConnectionFields' {
-                    $ApiUrl = 'https://' + $ServiceNowURL + '/api/now/v1/attachment'
-                    break
-                }
-                'UseConnectionObject' {
-                    $SecurePassword = ConvertTo-SecureString $Connection.Password -AsPlainText -Force
-                    $Credential = New-Object System.Management.Automation.PSCredential ($Connection.Username, $SecurePassword)
-                    $ApiUrl = 'https://' + $Connection.ServiceNowUri + '/api/now/v1/attachment'
-                    break
-                }
-                Default {
-                    If ((Test-ServiceNowAuthIsSet)) {
-                        $Credential = $Global:ServiceNowCredentials
-                        $ApiUrl = $Global:ServiceNowRESTURL + '/attachment'
-                    }
-                    Else {
-                        Throw "Exception:  You must do one of the following to authenticate: `n 1. Call the Set-ServiceNowAuth cmdlet `n 2. Pass in an Azure Automation connection object `n 3. Pass in an endpoint and credential"
-                    }
+    begin {}
+    process	{
+        # Try {
+        $params = @{}
+
+        if ( $ServiceNowSession ) {
+            $params.uri = $ServiceNowSession.BaseUri
+            if ( $ServiceNowSession.AccessToken ) {
+                $params.Headers = @{
+                    'Authorization' = 'Bearer {0}' -f $ServiceNowSession.AccessToken
                 }
             }
-
-            # URI format:  https://tenant.service-now.com/api/now/v1/attachment/{sys_id}/file
-            $Uri = $ApiUrl + '/' + $SysID + '/file'
-
-            If ($True -eq $PSBoundParameters.ContainsKey('AppendNameWithSysID')) {
-                $FileName = "{0}_{1}{2}" -f [io.path]::GetFileNameWithoutExtension($FileName),
-                $SysID,[io.path]::GetExtension($FileName)
-            }
-            $OutFile = $Null
-            $OutFile = Join-Path $Destination $FileName
-
-            If ((Test-Path $OutFile) -and -not $PSBoundParameters.ContainsKey('AllowOverwrite')) {
-                $ThrowMessage = "The file [{0}] already exists.  Please choose a different name, use the -AppendNameWithSysID switch parameter, or use the -AllowOverwrite switch parameter to overwrite the file." -f $OutFile
-                Throw $ThrowMessage
-            }
-
-            $invokeRestMethodSplat = @{
-                Uri         = $Uri
-                Credential  = $Credential
-                OutFile     = $OutFile
-            }
-
-            If ($PSCmdlet.ShouldProcess($Uri,$MyInvocation.MyCommand)) {
-                Invoke-RestMethod @invokeRestMethodSplat
-            }
+        } elseif ( $Credential -and $ServiceNowURL ) {
+            Write-Warning -Message 'This authentication path, providing URL and credential directly, will be deprecated in a future release.  Please use New-ServiceNowSession.'
+            $params.$uri = 'https://{0}/api/now/v1' -f $ServiceNowURL
+            $params.Credential = $Credential
+        } elseif ( $Connection ) {
+            $SecurePassword = ConvertTo-SecureString $Connection.Password -AsPlainText -Force
+            $Credential = New-Object System.Management.Automation.PSCredential ($Connection.Username, $SecurePassword)
+            $params.Credential = $Credential
+            $params.$uri = 'https://{0}/api/now/v1' -f $Connection.ServiceNowUri
+        } else {
+            throw "Exception:  You must do one of the following to authenticate: `n 1. Call the New-ServiceNowSession cmdlet `n 2. Pass in an Azure Automation connection object `n 3. Pass in an endpoint and credential"
         }
-        Catch {
-            Write-Error $PSItem
+
+        # Process credential steps based on parameter set name
+        # Switch ($PSCmdlet.ParameterSetName) {
+        #     'SpecifyConnectionFields' {
+        #         $ApiUrl = 'https://' + $ServiceNowURL + '/api/now/v1/attachment'
+        #         break
+        #     }
+        #     'UseConnectionObject' {
+        #         $SecurePassword = ConvertTo-SecureString $Connection.Password -AsPlainText -Force
+        #         $Credential = New-Object System.Management.Automation.PSCredential ($Connection.Username, $SecurePassword)
+        #         $ApiUrl = 'https://' + $Connection.ServiceNowUri + '/api/now/v1/attachment'
+        #         break
+        #     }
+        #     Default {
+        #         If ((Test-ServiceNowAuthIsSet)) {
+        #             $Credential = $Global:ServiceNowCredentials
+        #             $ApiUrl = $Global:ServiceNowRESTURL + '/attachment'
+        #         } Else {
+        #             Throw "Exception:  You must do one of the following to authenticate: `n 1. Call the Set-ServiceNowAuth cmdlet `n 2. Pass in an Azure Automation connection object `n 3. Pass in an endpoint and credential"
+        #         }
+        #     }
+        # }
+
+        # URI format:  https://tenant.service-now.com/api/now/v1/attachment/{sys_id}/file
+        $params.uri += '/attachment/' + $SysID + '/file'
+
+        If ($AppendNameWithSysID.IsPresent) {
+            $FileName = "{0}_{1}{2}" -f [io.path]::GetFileNameWithoutExtension($FileName),
+            $SysID, [io.path]::GetExtension($FileName)
         }
+        $OutFile = $Null
+        $OutFile = Join-Path $Destination $FileName
+
+        If ((Test-Path $OutFile) -and -not $PSBoundParameters.ContainsKey('AllowOverwrite')) {
+            $ThrowMessage = "The file [{0}] already exists.  Please choose a different name, use the -AppendNameWithSysID switch parameter, or use the -AllowOverwrite switch parameter to overwrite the file." -f $OutFile
+            Throw $ThrowMessage
+        }
+
+        $params.OutFile = $OutFile
+        # $invokeRestMethodSplat = @{
+        #     Uri        = $Uri
+        #     Credential = $Credential
+        #     OutFile    = $OutFile
+        # }
+
+        If ($PSCmdlet.ShouldProcess("SysId $SysId", "Save attachment to file $OutFile")) {
+            Invoke-RestMethod @params
+        }
+        # }
+        # Catch {
+        #     Write-Error $PSItem
+        # }
 
     }
-	end {}
+    end {}
 }

@@ -35,55 +35,55 @@ function New-ServiceNowIncident {
 
         # sys_id of the caller of the incident (user Get-ServiceNowUser to retrieve this)
         [parameter(Mandatory)]
-        [string]$Caller,
+        [string] $Caller,
 
         # Short description of the incident
         [parameter(Mandatory)]
-        [string]$ShortDescription,
+        [string] $ShortDescription,
 
         # Long description of the incident
         [parameter()]
-        [string]$Description,
+        [string] $Description,
 
         # sys_id of the assignment group (use Get-ServiceNowUserGroup to retrieve this)
         [parameter()]
-        [string]$AssignmentGroup,
+        [string] $AssignmentGroup,
 
         # Comment to include in the ticket
         [parameter()]
-        [string]$Comment,
+        [string] $Comment,
 
         # Category of the incident (e.g. 'Network')
         [parameter()]
-        [string]$Category,
+        [string] $Category,
 
         # Subcategory of the incident (e.g. 'Network')
         [parameter()]
-        [string]$Subcategory,
+        [string] $Subcategory,
 
         # sys_id of the configuration item of the incident
         [parameter()]
-        [string]$ConfigurationItem,
+        [string] $ConfigurationItem,
 
         # custom fields as hashtable
         [parameter()]
-        [hashtable]$CustomFields,
+        [hashtable] $CustomFields,
 
         # Credential used to authenticate to ServiceNow
         [Parameter(ParameterSetName = 'SpecifyConnectionFields', Mandatory)]
         [ValidateNotNullOrEmpty()]
         [Alias('ServiceNowCredential')]
-        [PSCredential]$Credential,
+        [PSCredential] $Credential,
 
         # The URL for the ServiceNow instance being used (eg: instancename.service-now.com)
         [Parameter(ParameterSetName = 'SpecifyConnectionFields', Mandatory)]
         [ValidateNotNullOrEmpty()]
-        [string]$ServiceNowURL,
+        [string] $ServiceNowURL,
 
         #Azure Automation Connection object containing username, password, and URL for the ServiceNow instance
         [Parameter(ParameterSetName = 'UseConnectionObject', Mandatory)]
         [ValidateNotNullOrEmpty()]
-        [Hashtable]$Connection,
+        [Hashtable] $Connection,
 
         [Parameter(ParameterSetName = 'Session')]
         [ValidateNotNullOrEmpty()]
@@ -140,18 +140,5 @@ function New-ServiceNowIncident {
         ServiceNowSession = $ServiceNowSession
     }
 
-    # Update the splat if the parameters have values
-    # if ($null -ne $PSBoundParameters.Connection)
-    # {
-    #     $newServiceNowTableEntrySplat.Add('Connection',$Connection)
-    # }
-    # elseif ($null -ne $PSBoundParameters.ServiceNowCredential -and $null -ne $PSBoundParameters.ServiceNowURL)
-    # {
-    #     $newServiceNowTableEntrySplat.Add('ServiceNowCredential',$ServiceNowCredential)
-    #     $newServiceNowTableEntrySplat.Add('ServiceNowURL',$ServiceNowURL)
-    # }
-
-    # # Create the table entry
-    # New-ServiceNowTableEntry @newServiceNowTableEntrySplat
     Invoke-ServiceNowRestMethod @params
 }
