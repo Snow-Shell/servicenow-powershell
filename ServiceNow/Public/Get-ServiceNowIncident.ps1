@@ -52,7 +52,7 @@ function Get-ServiceNowIncident {
         [hashtable] $ServiceNowSession = $script:ServiceNowSession
     )
 
-    $result = Get-ServiceNowTable @PSBoundParameters -Table 'incident'
+    $result = Get-ServiceNowTableEntry @PSBoundParameters -Table 'incident'
 
     If (-not $Properties) {
         $result | ForEach-Object { $_.PSObject.TypeNames.Insert(0, "ServiceNow.Incident") }

@@ -52,7 +52,7 @@ function Get-ServiceNowRequest {
         [hashtable] $ServiceNowSession = $script:ServiceNowSession
     )
 
-    $result = Get-ServiceNowTable @PSBoundParameters -Table 'sc_request'
+    $result = Get-ServiceNowTableEntry @PSBoundParameters -Table 'sc_request'
 
     If (-not $Properties) {
         $result | ForEach-Object { $_.PSObject.TypeNames.Insert(0, "ServiceNow.Request") }

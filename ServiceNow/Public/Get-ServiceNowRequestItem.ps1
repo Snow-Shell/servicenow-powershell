@@ -67,7 +67,7 @@ function Get-ServiceNowRequestItem {
         [hashtable] $ServiceNowSession = $script:ServiceNowSession
     )
 
-    $result = Get-ServiceNowTable @PSBoundParameters -Table 'sc_req_item'
+    $result = Get-ServiceNowTableEntry @PSBoundParameters -Table 'sc_req_item'
 
     If (-not $Properties) {
         $result | ForEach-Object { $_.PSObject.TypeNames.Insert(0, "ServiceNow.RequestItem") }

@@ -90,55 +90,61 @@ function New-ServiceNowIncident {
         [hashtable] $ServiceNowSession = $script:ServiceNowSession
     )
 
-    # Create a hash table of any defined parameters (not CustomFields) that have values
-    $DefinedIncidentParameters = @('AssignmentGroup', 'Caller', 'Category', 'Comment', 'ConfigurationItem', 'Description', 'ShortDescription', 'Subcategory')
-    $TableEntryValues = @{}
-    ForEach ($Parameter in $DefinedIncidentParameters) {
-        If ($null -ne $PSBoundParameters.$Parameter) {
-            # Turn the defined parameter name into the ServiceNow attribute name
-            $KeyToAdd = Switch ($Parameter) {
-                AssignmentGroup { 'assignment_group'; break }
-                Caller { 'caller_id'; break }
-                Category { 'category'; break }
-                Comment { 'comments'; break }
-                ConfigurationItem { 'cmdb_ci'; break }
-                Description { 'description'; break }
-                ShortDescription { 'short_description'; break }
-                Subcategory { 'subcategory'; break }
-            }
-            $TableEntryValues.Add($KeyToAdd, $PSBoundParameters.$Parameter)
-        }
+    begin {
+        Write-Warning -Message 'PassThru will be implemented in a future release and the response will not be returned by default.  Please update your code to handle this.'
     }
 
-    # Add CustomFields hash pairs to the Table Entry Values hash table
-    If ($null -ne $PSBoundParameters.CustomFields) {
-        $DuplicateTableEntryValues = ForEach ($Key in $CustomFields.Keys) {
-            If (($TableEntryValues.ContainsKey($Key) -eq $False)) {
-                # Add the unique entry to the table entry values hash table
-                $TableEntryValues.Add($Key, $CustomFields[$Key])
-            } Else {
-                # Capture the duplicate key name
-                $Key
+    process {
+        # Create a hash table of any defined parameters (not CustomFields) that have values
+        $DefinedIncidentParameters = @('AssignmentGroup', 'Caller', 'Category', 'Comment', 'ConfigurationItem', 'Description', 'ShortDescription', 'Subcategory')
+        $TableEntryValues = @{}
+        ForEach ($Parameter in $DefinedIncidentParameters) {
+            If ($null -ne $PSBoundParameters.$Parameter) {
+                # Turn the defined parameter name into the ServiceNow attribute name
+                $KeyToAdd = Switch ($Parameter) {
+                    AssignmentGroup { 'assignment_group'; break }
+                    Caller { 'caller_id'; break }
+                    Category { 'category'; break }
+                    Comment { 'comments'; break }
+                    ConfigurationItem { 'cmdb_ci'; break }
+                    Description { 'description'; break }
+                    ShortDescription { 'short_description'; break }
+                    Subcategory { 'subcategory'; break }
+                }
+                $TableEntryValues.Add($KeyToAdd, $PSBoundParameters.$Parameter)
             }
         }
-    }
 
-    # Throw an error if duplicate fields were provided
-    If ($null -ne $DuplicateTableEntryValues) {
-        $DuplicateKeyList = $DuplicateTableEntryValues -join ","
-        Throw "Ticket fields may only be used once:  $DuplicateKeyList"
-    }
+        # Add CustomFields hash pairs to the Table Entry Values hash table
+        If ($null -ne $PSBoundParameters.CustomFields) {
+            $DuplicateTableEntryValues = ForEach ($Key in $CustomFields.Keys) {
+                If (($TableEntryValues.ContainsKey($Key) -eq $False)) {
+                    # Add the unique entry to the table entry values hash table
+                    $TableEntryValues.Add($Key, $CustomFields[$Key])
+                } Else {
+                    # Capture the duplicate key name
+                    $Key
+                }
+            }
+        }
 
-    # Table Entry Splat
-    $params = @{
-        Method            = 'Post'
-        Table             = 'incident'
-        Values            = $TableEntryValues
-        Connection        = $Connection
-        Credential        = $Credential
-        ServiceNowUrl     = $ServiceNowURL
-        ServiceNowSession = $ServiceNowSession
-    }
+        # Throw an error if duplicate fields were provided
+        If ($null -ne $DuplicateTableEntryValues) {
+            $DuplicateKeyList = $DuplicateTableEntryValues -join ","
+            Throw "Ticket fields may only be used once:  $DuplicateKeyList"
+        }
 
-    Invoke-ServiceNowRestMethod @params
+        # Table Entry Splat
+        $params = @{
+            Method            = 'Post'
+            Table             = 'incident'
+            Values            = $TableEntryValues
+            Connection        = $Connection
+            Credential        = $Credential
+            ServiceNowUrl     = $ServiceNowURL
+            ServiceNowSession = $ServiceNowSession
+        }
+
+        Invoke-ServiceNowRestMethod @params
+    }
 }

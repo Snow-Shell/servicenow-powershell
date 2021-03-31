@@ -62,7 +62,7 @@ function Get-ServiceNowTableEntry {
         [PSCredential]$Credential,
 
         [Parameter(ParameterSetName = 'SpecifyConnectionFields', Mandatory)]
-        [ValidateScript({Test-ServiceNowURL -Url $_})]
+        [ValidateScript( { Test-ServiceNowURL -Url $_ })]
         [Alias('Url')]
         [string]$ServiceNowURL,
 
@@ -75,5 +75,19 @@ function Get-ServiceNowTableEntry {
         [hashtable] $ServiceNowSession = $script:ServiceNowSession
     )
 
-    Get-ServiceNowTable @PSBoundParameters -Table $Table
+    $newServiceNowQuerySplat = @{
+        OrderBy        = $OrderBy
+        MatchExact     = $MatchExact
+        OrderDirection = $OrderDirection
+        MatchContains  = $MatchContains
+    }
+    $query = New-ServiceNowQuery @newServiceNowQuerySplat
+
+    $paramsWithoutQuery = $PSBoundParameters
+    $paramsWithoutQuery.Remove('OrderBy') | Out-Null
+    $paramsWithoutQuery.Remove('MatchExact') | Out-Null
+    $paramsWithoutQuery.Remove('OrderDirection') | Out-Null
+    $paramsWithoutQuery.Remove('MatchContains') | Out-Null
+
+    Get-ServiceNowTable @paramsWithoutQuery -Query $query
 }

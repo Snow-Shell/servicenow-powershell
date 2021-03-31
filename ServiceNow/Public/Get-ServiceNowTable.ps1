@@ -19,30 +19,30 @@ function Get-ServiceNowTable {
         # Name of the table we're querying (e.g. incidents)
         [parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        [string]$Table,
+        [string] $Table,
 
         # sysparm_query param in the format of a ServiceNow encoded query string (see http://wiki.servicenow.com/index.php?title=Encoded_Query_Strings)
         [Parameter(Mandatory = $false)]
-        [string]$Query,
+        [string] $Query,
 
         # Maximum number of records to return
         [Parameter(Mandatory = $false)]
-        [int]$Limit,
+        [int] $Limit,
 
         # Fields to return
         [Parameter(Mandatory = $false)]
         [Alias('Fields')]
-        [string[]]$Properties,
+        [string[]] $Properties,
 
         # Whether or not to show human readable display values instead of machine values
         [Parameter(Mandatory = $false)]
         [ValidateSet('true', 'false', 'all')]
-        [string]$DisplayValues = 'true',
+        [string] $DisplayValues = 'true',
 
         [Parameter(ParameterSetName = 'SpecifyConnectionFields', Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         [Alias('ServiceNowCredential')]
-        [PSCredential]$Credential,
+        [PSCredential] $Credential,
 
         [Parameter(ParameterSetName = 'SpecifyConnectionFields', Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
@@ -58,14 +58,6 @@ function Get-ServiceNowTable {
         [hashtable] $ServiceNowSession = $script:ServiceNowSession
     )
 
-    $newServiceNowQuerySplat = @{
-        OrderBy        = $OrderBy
-        OrderDirection = $OrderDirection
-        MatchExact     = $MatchExact
-        MatchContains  = $MatchContains
-    }
-    $Query = New-ServiceNowQuery @newServiceNowQuerySplat
-
     # Table Splat
     $getServiceNowTableSplat = @{
         Table             = $Table
@@ -78,16 +70,15 @@ function Get-ServiceNowTable {
         ServiceNowSession = $ServiceNowSession
     }
 
-    # Only add the Limit parameter if it was explicitly provided
+    # # Only add the Limit parameter if it was explicitly provided
     if ($PSBoundParameters.ContainsKey('Limit')) {
         $getServiceNowTableSplat.Add('Limit', $Limit)
     }
 
-    # Add all provided paging parameters
+    # # Add all provided paging parameters
     ($PSCmdlet.PagingParameters | Get-Member -MemberType Property).Name | ForEach-Object {
         $getServiceNowTableSplat.Add($_, $PSCmdlet.PagingParameters.$_)
     }
 
-    Write-Verbose ($getServiceNowTableSplat | Out-String)
     Invoke-ServiceNowRestMethod @getServiceNowTableSplat
 }

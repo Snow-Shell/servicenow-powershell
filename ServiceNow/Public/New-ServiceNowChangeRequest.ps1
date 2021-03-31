@@ -120,10 +120,11 @@ function New-ServiceNowChangeRequest {
 
         # Switch to allow the results to be passed back
         [Parameter()]
-        [switch]$PassThru
+        [switch] $PassThru
     )
 
     begin { }
+
     process {
         # Create a hash table of any defined parameters (not CustomFields) that have values
         $DefinedChangeRequestParameters = @('AssignmentGroup', 'Caller', 'Category', 'Comment', 'ConfigurationItem', 'Description', 'ShortDescription', 'Subcategory')

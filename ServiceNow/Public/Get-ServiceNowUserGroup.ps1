@@ -52,7 +52,7 @@ function Get-ServiceNowUserGroup{
         [hashtable] $ServiceNowSession = $script:ServiceNowSession
     )
 
-    $result = Get-ServiceNowTable @PSBoundParameters -Table 'sys_user_group'
+    $result = Get-ServiceNowTableEntry @PSBoundParameters -Table 'sys_user_group'
 
     If (-not $Properties) {
         $result | ForEach-Object { $_.PSObject.TypeNames.Insert(0, "ServiceNow.UserAndUserGroup") }

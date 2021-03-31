@@ -52,7 +52,7 @@ function Get-ServiceNowChangeRequest {
         [hashtable] $ServiceNowSession = $script:ServiceNowSession
     )
 
-    $result = Get-ServiceNowTable @PSBoundParameters -Table 'change_request'
+    $result = Get-ServiceNowTableEntry @PSBoundParameters -Table 'change_request'
 
     If (-not $Properties) {
         $result | ForEach-Object { $_.PSObject.TypeNames.Insert(0, "ServiceNow.ChangeRequest") }

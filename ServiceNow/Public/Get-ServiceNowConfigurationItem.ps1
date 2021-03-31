@@ -52,7 +52,7 @@ function Get-ServiceNowConfigurationItem {
         [hashtable] $ServiceNowSession = $script:ServiceNowSession
     )
 
-    $result = Get-ServiceNowTable @PSBoundParameters -Table 'cmdb_ci'
+    $result = Get-ServiceNowTableEntry @PSBoundParameters -Table 'cmdb_ci'
 
     If (-not $Properties) {
         $result | ForEach-Object { $_.PSObject.TypeNames.Insert(0, "ServiceNow.ConfigurationItem") }

@@ -35,7 +35,9 @@ function Update-ServiceNowTableEntry {
         [hashtable] $ServiceNowSession = $script:ServiceNowSession
     )
 
-    begin {}
+    begin {
+        Write-Warning -Message 'PassThru will be implemented in a future release and the response will not be returned by default.  Please update your code to handle this.'
+    }
 
     process {
         $params = @{
@@ -49,6 +51,8 @@ function Update-ServiceNowTableEntry {
             ServiceNowSession = $ServiceNowSession
         }
 
-        Invoke-ServiceNowRestMethod @params
+        If ($PSCmdlet.ShouldProcess("$Table $SysID", 'Update values')) {
+            Invoke-ServiceNowRestMethod @params
+        }
     }
 }
