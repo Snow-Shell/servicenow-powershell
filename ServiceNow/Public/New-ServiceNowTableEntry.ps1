@@ -1,4 +1,7 @@
-function New-ServiceNowTableEntry{
+function New-ServiceNowTableEntry {
+
+    [CmdletBinding(DefaultParameterSetName = 'Session', SupportsShouldProcess)]
+
     Param
     (
         # Name of the table we're inserting into (e.g. incidents)
@@ -10,26 +13,34 @@ function New-ServiceNowTableEntry{
         [hashtable] $Values,
 
         # Credential used to authenticate to ServiceNow
-        [Parameter(ParameterSetName='SpecifyConnectionFields', Mandatory)]
+        [Parameter(ParameterSetName = 'SpecifyConnectionFields', Mandatory)]
         [ValidateNotNullOrEmpty()]
         [PSCredential] $ServiceNowCredential,
 
         # The URL for the ServiceNow instance being used
-        [Parameter(ParameterSetName='SpecifyConnectionFields', Mandatory)]
+        [Parameter(ParameterSetName = 'SpecifyConnectionFields', Mandatory)]
         [ValidateNotNullOrEmpty()]
         [string]
         $ServiceNowURL,
 
         #Azure Automation Connection object containing username, password, and URL for the ServiceNow instance
-        [Parameter(ParameterSetName='UseConnectionObject', Mandatory)]
+        [Parameter(ParameterSetName = 'UseConnectionObject', Mandatory)]
         [ValidateNotNullOrEmpty()]
         [Hashtable]
         $Connection,
 
         [Parameter(ParameterSetName = 'Session')]
         [ValidateNotNullOrEmpty()]
-        [hashtable] $ServiceNowSession = $script:ServiceNowSession
+        [hashtable] $ServiceNowSession = $script:ServiceNowSession,
+
+        [Parameter()]
+        [switch] $PassThru
     )
 
-    Invoke-ServiceNowRestMethod @PSBoundParameters -Method 'Post'
+    If ( $PSCmdlet.ShouldProcess($Table, 'Create new entry') ) {
+        $response = Invoke-ServiceNowRestMethod @PSBoundParameters -Method 'Post'
+        If ($PassThru.IsPresent) {
+            $response
+        }
+    }
 }

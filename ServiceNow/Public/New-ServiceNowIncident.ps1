@@ -31,6 +31,8 @@ Generate an Incident by "Splatting" all fields used in the 1st example plus some
 #>
 function New-ServiceNowIncident {
 
+    [CmdletBinding(DefaultParameterSetName = 'Session', SupportsShouldProcess)]
+
     Param(
 
         # sys_id of the caller of the incident (user Get-ServiceNowUser to retrieve this)
@@ -87,12 +89,13 @@ function New-ServiceNowIncident {
 
         [Parameter(ParameterSetName = 'Session')]
         [ValidateNotNullOrEmpty()]
-        [hashtable] $ServiceNowSession = $script:ServiceNowSession
+        [hashtable] $ServiceNowSession = $script:ServiceNowSession,
+
+        [Parameter()]
+        [switch] $PassThru
     )
 
-    begin {
-        Write-Warning -Message 'PassThru will be implemented in a future release and the response will not be returned by default.  Please update your code to handle this.'
-    }
+    begin {}
 
     process {
         # Create a hash table of any defined parameters (not CustomFields) that have values
@@ -145,6 +148,11 @@ function New-ServiceNowIncident {
             ServiceNowSession = $ServiceNowSession
         }
 
-        Invoke-ServiceNowRestMethod @params
+        If ( $PSCmdlet.ShouldProcess($ShortDescription, 'Create new incident') ) {
+            $response = Invoke-ServiceNowRestMethod @params
+            If ($PassThru.IsPresent) {
+                $response
+            }
+        }
     }
 }

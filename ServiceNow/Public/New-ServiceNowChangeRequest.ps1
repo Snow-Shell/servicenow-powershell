@@ -73,7 +73,8 @@ function New-ServiceNowChangeRequest {
         New-ServiceNowChangeRequest @newServiceNowChangeRequestSplat
      #>
 
-    [CmdletBinding(DefaultParameterSetName, SupportsShouldProcess)]
+    [CmdletBinding(DefaultParameterSetName = 'Session', SupportsShouldProcess)]
+
     Param(
         [parameter(Mandatory)]
         [string]$Caller,
@@ -118,12 +119,11 @@ function New-ServiceNowChangeRequest {
         [ValidateNotNullOrEmpty()]
         [hashtable] $ServiceNowSession = $script:ServiceNowSession,
 
-        # Switch to allow the results to be passed back
         [Parameter()]
         [switch] $PassThru
     )
 
-    begin { }
+    begin {}
 
     process {
         # Create a hash table of any defined parameters (not CustomFields) that have values
@@ -176,12 +176,13 @@ function New-ServiceNowChangeRequest {
             ServiceNowSession = $ServiceNowSession
         }
 
-        If ($PSCmdlet.ShouldProcess($Uri, $MyInvocation.MyCommand)) {
-            $result = Invoke-ServiceNowRestMethod @params
+        If ( $PSCmdlet.ShouldProcess($ShortDescription, 'Create new change request') ) {
+            $response = Invoke-ServiceNowRestMethod @params
             If ($PassThru.IsPresent) {
-                $result
+                $response
             }
         }
     }
-    end { }
+
+    end {}
 }

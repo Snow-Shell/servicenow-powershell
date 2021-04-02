@@ -17,39 +17,39 @@ function Get-ServiceNowTable {
     [CmdletBinding(DefaultParameterSetName = 'Session', SupportsPaging)]
     Param (
         # Name of the table we're querying (e.g. incidents)
-        [parameter(Mandatory = $true)]
+        [parameter(Mandatory)]
         [ValidateNotNullOrEmpty()]
         [string] $Table,
 
         # sysparm_query param in the format of a ServiceNow encoded query string (see http://wiki.servicenow.com/index.php?title=Encoded_Query_Strings)
-        [Parameter(Mandatory = $false)]
+        [Parameter()]
         [string] $Query,
 
         # Maximum number of records to return
-        [Parameter(Mandatory = $false)]
+        [Parameter()]
         [int] $Limit,
 
         # Fields to return
-        [Parameter(Mandatory = $false)]
+        [Parameter()]
         [Alias('Fields')]
         [string[]] $Properties,
 
         # Whether or not to show human readable display values instead of machine values
-        [Parameter(Mandatory = $false)]
+        [Parameter()]
         [ValidateSet('true', 'false', 'all')]
         [string] $DisplayValues = 'true',
 
-        [Parameter(ParameterSetName = 'SpecifyConnectionFields', Mandatory = $true)]
+        [Parameter(ParameterSetName = 'SpecifyConnectionFields', Mandatory)]
         [ValidateNotNullOrEmpty()]
         [Alias('ServiceNowCredential')]
         [PSCredential] $Credential,
 
-        [Parameter(ParameterSetName = 'SpecifyConnectionFields', Mandatory = $true)]
+        [Parameter(ParameterSetName = 'SpecifyConnectionFields', Mandatory)]
         [ValidateNotNullOrEmpty()]
         [Alias('Url')]
         [string]$ServiceNowURL,
 
-        [Parameter(ParameterSetName = 'UseConnectionObject', Mandatory = $true)]
+        [Parameter(ParameterSetName = 'UseConnectionObject', Mandatory)]
         [ValidateNotNullOrEmpty()]
         [hashtable]$Connection,
 

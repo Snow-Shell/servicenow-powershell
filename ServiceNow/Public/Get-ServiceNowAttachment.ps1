@@ -45,52 +45,49 @@ Function Get-ServiceNowAttachment {
 
     #>
 
-    [System.Diagnostics.CodeAnalysis.SuppressMessage('PSAvoidUsingConvertToSecureStringWithPlainText', '')]
-    [System.Diagnostics.CodeAnalysis.SuppressMessage('PSAvoidGlobalVars', '')]
-
     [CmdletBinding(DefaultParameterSetName, SupportsShouldProcess = $true)]
     Param(
         # Object number
         [Parameter(Mandatory, ValueFromPipelineByPropertyName)]
         [Alias('sys_id')]
-        [string]$SysId,
+        [string] $SysId,
 
         [Parameter(Mandatory, ValueFromPipelineByPropertyName)]
         [Alias('file_name')]
-        [string]$FileName,
+        [string] $FileName,
 
         # Out path to download files
         [parameter()]
         [ValidateScript( {
                 Test-Path $_
             })]
-        [string]$Destination = $PWD.Path,
+        [string] $Destination = $PWD.Path,
 
         # Options impacting downloads
         [parameter()]
-        [switch]$AllowOverwrite,
+        [switch] $AllowOverwrite,
 
         # Options impacting downloads
         [parameter()]
-        [switch]$AppendNameWithSysID,
+        [switch] $AppendNameWithSysID,
 
         # Credential used to authenticate to ServiceNow
         [Parameter(ParameterSetName = 'SpecifyConnectionFields', Mandatory)]
         [ValidateNotNullOrEmpty()]
         [Alias('ServiceNowCredential')]
-        [PSCredential]$Credential,
+        [PSCredential] $Credential,
 
         # The URL for the ServiceNow instance being used
         [Parameter(ParameterSetName = 'SpecifyConnectionFields', Mandatory)]
         [ValidateScript( { $_ | Test-ServiceNowURL })]
         [ValidateNotNullOrEmpty()]
         [Alias('Url')]
-        [string]$ServiceNowURL,
+        [string] $ServiceNowURL,
 
         # Azure Automation Connection object containing username, password, and URL for the ServiceNow instance
         [Parameter(ParameterSetName = 'UseConnectionObject', Mandatory)]
         [ValidateNotNullOrEmpty()]
-        [Hashtable]$Connection,
+        [Hashtable] $Connection,
 
         [Parameter(ParameterSetName = 'Session')]
         [ValidateNotNullOrEmpty()]
@@ -98,32 +95,18 @@ Function Get-ServiceNowAttachment {
     )
 
     begin {}
+
     process	{
-        $params = @{}
-
-        if ( $ServiceNowSession ) {
-            $params.uri = $ServiceNowSession.BaseUri
-            if ( $ServiceNowSession.AccessToken ) {
-                $params.Headers = @{
-                    'Authorization' = 'Bearer {0}' -f $ServiceNowSession.AccessToken
-                }
-            }
-        } elseif ( $Credential -and $ServiceNowURL ) {
-            Write-Warning -Message 'This authentication path, providing URL and credential directly, will be deprecated in a future release.  Please use New-ServiceNowSession.'
-            $params.$uri = 'https://{0}/api/now/v1' -f $ServiceNowURL
-            $params.Credential = $Credential
-        } elseif ( $Connection ) {
-            $SecurePassword = ConvertTo-SecureString $Connection.Password -AsPlainText -Force
-            $Credential = New-Object System.Management.Automation.PSCredential ($Connection.Username, $SecurePassword)
-            $params.Credential = $Credential
-            $params.$uri = 'https://{0}/api/now/v1' -f $Connection.ServiceNowUri
-        } else {
-            throw "Exception:  You must do one of the following to authenticate: `n 1. Call the New-ServiceNowSession cmdlet `n 2. Pass in an Azure Automation connection object `n 3. Pass in an endpoint and credential"
+        $getAuth = @{
+            Credential        = $Credential
+            ServiceNowUrl     = $ServiceNowUrl
+            Connection        = $Connection
+            ServiceNowSession = $ServiceNowSession
         }
-
+        $params = Get-ServiceNowAuth @getAuth
 
         # URI format:  https://tenant.service-now.com/api/now/attachment/{sys_id}/file
-        $params.uri += '/attachment/' + $SysID + '/file'
+        $params.Uri += '/attachment/' + $SysID + '/file'
 
         If ($AppendNameWithSysID.IsPresent) {
             $FileName = "{0}_{1}{2}" -f [io.path]::GetFileNameWithoutExtension($FileName),

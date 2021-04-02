@@ -19,110 +19,80 @@ Function Update-ServiceNowNumber {
 
     #>
 
-    [System.Diagnostics.CodeAnalysis.SuppressMessage('PSAvoidUsingConvertToSecureStringWithPlainText','')]
-    [System.Diagnostics.CodeAnalysis.SuppressMessage('PSAvoidGlobalVars','')]
+    [CmdletBinding(DefaultParameterSetName = 'Session', SupportsShouldProcess)]
 
-    [CmdletBinding(DefaultParameterSetName,SupportsShouldProcess=$true)]
     Param(
-        # Object number
-        [Parameter(Mandatory=$true)]
-        [string]$Number,
-
         # Table containing the entry
-        [Parameter(Mandatory=$true)]
+        [Parameter(Mandatory)]
         [string]$Table,
 
+        # Object number
+        [Parameter(Mandatory)]
+        [string]$Number,
+
+        # Hashtable of values to use as the record's properties
+        [parameter()]
+        [hashtable]$Values,
+
         # Credential used to authenticate to ServiceNow
-        [Parameter(ParameterSetName='SpecifyConnectionFields', Mandatory=$true)]
+        [Parameter(ParameterSetName = 'SpecifyConnectionFields', Mandatory)]
         [ValidateNotNullOrEmpty()]
         [Alias('ServiceNowCredential')]
         [PSCredential]$Credential,
 
         # The URL for the ServiceNow instance being used
-        [Parameter(ParameterSetName='SpecifyConnectionFields', Mandatory=$true)]
+        [Parameter(ParameterSetName = 'SpecifyConnectionFields', Mandatory)]
         [ValidateNotNullOrEmpty()]
         [string]$ServiceNowURL,
 
         # Azure Automation Connection object containing username, password, and URL for the ServiceNow instance
-        [Parameter(ParameterSetName='UseConnectionObject', Mandatory=$true)]
+        [Parameter(ParameterSetName = 'UseConnectionObject', Mandatory)]
         [ValidateNotNullOrEmpty()]
         [Hashtable]$Connection,
 
-        # Hashtable of values to use as the record's properties
-        [parameter(Mandatory=$false)]
-        [hashtable]$Values,
+        [Parameter(ParameterSetName = 'Session')]
+        [ValidateNotNullOrEmpty()]
+        [hashtable] $ServiceNowSession = $script:ServiceNowSession,
 
         # Switch to allow the results to be passed back
-        [parameter(Mandatory=$false)]
+        [parameter()]
         [switch]$PassThru
     )
 
     begin {}
+
     process {
-        Try {
-            # Prep a splat to use the provided number to find the sys_id
-            $getServiceNowTableEntry = @{
-                Table         = $Table
-                MatchExact    = @{number = $number}
-                ErrorAction   = 'Stop'
-            }
-
-            # Process credential steps based on parameter set name
-            Switch ($PSCmdlet.ParameterSetName) {
-                'SpecifyConnectionFields' {
-                    $getServiceNowTableEntry.Add('ServiceNowCredential',$Credential)
-                    $getServiceNowTableEntry.Add('ServiceNowURL',$ServiceNowURL)
-                    $ServiceNowURL = 'https://' + $ServiceNowURL + '/api/now/v1'
-                    break
-                }
-                'UseConnectionObject' {
-                    $getServiceNowTableEntry.Add('Connection',$Connection)
-                    $SecurePassword = ConvertTo-SecureString $Connection.Password -AsPlainText -Force
-                    $Credential = New-Object System.Management.Automation.PSCredential ($Connection.Username, $SecurePassword)
-                    $ServiceNowURL = 'https://' + $Connection.ServiceNowUri + '/api/now/v1'
-                    break
-                }
-                Default {
-                    If ((Test-ServiceNowAuthIsSet)) {
-                        $Credential = $Global:ServiceNowCredentials
-                        $ServiceNowURL = $Global:ServiceNowRESTURL
-                    }
-                    Else {
-                        Throw "Exception:  You must do one of the following to authenticate: `n 1. Call the Set-ServiceNowAuth cmdlet `n 2. Pass in an Azure Automation connection object `n 3. Pass in an endpoint and credential"
-                    }
-                }
-            }
-
-            # Use the number and table to determine the sys_id
-            $SysID = Get-ServiceNowTableEntry @getServiceNowTableEntry | Select-Object -Expand sys_id
-
-            # Convert the values to Json and encode them to an UTF8 array to support special chars
-            $Body = $Values | ConvertTo-Json
-            $utf8Bytes = [System.Text.Encoding]::Utf8.GetBytes($Body)
-
-            # Setup splat
-            $Uri = $ServiceNowURL + "/table/$Table/$SysID"
-            $invokeRestMethodSplat = @{
-                Uri         = $uri
-                Method      = 'Patch'
-                Credential  = $Credential
-                Body        = $utf8Bytes
-                ContentType = 'application/json'
-            }
-
-            If ($PSCmdlet.ShouldProcess("$Table/$SysID",$MyInvocation.MyCommand)) {
-                # Send REST call
-                $Result = (Invoke-RestMethod @invokeRestMethodSplat).Result
-
-                # Option to return results
-                If ($PSBoundParameters.ContainsKey('Passthru')) {
-                    $Result
-                }
-            }
+        # Prep a splat to use the provided number to find the sys_id
+        $getSysIdParams = @{
+            Table             = $Table
+            Query             = (New-ServiceNowQuery -MatchExact @{'number' = $number })
+            Properties        = 'sys_id'
+            Connection        = $Connection
+            Credential        = $Credential
+            ServiceNowUrl     = $ServiceNowURL
+            ServiceNowSession = $ServiceNowSession
         }
-        Catch {
-            Write-Error $PSItem
+
+        # Use the number and table to determine the sys_id
+        $sysId = Invoke-ServiceNowRestMethod @getSysIdParams | Select-Object -ExpandProperty sys_id
+
+        $updateParams = @{
+            Method            = 'Patch'
+            Table             = $Table
+            SysId             = $sysId
+            Values            = $Values
+            Connection        = $Connection
+            Credential        = $Credential
+            ServiceNowUrl     = $ServiceNowURL
+            ServiceNowSession = $ServiceNowSession
+        }
+        If ($PSCmdlet.ShouldProcess("$Table $SysID", 'Update values')) {
+            $response = Invoke-ServiceNowRestMethod @updateParams
+            if ( $PassThru.IsPresent ) {
+                $response
+            }
         }
     }
+
     end {}
 }

@@ -27,27 +27,27 @@ Function Remove-ServiceNowAttachment {
     Param(
         # Attachment sys_id
         [Parameter(
-            Mandatory=$true,
+            Mandatory,
             ValueFromPipelineByPropertyName = $true
         )]
         [Alias('sys_id')]
         [string]$SysID,
 
         # Credential used to authenticate to ServiceNow
-        [Parameter(ParameterSetName='SpecifyConnectionFields', Mandatory=$true)]
+        [Parameter(ParameterSetName='SpecifyConnectionFields', Mandatory)]
         [ValidateNotNullOrEmpty()]
         [Alias('ServiceNowCredential')]
         [PSCredential]$Credential,
 
         # The URL for the ServiceNow instance being used
-        [Parameter(ParameterSetName='SpecifyConnectionFields', Mandatory=$true)]
-        [ValidateScript({Test-ServiceNowURL -Url $_})]
+        [Parameter(ParameterSetName='SpecifyConnectionFields', Mandatory)]
+        [ValidateScript({$_ | Test-ServiceNowURL})]
         [ValidateNotNullOrEmpty()]
         [Alias('Url')]
         [string]$ServiceNowURL,
 
         # Azure Automation Connection object containing username, password, and URL for the ServiceNow instance
-        [Parameter(ParameterSetName='UseConnectionObject', Mandatory=$true)]
+        [Parameter(ParameterSetName='UseConnectionObject', Mandatory)]
         [ValidateNotNullOrEmpty()]
         [Hashtable]$Connection
     )

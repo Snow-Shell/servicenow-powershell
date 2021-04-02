@@ -30,12 +30,13 @@ function Update-ServiceNowIncident {
 
         [Parameter(ParameterSetName = 'Session')]
         [ValidateNotNullOrEmpty()]
-        [hashtable] $ServiceNowSession = $script:ServiceNowSession
+        [hashtable] $ServiceNowSession = $script:ServiceNowSession,
+
+        [Parameter()]
+        [switch] $PassThru
     )
 
-    begin {
-        Write-Warning -Message 'PassThru will be implemented in a future release and the response will not be returned by default.  Please update your code to handle this.'
-    }
+    begin {}
 
     process {
         $params = @{
@@ -50,9 +51,11 @@ function Update-ServiceNowIncident {
         }
 
         If ($PSCmdlet.ShouldProcess("Incident $SysID", 'Update values')) {
-            Invoke-ServiceNowRestMethod @params
+            $response = Invoke-ServiceNowRestMethod @params
+            if ( $PassThru.IsPresent ) {
+                $response
+            }
         }
-
     }
 
     end {}

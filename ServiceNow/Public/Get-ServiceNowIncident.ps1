@@ -3,33 +3,33 @@ function Get-ServiceNowIncident {
     [CmdletBinding(DefaultParameterSetName = 'Session', SupportsPaging)]
     Param(
         # Machine name of the field to order by
-        [Parameter(Mandatory = $false)]
+        [Parameter()]
         [string]$OrderBy = 'opened_at',
 
         # Direction of ordering (Desc/Asc)
-        [Parameter(Mandatory = $false)]
+        [Parameter()]
         [ValidateSet('Desc', 'Asc')]
         [string]$OrderDirection = 'Desc',
 
         # Maximum number of records to return
-        [Parameter(Mandatory = $false)]
+        [Parameter()]
         [int]$Limit,
 
         # Fields to return
-        [Parameter(Mandatory = $false)]
+        [Parameter()]
         [Alias('Fields')]
         [string[]]$Properties,
 
         # Hashtable containing machine field names and values returned must match exactly (will be combined with AND)
-        [Parameter(Mandatory = $false)]
+        [Parameter()]
         [hashtable]$MatchExact = @{},
 
         # Hashtable containing machine field names and values returned rows must contain (will be combined with AND)
-        [Parameter(Mandatory = $false)]
+        [Parameter()]
         [hashtable]$MatchContains = @{},
 
         # Whether or not to show human readable display values instead of machine values
-        [Parameter(Mandatory = $false)]
+        [Parameter()]
         [ValidateSet('true', 'false', 'all')]
         [string]$DisplayValues = 'true',
 
@@ -54,7 +54,7 @@ function Get-ServiceNowIncident {
 
     $result = Get-ServiceNowTableEntry @PSBoundParameters -Table 'incident'
 
-    If (-not $Properties) {
+    If ( $result -and -not $Properties) {
         $result | ForEach-Object { $_.PSObject.TypeNames.Insert(0, "ServiceNow.Incident") }
     }
     $result

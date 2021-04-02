@@ -19,33 +19,33 @@ function Get-ServiceNowRequestItem {
     [CmdletBinding(DefaultParameterSetName = 'Session', SupportsPaging)]
     param(
         # Machine name of the field to order by
-        [parameter(Mandatory = $false)]
+        [parameter()]
         [string]$OrderBy = 'opened_at',
 
         # Direction of ordering (Desc/Asc)
-        [parameter(Mandatory = $false)]
+        [parameter()]
         [ValidateSet('Desc', 'Asc')]
         [string]$OrderDirection = 'Desc',
 
         # Maximum number of records to return
-        [parameter(Mandatory = $false)]
+        [parameter()]
         [int]$Limit,
 
         # Fields to return
-        [Parameter(Mandatory = $false)]
+        [Parameter()]
         [Alias('Fields')]
         [string[]]$Properties,
 
         # Hashtable containing machine field names and values returned must match exactly (will be combined with AND)
-        [parameter(Mandatory = $false)]
+        [parameter()]
         [hashtable]$MatchExact = @{},
 
         # Hashtable containing machine field names and values returned rows must contain (will be combined with AND)
-        [parameter(Mandatory = $false)]
+        [parameter()]
         [hashtable]$MatchContains = @{},
 
         # Whether or not to show human readable display values instead of machine values
-        [parameter(Mandatory = $false)]
+        [parameter()]
         [ValidateSet('true', 'false', 'all')]
         [string]$DisplayValues = 'true',
 
@@ -69,7 +69,7 @@ function Get-ServiceNowRequestItem {
 
     $result = Get-ServiceNowTableEntry @PSBoundParameters -Table 'sc_req_item'
 
-    If (-not $Properties) {
+    If ( $result -and -not $Properties) {
         $result | ForEach-Object { $_.PSObject.TypeNames.Insert(0, "ServiceNow.RequestItem") }
     }
     $result

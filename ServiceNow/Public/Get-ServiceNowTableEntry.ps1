@@ -62,7 +62,7 @@ function Get-ServiceNowTableEntry {
         [PSCredential]$Credential,
 
         [Parameter(ParameterSetName = 'SpecifyConnectionFields', Mandatory)]
-        [ValidateScript( { Test-ServiceNowURL -Url $_ })]
+        [ValidateScript( { $_ | Test-ServiceNowURL })]
         [Alias('Url')]
         [string]$ServiceNowURL,
 
@@ -89,5 +89,6 @@ function Get-ServiceNowTableEntry {
     $paramsWithoutQuery.Remove('OrderDirection') | Out-Null
     $paramsWithoutQuery.Remove('MatchContains') | Out-Null
 
-    Get-ServiceNowTable @paramsWithoutQuery -Query $query
+    Invoke-ServiceNowRestMethod @paramsWithoutQuery -Query $query
+    # Get-ServiceNowTable @paramsWithoutQuery -Query $query
 }
