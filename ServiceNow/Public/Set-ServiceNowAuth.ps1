@@ -29,7 +29,7 @@ function Set-ServiceNowAuth {
         [ValidateNotNullOrEmpty()]
         [System.Management.Automation.PSCredential] $Credentials
     )
-    Write-Warning -Message 'Set-ServiceNowAuth will be deprecated in a future release.  Please use New-ServiceNowSession.'
-    New-ServiceNowSession -Url $Url -Credential $Credentials
+    Write-Warning -Message 'Set-ServiceNowAuth will be deprecated in a future release.  Please use New-ServiceNowSession.  Also, the current default of v1 of the API will be deprecated in favor of the latest in a future release.  Set-ServiceNowAuth will utilize v1.  To test the latest API, use New-ServiceNowSession.'
+    New-ServiceNowSession -Url $Url -Credential $Credentials -ApiVersion 1
     return $true
 }

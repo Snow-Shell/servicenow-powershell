@@ -36,13 +36,7 @@ function New-ServiceNowSession {
     Write-Verbose $PSCmdLet.ParameterSetName
 
     if ( $ApiVersion -le 0 ) {
-        if ( $PSCmdLet.ParameterSetName -eq 'BasicAuth' ) {
-            # for existing users the expectation is v1 of the api, keep this for now
-            Write-Warning -Message 'A default of v1 of the API will be deprecated in favor of the latest in a future release.'
-            $version = '/v1'
-        } else {
-            $version = ''
-        }
+        $version = ''
     } else {
         $version = ('/v{0}' -f $ApiVersion)
     }
