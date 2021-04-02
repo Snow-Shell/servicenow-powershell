@@ -3,7 +3,28 @@
 Create a new ServiceNow session
 
 .DESCRIPTION
+Create a new ServiceNow session via credentials, OAuth, or access token.
+This session will be used by default for all future calls.
+Optionally, you can specify the api version you'd like to use; the default is the latest.
 
+.PARAMETER Url
+Base domain for your ServiceNow instance, eg. tenant.domain.com
+
+.PARAMETER Credential
+Username and password to connect.  This can be used standalone to use basic authentication or in conjunction with ClientCredential for OAuth.
+
+.PARAMETER ClientCredential
+Required for OAuth.  Credential where the username is the Client ID and the password is the Secret.
+
+.PARAMETER AccessToken
+Provide the access token directly if obtained outside of this module.
+
+.PARAMETER ApiVersion
+Specific API version to use.  The default is the latest.
+
+.PARAMETER PassThru
+Provide the resulting session object to the pipeline as opposed to setting as a script scoped variable to be used by default for other calls.
+This is useful if you want to have multiple sessions with different api versions, credentials, etc.
 #>
 function New-ServiceNowSession {
 
@@ -42,7 +63,7 @@ function New-ServiceNowSession {
     }
 
     $newSession = @{
-        Domain = $Url
+        Domain  = $Url
         BaseUri = ('https://{0}/api/now{1}' -f $Url, $version)
     }
 
@@ -78,7 +99,7 @@ function New-ServiceNowSession {
         }
     }
 
-    Write-Verbose ($newSession | Out-String)
+    Write-Verbose ($newSession | ConvertTo-Json)
 
     if ( $PassThru ) {
         $newSession
