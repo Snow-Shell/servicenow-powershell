@@ -81,36 +81,6 @@ function Invoke-ServiceNowRestMethod {
     $params.Method = $Method
     $params.ContentType = 'application/json'
 
-    # $params = @{
-    #     Method      = $Method
-    #     ContentType = 'application/json'
-    # }
-
-    # # Get credential and ServiceNow REST URL
-    # if ( $ServiceNowSession.Count -gt 0 ) {
-    #     $uri = $ServiceNowSession.BaseUri
-    #     if ( $ServiceNowSession.AccessToken ) {
-    #         $params.Headers = @{
-    #             'Authorization' = 'Bearer {0}' -f $ServiceNowSession.AccessToken
-    #         }
-    #     }
-    # } elseif ( $Credential -and $ServiceNowURL ) {
-    #     Write-Warning -Message 'This authentication path, providing URL and credential directly, will be deprecated in a future release.  Please use New-ServiceNowSession.'
-    #     $uri = 'https://{0}/api/now/v1' -f $ServiceNowURL
-    #     $params.Credential = $Credential
-    # } elseif ( $Connection ) {
-    #     $SecurePassword = ConvertTo-SecureString $Connection.Password -AsPlainText -Force
-    #     $Credential = New-Object System.Management.Automation.PSCredential ($Connection.Username, $SecurePassword)
-    #     $params.Credential = $Credential
-    #     $uri = 'https://{0}/api/now/v1' -f $Connection.ServiceNowUri
-    # } else {
-    #     throw "Exception:  You must do one of the following to authenticate: `n 1. Call the New-ServiceNowSession cmdlet `n 2. Pass in an Azure Automation connection object `n 3. Pass in an endpoint and credential"
-    # }
-
-    # if ( $Header ) {
-    #     $params.Headers += $Header
-    # }
-
     if ( $Table ) {
         $params.Uri += "/table/$Table"
         if ( $SysId ) {
@@ -183,7 +153,7 @@ function Invoke-ServiceNowRestMethod {
         $params.Body = $Body
     }
 
-    Write-Verbose ($params | Format-List | Out-String)
+    Write-Verbose ($params | ConvertTo-Json)
 
     $response = Invoke-RestMethod @params
 

@@ -20,77 +20,88 @@ Function Remove-ServiceNowAttachment {
 
     #>
 
-    [System.Diagnostics.CodeAnalysis.SuppressMessage('PSAvoidUsingConvertToSecureStringWithPlainText','')]
-    [System.Diagnostics.CodeAnalysis.SuppressMessage('PSAvoidGlobalVars','')]
-
-    [CmdletBinding(DefaultParameterSetName,SupportsShouldProcess=$true)]
+    [CmdletBinding(DefaultParameterSetName = 'Session', SupportsShouldProcess, ConfirmImpact = 'High')]
     Param(
         # Attachment sys_id
-        [Parameter(
-            Mandatory,
-            ValueFromPipelineByPropertyName = $true
-        )]
+        [Parameter(Mandatory, ValueFromPipelineByPropertyName)]
         [Alias('sys_id')]
         [string]$SysID,
 
         # Credential used to authenticate to ServiceNow
-        [Parameter(ParameterSetName='SpecifyConnectionFields', Mandatory)]
+        [Parameter(ParameterSetName = 'SpecifyConnectionFields', Mandatory)]
         [ValidateNotNullOrEmpty()]
         [Alias('ServiceNowCredential')]
         [PSCredential]$Credential,
 
         # The URL for the ServiceNow instance being used
-        [Parameter(ParameterSetName='SpecifyConnectionFields', Mandatory)]
-        [ValidateScript({$_ | Test-ServiceNowURL})]
+        [Parameter(ParameterSetName = 'SpecifyConnectionFields', Mandatory)]
+        [ValidateScript( { $_ | Test-ServiceNowURL })]
         [ValidateNotNullOrEmpty()]
         [Alias('Url')]
         [string]$ServiceNowURL,
 
         # Azure Automation Connection object containing username, password, and URL for the ServiceNow instance
-        [Parameter(ParameterSetName='UseConnectionObject', Mandatory)]
+        [Parameter(ParameterSetName = 'UseConnectionObject', Mandatory)]
         [ValidateNotNullOrEmpty()]
-        [Hashtable]$Connection
+        [Hashtable]$Connection,
+
+        [Parameter(ParameterSetName = 'Session')]
+        [ValidateNotNullOrEmpty()]
+        [hashtable] $ServiceNowSession = $script:ServiceNowSession
     )
 
-	begin {}
-	process	{
-		# DELETE: https://tenant.service-now.com/api/now/v1/attachment/{sys_id}
+    begin {}
 
-        # Process credential steps based on parameter set name
-        Switch ($PSCmdlet.ParameterSetName) {
-            'SpecifyConnectionFields' {
-                $ApiUrl = 'https://' + $ServiceNowURL + '/api/now/v1/attachment'
-                break
-            }
-            'UseConnectionObject' {
-                $SecurePassword = ConvertTo-SecureString $Connection.Password -AsPlainText -Force
-                $Credential = New-Object System.Management.Automation.PSCredential ($Connection.Username, $SecurePassword)
-                $ApiUrl = 'https://' + $Connection.ServiceNowUri + '/api/now/v1/attachment'
-                break
-            }
-            Default {
-                If (Test-ServiceNowAuthIsSet) {
-                    $Credential = $Global:ServiceNowCredentials
-                    $ApiUrl = $Global:ServiceNowRESTURL + '/attachment'
-                }
-                Else {
-                    Throw "Exception:  You must do one of the following to authenticate: `n 1. Call the Set-ServiceNowAuth cmdlet `n 2. Pass in an Azure Automation connection object `n 3. Pass in an endpoint and credential"
-                }
-            }
+    process	{
+        # DELETE: https://tenant.service-now.com/api/now/v1/attachment/{sys_id}
+
+        # # Process credential steps based on parameter set name
+        # Switch ($PSCmdlet.ParameterSetName) {
+        #     'SpecifyConnectionFields' {
+        #         $ApiUrl = 'https://' + $ServiceNowURL + '/api/now/v1/attachment'
+        #         break
+        #     }
+        #     'UseConnectionObject' {
+        #         $SecurePassword = ConvertTo-SecureString $Connection.Password -AsPlainText -Force
+        #         $Credential = New-Object System.Management.Automation.PSCredential ($Connection.Username, $SecurePassword)
+        #         $ApiUrl = 'https://' + $Connection.ServiceNowUri + '/api/now/v1/attachment'
+        #         break
+        #     }
+        #     Default {
+        #         If (Test-ServiceNowAuthIsSet) {
+        #             $Credential = $Global:ServiceNowCredentials
+        #             $ApiUrl = $Global:ServiceNowRESTURL + '/attachment'
+        #         } Else {
+        #             Throw "Exception:  You must do one of the following to authenticate: `n 1. Call the Set-ServiceNowAuth cmdlet `n 2. Pass in an Azure Automation connection object `n 3. Pass in an endpoint and credential"
+        #         }
+        #     }
+        # }
+
+        $params = @{
+            Method            = 'Delete'
+            UriLeaf           = "/attachment/$SysId"
+            Connection        = $Connection
+            Credential        = $Credential
+            ServiceNowUrl     = $ServiceNowURL
+            ServiceNowSession = $ServiceNowSession
         }
 
-        $Uri = $ApiUrl + '/' + $SysID
-        Write-Verbose "URI:  $Uri"
-
-        $invokeRestMethodSplat = @{
-            Uri         = $Uri
-            Credential  = $Credential
-            Method      = 'Delete'
+        If ($PSCmdlet.ShouldProcess("SysId $SysId", 'Remove attachment')) {
+            Invoke-ServiceNowRestMethod @params
         }
 
-        If ($PSCmdlet.ShouldProcess($Uri,$MyInvocation.MyCommand)) {
-            (Invoke-RestMethod @invokeRestMethodSplat).Result
-        }
+        # $Uri = $ApiUrl + '/' + $SysID
+        # Write-Verbose "URI:  $Uri"
+
+        # $invokeRestMethodSplat = @{
+        #     Uri        = $Uri
+        #     Credential = $Credential
+        #     Method     = 'Delete'
+        # }
+
+        # If ($PSCmdlet.ShouldProcess($Uri, $MyInvocation.MyCommand)) {
+        #     (Invoke-RestMethod @invokeRestMethodSplat).Result
+        # }
     }
-	end {}
+    end {}
 }

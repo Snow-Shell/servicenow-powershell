@@ -121,7 +121,7 @@ Function Add-ServiceNowAttachment {
             # POST: https://instance.service-now.com/api/now/attachment/file?table_name=incident&table_sys_id=d71f7935c0a8016700802b64c67c11c6&file_name=Issue_screenshot
             # $Uri = "{0}/file?table_name={1}&table_sys_id={2}&file_name={3}" -f $ApiUrl, $Table, $TableSysID, $FileData.Name
             $invokeRestMethodSplat = $auth
-            $invokeRestMethodSplat.Uri += '/file?table_name={0}&table_sys_id={1}&file_name={2}' -f $Table, $sysId, $FileData.Name
+            $invokeRestMethodSplat.Uri += '/attachment/file?table_name={0}&table_sys_id={1}&file_name={2}' -f $Table, $sysId, $FileData.Name
             $invokeRestMethodSplat.Headers += @{'Content-Type' = $ContentType }
             $invokeRestMethodSplat += @{
                 Method = 'POST'
@@ -129,11 +129,11 @@ Function Add-ServiceNowAttachment {
             }
 
             If ($PSCmdlet.ShouldProcess("$Table $Number", 'Add attachment')) {
-                $invokeRestMethodSplat | ConvertTo-Json
+                Write-Verbose ($invokeRestMethodSplat | ConvertTo-Json)
                 $response = Invoke-RestMethod @invokeRestMethodSplat
 
                 If ($PassThru) {
-                    $response
+                    $response.result
                 }
             }
         }
