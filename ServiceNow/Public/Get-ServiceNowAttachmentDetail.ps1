@@ -51,7 +51,7 @@ Function Get-ServiceNowAttachmentDetail {
         [Parameter(ParameterSetName = 'SpecifyConnectionFields', Mandatory)]
         [ValidateNotNullOrEmpty()]
         [Alias('ServiceNowCredential')]
-        [PSCredential]$Credential,
+        [PSCredential] $Credential,
 
         # The URL for the ServiceNow instance being used
         [Parameter(ParameterSetName = 'SpecifyConnectionFields', Mandatory)]
@@ -87,7 +87,7 @@ Function Get-ServiceNowAttachmentDetail {
         # Use the number and table to determine the sys_id
         $sysId = Invoke-ServiceNowRestMethod @getSysIdParams | Select-Object -ExpandProperty sys_id
 
-        $getSysIdParams = @{
+        $params = @{
             Uri               = '/attachment'
             Query             = (New-ServiceNowQuery -MatchExact @{
                     table_name   = $Table
@@ -98,7 +98,7 @@ Function Get-ServiceNowAttachmentDetail {
             ServiceNowUrl     = $ServiceNowURL
             ServiceNowSession = $ServiceNowSession
         }
-        $response = Invoke-ServiceNowRestMethod @getSysIdParams
+        $response = Invoke-ServiceNowRestMethod @params
 
         if ( $FileName ) {
             $response = $response | Where-Object { $_.file_name -in $FileName }
@@ -106,5 +106,6 @@ Function Get-ServiceNowAttachmentDetail {
 
         $response | Update-ServiceNowDateTimeField
     }
+
     end {}
 }
