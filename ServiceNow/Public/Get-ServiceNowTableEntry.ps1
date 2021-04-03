@@ -22,103 +22,73 @@ function Get-ServiceNowTableEntry {
     [CmdletBinding(DefaultParameterSetName, SupportsPaging)]
     param(
         # Table containing the entry we're deleting
-        [parameter(mandatory = $true)]
+        [parameter(Mandatory)]
         [string]$Table,
 
         # Machine name of the field to order by
-        [parameter(Mandatory = $false)]
+        [parameter()]
         [string]$OrderBy = 'opened_at',
 
         # Direction of ordering (Desc/Asc)
-        [parameter(Mandatory = $false)]
+        [parameter()]
         [ValidateSet('Desc', 'Asc')]
         [string]$OrderDirection = 'Desc',
 
         # Maximum number of records to return
-        [parameter(Mandatory = $false)]
+        [parameter()]
         [int]$Limit,
 
         # Fields to return
-        [Parameter(Mandatory = $false)]
+        [Parameter()]
         [Alias('Fields')]
         [string[]]$Properties,
 
         # Hashtable containing machine field names and values returned must match exactly (will be combined with AND)
-        [parameter(Mandatory = $false)]
+        [parameter()]
         [hashtable]$MatchExact = @{},
 
         # Hashtable containing machine field names and values returned rows must contain (will be combined with AND)
-        [parameter(Mandatory = $false)]
+        [parameter()]
         [hashtable]$MatchContains = @{},
 
         # Whether or not to show human readable display values instead of machine values
-        [parameter(Mandatory = $false)]
+        [parameter()]
         [ValidateSet('true', 'false', 'all')]
         [string]$DisplayValues = 'true',
 
-        [Parameter(ParameterSetName = 'SpecifyConnectionFields', Mandatory = $true)]
+        [Parameter(ParameterSetName = 'SpecifyConnectionFields', Mandatory)]
         [ValidateNotNullOrEmpty()]
         [Alias('ServiceNowCredential')]
         [PSCredential]$Credential,
 
-        [Parameter(ParameterSetName = 'SpecifyConnectionFields', Mandatory = $true)]
-        [ValidateScript({Test-ServiceNowURL -Url $_})]
+        [Parameter(ParameterSetName = 'SpecifyConnectionFields', Mandatory)]
+        [ValidateScript( { $_ | Test-ServiceNowURL })]
         [Alias('Url')]
         [string]$ServiceNowURL,
 
-        [Parameter(ParameterSetName = 'UseConnectionObject', Mandatory = $true)]
+        [Parameter(ParameterSetName = 'UseConnectionObject', Mandatory)]
         [ValidateNotNullOrEmpty()]
-        [hashtable]$Connection
+        [hashtable]$Connection,
+
+        [Parameter(ParameterSetName = 'Session')]
+        [ValidateNotNullOrEmpty()]
+        [hashtable] $ServiceNowSession = $script:ServiceNowSession
     )
 
-    Try {
-        # Query Splat
-        $newServiceNowQuerySplat = @{
-            OrderBy        = $OrderBy
-            MatchExact     = $MatchExact
-            OrderDirection = $OrderDirection
-            MatchContains  = $MatchContains
-            ErrorAction    = 'Stop'
-        }
-        $Query = New-ServiceNowQuery @newServiceNowQuerySplat
-
-        # Table Splat
-        $getServiceNowTableSplat = @{
-            Table         = $Table
-            Query         = $Query
-            Fields        = $Properties
-            DisplayValues = $DisplayValues
-            ErrorAction   = 'Stop'
-        }
-
-        # Update the Table Splat if an applicable parameter set name is in use
-        Switch ($PSCmdlet.ParameterSetName) {
-            'SpecifyConnectionFields' {
-                $getServiceNowTableSplat.Add('Credential', $Credential)
-                $getServiceNowTableSplat.Add('ServiceNowURL', $ServiceNowURL)
-                break
-            }
-            'UseConnectionObject' {
-                $getServiceNowTableSplat.Add('Connection', $Connection)
-                break
-            }
-            Default {}
-        }
-
-        # Only add the Limit parameter if it was explicitly provided
-        if ($PSBoundParameters.ContainsKey('Limit')) {
-            $getServiceNowTableSplat.Add('Limit', $Limit)
-        }
-
-        # Add all provided paging parameters
-        ($PSCmdlet.PagingParameters | Get-Member -MemberType Property).Name | Foreach-Object {
-            $getServiceNowTableSplat.Add($_, $PSCmdlet.PagingParameters.$_)
-        }
-
-        # Perform table query and return each object.  No fancy formatting here as this can pull tables with unknown default properties
-        Get-ServiceNowTable @getServiceNowTableSplat
+    $newServiceNowQuerySplat = @{
+        OrderBy        = $OrderBy
+        MatchExact     = $MatchExact
+        OrderDirection = $OrderDirection
+        MatchContains  = $MatchContains
     }
-    Catch {
-        Write-Error $PSItem
-    }
+    $query = New-ServiceNowQuery @newServiceNowQuerySplat
+
+    $paramsWithoutQuery = $PSBoundParameters
+    $paramsWithoutQuery.Remove('OrderBy') | Out-Null
+    $paramsWithoutQuery.Remove('MatchExact') | Out-Null
+    $paramsWithoutQuery.Remove('OrderDirection') | Out-Null
+    $paramsWithoutQuery.Remove('MatchContains') | Out-Null
+
+    Invoke-ServiceNowRestMethod @paramsWithoutQuery -Query $query
+    # Get-ServiceNowTable @paramsWithoutQuery -Query $query
 }

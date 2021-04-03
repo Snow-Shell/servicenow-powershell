@@ -6,6 +6,16 @@ This PowerShell module provides a series of cmdlets for interacting with the [Se
 
 **IMPORTANT:** Neither this module nor its creator are in any way affiliated with ServiceNow.
 
+## Version 2
+
+Building on the great work the community has done thus far, a lot of new updates with this release.
+- Although still in the module for backward compatibility, `Set-ServiceNowAuth` is being replaced with `New-ServiceNowSession`.  With this comes OAuth support, removal of global variables, and much more folks have asked for.  The ability to provide credentials directly to functions has been retained for this release, but will be deprecated in a future release in favor of using `New-ServiceNowSession`.
+- Support for different api versions.  `Set-ServiceNowAuth` will continue to use v1 of the api, but `New-ServiceNowSession` defaults to the latest.  Check out the `-ApiVersion` parameter of `New-ServiceNowSession`.
+- `Remove-ServiceNowAuth` has been retained for this release, but as global variables have been removed, there is no longer a need for it; it will always return `$true`.  It will be removed in a future release.
+- `-PassThru` added to remaining `Update-` and `New-` functions.  Depending on your code, this may be a ***breaking change*** if you expected the result to be returned.
+- Pipeline support added to many functions
+- Standardizing on coding between all functions
+
 ## Version 1
 
 The module has been renamed from PSServiceNow to ServiceNow for version 1.  This change moves us away from the reserved "PS" prefix.  Since the name change is a major change for the user base and the project was never incremented to v1 we've taken the opportunity to label it such.
@@ -108,12 +118,11 @@ The `Connection` parameter accepts a hashtable object that requires a username, 
 * Get-ServiceNowUserGroup
 * New-ServiceNowChangeRequest
 * New-ServiceNowIncident
+* New-ServiceNowSession
 * New-ServiceNowQuery
 * New-ServiceNowTableEntry
 * Remove-ServiceNowAttachment
-* Remove-ServiceNowAuth
 * Remove-ServiceNowTableEntry
-* Set-ServiceNowAuth
 * Test-ServiceNowAuthIsSet
 * Update-ServiceNowChangeRequest
 * Update-ServiceNowIncident

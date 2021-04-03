@@ -1,6 +1,6 @@
 [CmdletBinding()]
 Param(
-    [Parameter(Mandatory = $true)]
+    [Parameter(Mandatory)]
     [ValidateNotNullorEmpty()]
     [PSCredential]$Credential
 )

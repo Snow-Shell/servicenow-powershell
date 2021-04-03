@@ -20,63 +20,66 @@ function Update-ServiceNowRequestItem {
 
     #>
 
-    [System.Diagnostics.CodeAnalysis.SuppressMessage('PSAvoidUsingConvertToSecureStringWithPlainText','')]
-    [System.Diagnostics.CodeAnalysis.SuppressMessage('PSAvoidGlobalVars','')]
+    [OutputType([void], [System.Management.Automation.PSCustomObject])]
+    [CmdletBinding(DefaultParameterSetName = 'Session', SupportsShouldProcess)]
 
-    [OutputType([void],[System.Management.Automation.PSCustomObject])]
-    [CmdletBinding(DefaultParameterSetName,SupportsShouldProcess=$true)]
     Param (
         # sys_id of the ticket to update
-        [Parameter(mandatory=$true)]
-        [string]$SysId,
+        [parameter(Mandatory, ValueFromPipelineByPropertyName)]
+        [Alias('sys_id')]
+        [string] $SysId,
 
-         # Hashtable of values to use as the record's properties
-        [Parameter(mandatory=$true)]
-        [hashtable]$Values,
+        # Hashtable of values to use as the record's properties
+        [Parameter(Mandatory)]
+        [hashtable] $Values,
 
-         # Credential used to authenticate to ServiceNow
-        [Parameter(ParameterSetName='SpecifyConnectionFields', Mandatory=$True)]
+        # Credential used to authenticate to ServiceNow
+        [Parameter(ParameterSetName = 'SpecifyConnectionFields', Mandatory)]
         [ValidateNotNullOrEmpty()]
         [Alias('ServiceNowCredential')]
-        [PSCredential]$Credential,
+        [PSCredential] $Credential,
 
         # The URL for the ServiceNow instance being used (eg: instancename.service-now.com)
-        [Parameter(ParameterSetName='SpecifyConnectionFields', Mandatory=$True)]
+        [Parameter(ParameterSetName = 'SpecifyConnectionFields', Mandatory)]
         [ValidateNotNullOrEmpty()]
-        [string]$ServiceNowURL,
+        [string] $ServiceNowURL,
 
         #Azure Automation Connection object containing username, password, and URL for the ServiceNow instance
-        [Parameter(ParameterSetName='UseConnectionObject', Mandatory=$True)]
+        [Parameter(ParameterSetName = 'UseConnectionObject', Mandatory)]
         [ValidateNotNullOrEmpty()]
-        [Hashtable]$Connection,
+        [Hashtable] $Connection,
 
-        # Switch to allow the results to be passed back
-        [Parameter(Mandatory=$false)]
-        [switch]$PassThru
+        [Parameter(ParameterSetName = 'Session')]
+        [ValidateNotNullOrEmpty()]
+        [hashtable] $ServiceNowSession = $script:ServiceNowSession,
+
+        [Parameter()]
+        [switch] $PassThru
     )
 
-    $updateServiceNowTableEntrySplat = @{
-        SysId  = $SysId
-        Table  = 'sc_req_item'
-        Values = $Values
-    }
+    begin {}
 
-    # Update the splat if the parameters have values
-    If ($null -ne $PSBoundParameters.Connection) {
-        $updateServiceNowTableEntrySplat.Add('Connection',$Connection)
-    }
-    ElseIf ($null -ne $PSBoundParameters.Credential -and $null -ne $PSBoundParameters.ServiceNowURL) {
-         $updateServiceNowTableEntrySplat.Add('ServiceNowCredential',$ServiceNowCredential)
-         $updateServiceNowTableEntrySplat.Add('ServiceNowURL',$ServiceNowURL)
-    }
+    process {
 
-    If ($PSCmdlet.ShouldProcess("$Table/$SysID",$MyInvocation.MyCommand)) {
-        # Send REST call
-        $Result = Update-ServiceNowTableEntry @updateServiceNowTableEntrySplat
-
-        # Option to return results
-        If ($PSBoundParameters.ContainsKey('Passthru')) {
-            $Result
+        $params = @{
+            Method            = 'Patch'
+            Table             = 'sc_req_item'
+            SysId             = $SysId
+            Values            = $Values
+            Connection        = $Connection
+            Credential        = $Credential
+            ServiceNowUrl     = $ServiceNowURL
+            ServiceNowSession = $ServiceNowSession
         }
+
+        If ($PSCmdlet.ShouldProcess("Request Item $SysID", 'Update values')) {
+            $response = Invoke-ServiceNowRestMethod @params
+            if ( $PassThru.IsPresent ) {
+                $response
+            }
+        }
+
     }
+
+    end {}
 }

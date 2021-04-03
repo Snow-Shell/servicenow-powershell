@@ -26,20 +26,20 @@ function New-ServiceNowQuery {
 
     param(
         # Machine name of the field to order by
-        [parameter(mandatory=$false)]
+        [parameter()]
         [string]$OrderBy='opened_at',
 
         # Direction of ordering (Desc/Asc)
-        [parameter(mandatory=$false)]
+        [parameter()]
         [ValidateSet("Desc", "Asc")]
         [string]$OrderDirection='Desc',
 
         # Hashtable containing machine field names and values returned must match exactly (will be combined with AND)
-        [parameter(mandatory=$false)]
+        [parameter()]
         [hashtable]$MatchExact,
 
         # Hashtable containing machine field names and values returned rows must contain (will be combined with AND)
-        [parameter(mandatory=$false)]
+        [parameter()]
         [hashtable]$MatchContains
     )
 
