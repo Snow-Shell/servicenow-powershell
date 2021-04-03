@@ -4,48 +4,48 @@ function Get-ServiceNowChangeRequest {
     Param(
         # Machine name of the field to order by
         [Parameter()]
-        [string]$OrderBy = 'opened_at',
+        [string] $OrderBy = 'opened_at',
 
         # Direction of ordering (Desc/Asc)
         [Parameter()]
         [ValidateSet('Desc', 'Asc')]
-        [string]$OrderDirection = 'Desc',
+        [string] $OrderDirection = 'Desc',
 
         # Maximum number of records to return
         [Parameter()]
-        [int]$Limit,
+        [int] $Limit,
 
         # Fields to return
         [Parameter()]
         [Alias('Fields')]
-        [string[]]$Properties,
+        [string[]] $Properties,
 
         # Hashtable containing machine field names and values returned must match exactly (will be combined with AND)
         [Parameter()]
-        [hashtable]$MatchExact = @{},
+        [hashtable] $MatchExact = @{},
 
         # Hashtable containing machine field names and values returned rows must contain (will be combined with AND)
         [Parameter()]
-        [hashtable]$MatchContains = @{},
+        [hashtable] $MatchContains = @{},
 
         # Whether or not to show human readable display values instead of machine values
         [Parameter()]
         [ValidateSet('true', 'false', 'all')]
-        [string]$DisplayValues = 'true',
+        [string] $DisplayValues = 'true',
 
         [Parameter(ParameterSetName = 'SpecifyConnectionFields', Mandatory)]
         [ValidateNotNullOrEmpty()]
         [Alias('ServiceNowCredential')]
-        [PSCredential]$Credential,
+        [PSCredential] $Credential,
 
         [Parameter(ParameterSetName = 'SpecifyConnectionFields', Mandatory)]
         [ValidateScript( { $_ | Test-ServiceNowURL })]
         [Alias('Url')]
-        [string]$ServiceNowURL,
+        [string] $ServiceNowURL,
 
         [Parameter(ParameterSetName = 'UseConnectionObject', Mandatory)]
         [ValidateNotNullOrEmpty()]
-        [hashtable]$Connection,
+        [hashtable] $Connection,
 
         [Parameter(ParameterSetName = 'Session')]
         [ValidateNotNullOrEmpty()]

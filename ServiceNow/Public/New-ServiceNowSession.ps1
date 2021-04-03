@@ -6,6 +6,7 @@ Create a new ServiceNow session
 Create a new ServiceNow session via credentials, OAuth, or access token.
 This session will be used by default for all future calls.
 Optionally, you can specify the api version you'd like to use; the default is the latest.
+To use OAuth, ensure you've set it up, https://docs.servicenow.com/bundle/quebec-platform-administration/page/administer/security/task/t_SettingUpOAuth.html.
 
 .PARAMETER Url
 Base domain for your ServiceNow instance, eg. tenant.domain.com
@@ -25,6 +26,31 @@ Specific API version to use.  The default is the latest.
 .PARAMETER PassThru
 Provide the resulting session object to the pipeline as opposed to setting as a script scoped variable to be used by default for other calls.
 This is useful if you want to have multiple sessions with different api versions, credentials, etc.
+
+.EXAMPLE
+New-ServiceNowSession -Url tenant.domain.com -Credential $mycred
+Create a session using basic authentication and save it to a script-scoped variable
+
+.EXAMPLE
+New-ServiceNowSession -Url tenant.domain.com -Credential $mycred -ClientCredential $myClientCred
+Create a session using OAuth and save it to a script-scoped variable
+
+.EXAMPLE
+New-ServiceNowSession -Url tenant.domain.com -AccessToken 'asdfasd9f87adsfkksk3nsnd87g6s'
+Create a session with an existing access token and save it to a script-scoped variable
+
+.EXAMPLE
+$session = New-ServiceNowSession -Url tenant.domain.com -Credential $mycred -ClientCredential $myClientCred -PassThru
+Create a session using OAuth and save it as a local variable to be provided to functions directly
+
+.INPUTS
+None
+
+.OUTPUTS
+Hashtable if -PassThru provided
+
+.LINK
+https://docs.servicenow.com/bundle/quebec-platform-administration/page/administer/security/reference/r_OAuthAPIRequestParameters.html
 #>
 function New-ServiceNowSession {
 

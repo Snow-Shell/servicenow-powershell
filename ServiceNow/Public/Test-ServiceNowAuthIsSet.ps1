@@ -1,7 +1,7 @@
 function Test-ServiceNowAuthIsSet{
-    if($script:ServiceNowSession.Credential){
-        return $true;
+    if ( $ServiceNowSession.Credential -or $ServiceNowSession.AccessToken ){
+        return $true
     }else{
-        return $false;
+        return $false
     }
 }
