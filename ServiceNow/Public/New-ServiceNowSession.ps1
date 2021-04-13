@@ -20,6 +20,12 @@ Required for OAuth.  Credential where the username is the Client ID and the pass
 .PARAMETER AccessToken
 Provide the access token directly if obtained outside of this module.
 
+.PARAMETER Proxy
+Use a proxy server for the request, rather than connecting directly.  Provide the full url.
+
+.PARAMETER ProxyCredential
+Credential of user who can access Proxy.  If not provided, the current user will be used.
+
 .PARAMETER ApiVersion
 Specific API version to use.  The default is the latest.
 
@@ -43,6 +49,10 @@ Create a session with an existing access token and save it to a script-scoped va
 $session = New-ServiceNowSession -Url tenant.domain.com -Credential $mycred -ClientCredential $myClientCred -PassThru
 Create a session using OAuth and save it as a local variable to be provided to functions directly
 
+.EXAMPLE
+New-ServiceNowSession -Url tenant.domain.com -Credential $mycred -Proxy http://1.2.3.4
+Create a session utilizing a proxy to connect
+
 .INPUTS
 None
 
@@ -64,14 +74,28 @@ function New-ServiceNowSession {
 
         [Parameter(Mandatory, ParameterSetName = 'BasicAuth')]
         [Parameter(Mandatory, ParameterSetName = 'OAuth')]
+        [Parameter(Mandatory, ParameterSetName = 'BasicAuthProxy')]
+        [Parameter(Mandatory, ParameterSetName = 'OAuthProxy')]
         [Alias('Credentials')]
         [System.Management.Automation.PSCredential] $Credential,
 
         [Parameter(Mandatory, ParameterSetName = 'OAuth')]
+        [Parameter(Mandatory, ParameterSetName = 'OAuthProxy')]
         [System.Management.Automation.PSCredential] $ClientCredential,
 
         [Parameter(Mandatory, ParameterSetName = 'AccessToken')]
+        [Parameter(Mandatory, ParameterSetName = 'AccessTokenProxy')]
         [string] $AccessToken,
+
+        [Parameter(Mandatory, ParameterSetName = 'BasicAuthProxy')]
+        [Parameter(Mandatory, ParameterSetName = 'OAuthProxy')]
+        [Parameter(Mandatory, ParameterSetName = 'AccessTokenProxy')]
+        [string] $Proxy,
+
+        [Parameter(ParameterSetName = 'BasicAuthProxy')]
+        [Parameter(ParameterSetName = 'OAuthProxy')]
+        [Parameter(ParameterSetName = 'AccessTokenProxy')]
+        [System.Management.Automation.PSCredential] $ProxyCredential,
 
         [Parameter()]
         [int] $ApiVersion,
@@ -93,8 +117,15 @@ function New-ServiceNowSession {
         BaseUri = ('https://{0}/api/now{1}' -f $Url, $version)
     }
 
-    switch ($PSCmdLet.ParameterSetName) {
-        'OAuth' {
+    if ( $PSBoundParameters.ContainsKey('Proxy') ) {
+        $newSession.Add('Proxy', $Proxy)
+        if ( $PSBoundParameters.ContainsKey('ProxyCredential') ) {
+            $newSession.Add('ProxyCredential', $ProxyCredential)
+        }
+    }
+
+    switch -Wildcard ($PSCmdLet.ParameterSetName) {
+        'OAuth*' {
             $params = @{
                 Uri    = 'https://{0}/oauth_token.do' -f $Url
                 Body   = @{
@@ -107,19 +138,30 @@ function New-ServiceNowSession {
                 Method = 'Post'
             }
 
+            # need to add this manually here, in addition to above, since we're making a rest call before our session is created
+            if ( $PSBoundParameters.ContainsKey('Proxy') ) {
+                $params.Add('Proxy', $Proxy)
+                if ( $PSBoundParameters.ContainsKey('ProxyCredential') ) {
+                    $params.Add('ProxyCredential', $ProxyCredential)
+                } else {
+                    $params.Add('ProxyUseDefaultCredentials', $true)
+                }
+            }
+
+
             $token = Invoke-RestMethod @params
             $newSession.Add('AccessToken', $token.access_token)
             $newSession.Add('RefreshToken', $token.refresh_token)
         }
-        'AccessToken' {
+
+        'AccessToken*' {
             $newSession.Add('AccessToken', $AccessToken)
         }
-        'BasicAuth' {
+
+        'BasicAuth*' {
             $newSession.Add('Credential', $Credential)
         }
-        'SSO' {
 
-        }
         Default {
 
         }
