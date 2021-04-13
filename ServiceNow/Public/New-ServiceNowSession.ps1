@@ -148,7 +148,6 @@ function New-ServiceNowSession {
                 }
             }
 
-
             $token = Invoke-RestMethod @params
             $newSession.Add('AccessToken', $token.access_token)
             $newSession.Add('RefreshToken', $token.refresh_token)
