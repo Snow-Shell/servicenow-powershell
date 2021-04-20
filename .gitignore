@@ -1,2 +1,3 @@
 *.Pester.Defaults.json
 *.zip
+*pending.ps1
