@@ -23,52 +23,52 @@ function Get-ServiceNowTableEntry {
     param(
         # Table containing the entry we're deleting
         [parameter(Mandatory)]
-        [string]$Table,
+        [string] $Table,
 
         # Machine name of the field to order by
         [parameter()]
-        [string]$OrderBy = 'opened_at',
+        [string] $OrderBy = 'opened_at',
 
         # Direction of ordering (Desc/Asc)
         [parameter()]
         [ValidateSet('Desc', 'Asc')]
-        [string]$OrderDirection = 'Desc',
+        [string] $OrderDirection = 'Desc',
 
         # Maximum number of records to return
         [parameter()]
-        [int]$Limit,
+        [int] $Limit,
 
         # Fields to return
         [Parameter()]
         [Alias('Fields')]
-        [string[]]$Properties,
+        [string[]] $Properties,
 
         # Hashtable containing machine field names and values returned must match exactly (will be combined with AND)
         [parameter()]
-        [hashtable]$MatchExact = @{},
+        [hashtable] $MatchExact = @{},
 
         # Hashtable containing machine field names and values returned rows must contain (will be combined with AND)
         [parameter()]
-        [hashtable]$MatchContains = @{},
+        [hashtable] $MatchContains = @{},
 
         # Whether or not to show human readable display values instead of machine values
         [parameter()]
         [ValidateSet('true', 'false', 'all')]
-        [string]$DisplayValues = 'true',
+        [string] $DisplayValues = 'true',
 
         [Parameter(ParameterSetName = 'SpecifyConnectionFields', Mandatory)]
         [ValidateNotNullOrEmpty()]
         [Alias('ServiceNowCredential')]
-        [PSCredential]$Credential,
+        [PSCredential] $Credential,
 
         [Parameter(ParameterSetName = 'SpecifyConnectionFields', Mandatory)]
         [ValidateScript( { $_ | Test-ServiceNowURL })]
         [Alias('Url')]
-        [string]$ServiceNowURL,
+        [string] $ServiceNowURL,
 
         [Parameter(ParameterSetName = 'UseConnectionObject', Mandatory)]
         [ValidateNotNullOrEmpty()]
-        [hashtable]$Connection,
+        [hashtable] $Connection,
 
         [Parameter(ParameterSetName = 'Session')]
         [ValidateNotNullOrEmpty()]

@@ -1,0 +1,137 @@
+{
+    "Tables": [
+        {
+            "Name": "Incident",
+            "DbTableName": "incident",
+            "Type": "ServiceNow.Incident"
+        },
+        {
+            "Name": "Change Request",
+            "DbTableName": "change_request",
+            "Type": "ServiceNow.ChangeRequest"
+        },
+        {
+            "Name": "Configuration Item",
+            "DbTableName": "cmdb_ci",
+            "Type": "ServiceNow.ConfigurationItem"
+        },
+        {
+            "Name": "Request",
+            "DbTableName": "sc_request",
+            "Type": "ServiceNow.Request"
+        },
+        {
+            "Name": "Request Item",
+            "DbTableName": "sc_req_item",
+            "Type": "ServiceNow.RequestItem"
+        },
+        {
+            "Name": "User",
+            "DbTableName": "sys_user",
+            "Type": "ServiceNow.UserAndUserGroup"
+        },
+        {
+            "Name": "User Group",
+            "DbTableName": "sys_user_group",
+            "Type": "ServiceNow.UserAndUserGroup"
+        }
+    ],
+    "FilterOperators": [
+        {
+            "Name": "-eq",
+            "QueryOperator": "=",
+            "Description": "is equal to",
+            "RequiresValue": true
+        },
+        {
+            "Name": "-ne",
+            "QueryOperator": "!=",
+            "Description": "is not equal to",
+            "RequiresValue": true
+        },
+        {
+            "Name": "=''",
+            "QueryOperator": "ISEMPTY",
+            "Description": "field has no value",
+            "RequiresValue": false
+        },
+        {
+            "Name": "=\"\"",
+            "QueryOperator": "ISEMPTY",
+            "Description": "field has no value",
+            "RequiresValue": false
+        },
+        {
+            "Name": "!=''",
+            "QueryOperator": "ISNOTEMPTY",
+            "Description": "field has any value",
+            "RequiresValue": false
+        },
+        {
+            "Name": "!=\"\"",
+            "QueryOperator": "ISNOTEMPTY",
+            "Description": "field has any value",
+            "RequiresValue": false
+        },
+        {
+            "Name": "-like",
+            "QueryOperator": "LIKE",
+            "Description": "string is found anywhere in field",
+            "RequiresValue": true
+        },
+        {
+            "Name": "-notlike",
+            "QueryOperator": "NOTLIKE",
+            "Description": "string is not found anywhere in field",
+            "RequiresValue": true
+        },
+        {
+            "Name": "-in",
+            "QueryOperator": "IN",
+            "Description": "field is populated by one of the values",
+            "RequiresValue": true
+        },
+        {
+            "Name": "-notin",
+            "QueryOperator": "NOTIN",
+            "Description": "field is populated by any value except for these",
+            "RequiresValue": true
+        },
+        {
+            "Name": "lt",
+            "QueryOperator": "<",
+            "Description": "",
+            "RequiresValue": true
+        },
+        {
+            "Name": "le",
+            "QueryOperator": "<=",
+            "Description": "",
+            "RequiresValue": true
+        },
+        {
+            "Name": "gt",
+            "QueryOperator": ">",
+            "Description": "",
+            "RequiresValue": true
+        },
+        {
+            "Name": "ge",
+            "QueryOperator": ">=",
+            "Description": "",
+            "RequiresValue": true
+        },
+        {
+            "Name": ".startswith",
+            "QueryOperator": "STARTSWITH",
+            "Description": "",
+            "RequiresValue": true
+        },
+        {
+            "Name": ".endswith",
+            "QueryOperator": "%",
+            "Description": "",
+            "RequiresValue": true
+        }
+    ]
+}

@@ -166,6 +166,18 @@ function New-ServiceNowSession {
         }
     }
 
+    $cmdbParams = @{
+        Table             = 'sys_db_object'
+        Query             = 'nameSTARTSWITHcmdb_ci'
+        Properties        = 'name', 'sys_id', 'label'
+        First             = 10000
+        ServiceNowSession = $newSession
+    }
+    $ci = Get-ServiceNowTable @cmdbParams -ErrorAction SilentlyContinue
+    if ( $ci ) {
+        $newSession.Add('CmdbClasses', $ci)
+    }
+
     Write-Verbose ($newSession | ConvertTo-Json)
 
     if ( $PassThru ) {
