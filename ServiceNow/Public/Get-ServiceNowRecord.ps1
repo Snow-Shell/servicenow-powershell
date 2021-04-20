@@ -29,7 +29,7 @@ function Get-ServiceNowRecord {
         [parameter(ParameterSetName = 'AutomationFilter')]
         [parameter(ParameterSetName = 'SessionFilter')]
         [ValidateNotNullOrEmpty()]
-        [System.Collections.ArrayList] $Order,
+        [System.Collections.ArrayList] $Sort,
 
         # sysparm_query param in the format of a ServiceNow encoded query string (see http://wiki.servicenow.com/index.php?title=Encoded_Query_Strings)
         [Parameter(Mandatory, ParameterSetName = 'AutomationQuery')]

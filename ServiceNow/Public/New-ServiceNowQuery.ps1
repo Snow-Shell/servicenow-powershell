@@ -1,22 +1,61 @@
+<#
+.SYNOPSIS
+    Build query string for api call
+
+.DESCRIPTION
+    Build query string for api call, there are basic and advanced methods; see the different parameter sets.
+
+    Basic allows you to look for exact matches as well as fields that are like a value; these are all and'd together.
+    You can also sort your results, ascending or descending, by 1 field.
+
+    Advanced allows you to perform the complete set of operations that ServiceNow has (mostly).
+    The comparison operators have been made to mimic powershell itself so the code should be easy to understand.
+    You can use a very large set of comparison operators (see the script variable ServiceNowOperator),
+    and, or, and grouping joins, as well as multiple sorting parameters.
+
+.PARAMETER Filter
+    Array or multidimensional array of fields and values to filter on.
+    Each array should be of the format @(field, comparison operator, value) separated by a join, either 'and', 'or', or 'group.
+    For a complete list of comparison operators, see $script:ServiceNowOperator.
+    See the examples.
+
+.PARAMETER Sort
+    Array or multidimensional array of fields to sort on.
+    Each array should be of the format @(field, asc/desc).
+
+.EXAMPLE
+    New-ServiceNowQuery -MatchExact @{field_name=value}
+    Get query string where field name exactly matches the value
+
+.EXAMPLE
+    New-ServiceNowQuery -MatchContains @{field_name=value}
+    Get query string where field name contains the value
+
+.EXAMPLE
+    New-ServiceNowQuery -Filter @('state', '-eq', '1'), 'or', @('short_description','-like', 'powershell')
+    Get query string where state equals New or short description contains the word powershell
+
+.EXAMPLE
+    $filter = @('state', '-eq', '1'),
+                'and',
+              @('short_description','-like', 'powershell'),
+              'group',
+              @('state', '-eq', '2')
+    PS > New-ServiceNowQuery -Filter $filter
+    Get query string where state equals New and short description contains the word powershell or state equals In Progress.
+    The first 2 filters are combined and then or'd against the last.
+
+.EXAMPLE
+    New-ServiceNowQuery -Filter @('state', '-eq', '1') -Sort @('opened_at', 'desc'), @('state')
+    Get query string where state equals New and first sort by the field opened_at descending and then sort by the field state ascending
+
+.INPUTS
+    None
+
+.OUTPUTS
+    String
+#>
 function New-ServiceNowQuery {
-    <#
-    .SYNOPSIS
-        Build query string for api call
-    .DESCRIPTION
-        Build query string for api call
-    .EXAMPLE
-        New-ServiceNowQuery -MatchExact @{field_name=value}
-
-        Get query string where field name exactly matches the value
-    .EXAMPLE
-        New-ServiceNowQuery -MatchContains @{field_name=value}
-
-        Get query string where field name contains the value
-    .INPUTS
-        None
-    .OUTPUTS
-        String
-    #>
 
     [System.Diagnostics.CodeAnalysis.SuppressMessage('PSUseShouldProcessForStateChangingFunctions', 'No state is actually changing')]
 
@@ -46,7 +85,7 @@ function New-ServiceNowQuery {
 
         [parameter(ParameterSetName = 'Advanced')]
         [ValidateNotNullOrEmpty()]
-        [System.Collections.ArrayList] $Order = @('opened_at', 'desc')
+        [System.Collections.ArrayList] $Sort
 
     )
 
@@ -139,11 +178,11 @@ function New-ServiceNowQuery {
             $query += '^'
         }
 
-        $orderList = $Order
+        $orderList = $Sort
         # see if we're working with 1 array or multidimensional array
         # we're looking for multidimensional so convert if not
-        if ($Order[0].GetType().Name -eq 'String') {
-            $orderList = @(, $Order)
+        if ($Sort[0].GetType().Name -eq 'String') {
+            $orderList = @(, $Sort)
         }
 
         $query += for ($i = 0; $i -lt $orderList.Count; $i++) {

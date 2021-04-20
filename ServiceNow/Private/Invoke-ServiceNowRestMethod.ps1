@@ -44,7 +44,7 @@ function Invoke-ServiceNowRestMethod {
 
         [parameter()]
         [ValidateNotNullOrEmpty()]
-        [System.Collections.ArrayList] $Order = @('opened_at', 'desc'),
+        [System.Collections.ArrayList] $Sort = @('opened_at', 'desc'),
 
         # sysparm_query param in the format of a ServiceNow encoded query string (see http://wiki.servicenow.com/index.php?title=Encoded_Query_Strings)
         [Parameter()]
@@ -143,7 +143,7 @@ function Invoke-ServiceNowRestMethod {
         if ($Query) {
             $Body.sysparm_query = $Query
         } else {
-            $body.sysparm_query = (New-ServiceNowQuery -Filter $Filter -Order $Order)
+            $body.sysparm_query = (New-ServiceNowQuery -Filter $Filter -Sort $Sort)
         }
 
         if ($Properties) {
