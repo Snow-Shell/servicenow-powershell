@@ -98,39 +98,39 @@
             "RequiresValue": true
         },
         {
-            "Name": "lt",
+            "Name": "-lt",
             "QueryOperator": "<",
-            "Description": "",
+            "Description": "field is less than the value.  can be used with dates to represent prior to the value.",
             "RequiresValue": true
         },
         {
-            "Name": "le",
+            "Name": "-le",
             "QueryOperator": "<=",
-            "Description": "",
+            "Description": "field is less than or equal to the value.  can be used with dates to represent prior to or the day of the value.",
             "RequiresValue": true
         },
         {
-            "Name": "gt",
+            "Name": "-gt",
             "QueryOperator": ">",
-            "Description": "",
+            "Description": "field is greater than the value.  can be used with dates to represent after the value.",
             "RequiresValue": true
         },
         {
-            "Name": "ge",
+            "Name": "-ge",
             "QueryOperator": ">=",
-            "Description": "",
+            "Description": "field is greater than or equal to the value.  can be used with dates to represent after or the day of the value.",
             "RequiresValue": true
         },
         {
             "Name": ".startswith",
             "QueryOperator": "STARTSWITH",
-            "Description": "",
+            "Description": "field starts with the value",
             "RequiresValue": true
         },
         {
             "Name": ".endswith",
             "QueryOperator": "%",
-            "Description": "",
+            "Description": "field ends with the value",
             "RequiresValue": true
         }
     ]

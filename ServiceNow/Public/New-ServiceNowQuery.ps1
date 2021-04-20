@@ -8,7 +8,7 @@
     Basic allows you to look for exact matches as well as fields that are like a value; these are all and'd together.
     You can also sort your results, ascending or descending, by 1 field.
 
-    Advanced allows you to perform the complete set of operations that ServiceNow has (mostly).
+    Advanced allows you to perform the (almost) complete set of operations that ServiceNow has.
     The comparison operators have been made to mimic powershell itself so the code should be easy to understand.
     You can use a very large set of comparison operators (see the script variable ServiceNowOperator),
     and, or, and grouping joins, as well as multiple sorting parameters.
@@ -16,8 +16,10 @@
 .PARAMETER Filter
     Array or multidimensional array of fields and values to filter on.
     Each array should be of the format @(field, comparison operator, value) separated by a join, either 'and', 'or', or 'group.
-    For a complete list of comparison operators, see $script:ServiceNowOperator.
+    For a complete list of comparison operators, see $script:ServiceNowOperator and use Name in your filter.
     See the examples.
+    Also, see https://docs.servicenow.com/bundle/quebec-platform-user-interface/page/use/common-ui-elements/reference/r_OpAvailableFiltersQueries.html
+    for how to represent dates.
 
 .PARAMETER Sort
     Array or multidimensional array of fields to sort on.
@@ -48,6 +50,10 @@
 .EXAMPLE
     New-ServiceNowQuery -Filter @('state', '-eq', '1') -Sort @('opened_at', 'desc'), @('state')
     Get query string where state equals New and first sort by the field opened_at descending and then sort by the field state ascending
+
+.EXAMPLE
+    New-ServiceNowQuery -Filter @('opened_at', '-ge', 'javascript:gs.daysAgoEnd(30)')
+    Get query string where the record was opened in the last 30 days
 
 .INPUTS
     None
