@@ -81,3 +81,7 @@ Contributions are gratefully received, so please feel free to submit a pull requ
 - [Sam Martin](https://github.com/Sam-Martin)
 - [Rick Arroues](https://github.com/Rick-2CA)
 - [Greg Brownstein](https://github.com/gdbarron)
+
+## Contributors
+
+- [Michael Dejulia](https://github.com/dejulia489)
