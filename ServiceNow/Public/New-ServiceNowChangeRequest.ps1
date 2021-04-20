@@ -46,7 +46,7 @@ function New-ServiceNowChangeRequest {
         Returns the ticket values after creation
 
     .LINK
-        https://github.com/Sam-Martin/servicenow-powershell
+        https://github.com/Snow-Shell/servicenow-powershell
 
     .EXAMPLE
         Generate a basic change request attributed to the caller "UserName" with descriptions, categories, assignment groups and CMDB items set.
@@ -73,123 +73,116 @@ function New-ServiceNowChangeRequest {
         New-ServiceNowChangeRequest @newServiceNowChangeRequestSplat
      #>
 
-    [CmdletBinding(DefaultParameterSetName, SupportsShouldProcess)]
+    [CmdletBinding(DefaultParameterSetName = 'Session', SupportsShouldProcess)]
+
     Param(
-        [parameter(Mandatory = $true)]
+        [parameter(Mandatory)]
         [string]$Caller,
 
-        [parameter(Mandatory = $true)]
+        [parameter(Mandatory)]
         [string]$ShortDescription,
 
-        [parameter(Mandatory = $false)]
+        [parameter()]
         [string]$Description,
 
-        [parameter(Mandatory = $false)]
+        [parameter()]
         [string]$AssignmentGroup,
 
-        [parameter(Mandatory = $false)]
+        [parameter()]
         [string]$Comment,
 
-        [parameter(Mandatory = $false)]
+        [parameter()]
         [string]$Category,
 
-        [parameter(Mandatory = $false)]
+        [parameter()]
         [string]$Subcategory,
 
-        [parameter(Mandatory = $false)]
+        [parameter()]
         [string]$ConfigurationItem,
 
-        [parameter(Mandatory = $false)]
+        [parameter()]
         [hashtable]$CustomFields,
 
-        [Parameter(ParameterSetName = 'SpecifyConnectionFields', Mandatory = $True)]
+        [Parameter(ParameterSetName = 'SpecifyConnectionFields', Mandatory)]
         [ValidateNotNullOrEmpty()]
         [PSCredential]$ServiceNowCredential,
 
-        [Parameter(ParameterSetName = 'SpecifyConnectionFields', Mandatory = $True)]
+        [Parameter(ParameterSetName = 'SpecifyConnectionFields', Mandatory)]
         [ValidateNotNullOrEmpty()]
         [string]$ServiceNowURL,
 
-        [Parameter(ParameterSetName = 'UseConnectionObject', Mandatory = $True)]
+        [Parameter(ParameterSetName = 'UseConnectionObject', Mandatory)]
         [ValidateNotNullOrEmpty()]
         [Hashtable]$Connection,
 
-        # Switch to allow the results to be passed back
-        [Parameter(Mandatory = $false)]
-        [switch]$PassThru
+        [Parameter(ParameterSetName = 'Session')]
+        [ValidateNotNullOrEmpty()]
+        [hashtable] $ServiceNowSession = $script:ServiceNowSession,
+
+        [Parameter()]
+        [switch] $PassThru
     )
 
-    begin { }
+    begin {}
+
     process {
-        Try {
-            # Create a hash table of any defined parameters (not CustomFields) that have values
-            $DefinedChangeRequestParameters = @('AssignmentGroup', 'Caller', 'Category', 'Comment', 'ConfigurationItem', 'Description', 'ShortDescription', 'Subcategory')
-            $TableEntryValues = @{ }
-            ForEach ($Parameter in $DefinedChangeRequestParameters) {
-                If ($null -ne $PSBoundParameters.$Parameter) {
-                    # Turn the defined parameter name into the ServiceNow attribute name
-                    $KeyToAdd = Switch ($Parameter) {
-                        AssignmentGroup   {'assignment_group'; break}
-                        Caller            {'caller_id'; break}
-                        Category          {'category'; break}
-                        Comment           {'comments'; break}
-                        ConfigurationItem {'cmdb_ci'; break}
-                        Description       {'description'; break}
-                        ShortDescription  {'short_description'; break}
-                        Subcategory       {'subcategory'; break}
-                    }
-                    $TableEntryValues.Add($KeyToAdd, $PSBoundParameters.$Parameter)
+        # Create a hash table of any defined parameters (not CustomFields) that have values
+        $DefinedChangeRequestParameters = @('AssignmentGroup', 'Caller', 'Category', 'Comment', 'ConfigurationItem', 'Description', 'ShortDescription', 'Subcategory')
+        $TableEntryValues = @{ }
+        ForEach ($Parameter in $DefinedChangeRequestParameters) {
+            If ($null -ne $PSBoundParameters.$Parameter) {
+                # Turn the defined parameter name into the ServiceNow attribute name
+                $KeyToAdd = Switch ($Parameter) {
+                    AssignmentGroup { 'assignment_group'; break }
+                    Caller { 'caller_id'; break }
+                    Category { 'category'; break }
+                    Comment { 'comments'; break }
+                    ConfigurationItem { 'cmdb_ci'; break }
+                    Description { 'description'; break }
+                    ShortDescription { 'short_description'; break }
+                    Subcategory { 'subcategory'; break }
                 }
+                $TableEntryValues.Add($KeyToAdd, $PSBoundParameters.$Parameter)
             }
+        }
 
-            # Add CustomFields hash pairs to the Table Entry Values hash table
-            If ($null -ne $PSBoundParameters.CustomFields) {
-                $DuplicateTableEntryValues = ForEach ($Key in $CustomFields.Keys) {
-                    If (($TableEntryValues.ContainsKey($Key) -eq $False)) {
-                        # Add the unique entry to the table entry values hash table
-                        $TableEntryValues.Add($Key, $CustomFields[$Key])
-                    }
-                    Else {
-                        # Capture the duplicate key name
-                        $Key
-                    }
-                }
-            }
-
-            # Throw an error if duplicate fields were provided
-            If ($null -ne $DuplicateTableEntryValues) {
-                $DuplicateKeyList = $DuplicateTableEntryValues -join ","
-                Throw "Ticket fields may only be used once:  $DuplicateKeyList"
-            }
-
-            # Table Entry Splat
-            $newServiceNowTableEntrySplat = @{
-                Table  = 'change_request'
-                Values = $TableEntryValues
-            }
-
-            # Update the splat if the parameters have values
-            If ($null -ne $PSBoundParameters.Connection) {
-                $newServiceNowTableEntrySplat.Add('Connection', $Connection)
-            }
-            ElseIf ($null -ne $PSBoundParameters.ServiceNowCredential -and $null -ne $PSBoundParameters.ServiceNowURL) {
-                $newServiceNowTableEntrySplat.Add('ServiceNowCredential', $ServiceNowCredential)
-                $newServiceNowTableEntrySplat.Add('ServiceNowURL', $ServiceNowURL)
-            }
-
-            # Create the table entry
-            If ($PSCmdlet.ShouldProcess($Uri, $MyInvocation.MyCommand)) {
-                $Result = New-ServiceNowTableEntry @newServiceNowTableEntrySplat
-
-                # Option to return results
-                If ($PSBoundParameters.ContainsKey('Passthru')) {
-                    $Result
+        # Add CustomFields hash pairs to the Table Entry Values hash table
+        If ($null -ne $PSBoundParameters.CustomFields) {
+            $DuplicateTableEntryValues = ForEach ($Key in $CustomFields.Keys) {
+                If (($TableEntryValues.ContainsKey($Key) -eq $False)) {
+                    # Add the unique entry to the table entry values hash table
+                    $TableEntryValues.Add($Key, $CustomFields[$Key])
+                } Else {
+                    # Capture the duplicate key name
+                    $Key
                 }
             }
         }
-        Catch {
-            Write-Error $PSItem
+
+        # Throw an error if duplicate fields were provided
+        If ($null -ne $DuplicateTableEntryValues) {
+            $DuplicateKeyList = $DuplicateTableEntryValues -join ","
+            Throw "Ticket fields may only be used once:  $DuplicateKeyList"
+        }
+
+        # Table Entry Splat
+        $params = @{
+            Method            = 'Post'
+            Table             = 'change_request'
+            Values            = $TableEntryValues
+            Connection        = $Connection
+            Credential        = $Credential
+            ServiceNowUrl     = $ServiceNowURL
+            ServiceNowSession = $ServiceNowSession
+        }
+
+        If ( $PSCmdlet.ShouldProcess($ShortDescription, 'Create new change request') ) {
+            $response = Invoke-ServiceNowRestMethod @params
+            If ($PassThru.IsPresent) {
+                $response
+            }
         }
     }
-    end { }
+
+    end {}
 }

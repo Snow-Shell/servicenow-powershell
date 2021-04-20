@@ -1,62 +1,42 @@
-function Remove-ServiceNowTableEntry{
-[CmdletBinding(ConfirmImpact='High')]
+function Remove-ServiceNowTableEntry {
+    [CmdletBinding(DefaultParameterSetName = 'Session', ConfirmImpact = 'High')]
     Param(
-        # sys_id of the entry we're deleting
-        [parameter(mandatory=$true)]
-        [parameter(ParameterSetName='SpecifyConnectionFields')]
-        [parameter(ParameterSetName='UseConnectionObject')]
-        [parameter(ParameterSetName='SetGlobalAuth')]
-        [string]$SysId,
-        
         # Table containing the entry we're deleting
-        [parameter(mandatory=$true)]
-        [parameter(ParameterSetName='SpecifyConnectionFields')]
-        [parameter(ParameterSetName='UseConnectionObject')]
-        [parameter(ParameterSetName='SetGlobalAuth')]
-        [string]$Table,
-        
-        # Credential used to authenticate to ServiceNow  
-        [Parameter(ParameterSetName='SpecifyConnectionFields', Mandatory=$True)]
-        [ValidateNotNullOrEmpty()]
-        [PSCredential]
-        $ServiceNowCredential, 
+        [parameter(Mandatory)]
+        [string] $Table,
 
-        # The URL for the ServiceNow instance being used  
-        [Parameter(ParameterSetName='SpecifyConnectionFields', Mandatory=$True)]
+        # sys_id of the entry we're deleting
+        [parameter(Mandatory)]
+        [string] $SysId,
+
+        # Credential used to authenticate to ServiceNow
+        [Parameter(ParameterSetName = 'SpecifyConnectionFields', Mandatory)]
         [ValidateNotNullOrEmpty()]
-        [string]
-        $ServiceNowURL, 
+        [PSCredential] $ServiceNowCredential,
+
+        # The URL for the ServiceNow instance being used
+        [Parameter(ParameterSetName = 'SpecifyConnectionFields', Mandatory)]
+        [ValidateNotNullOrEmpty()]
+        [string] $ServiceNowURL,
 
         #Azure Automation Connection object containing username, password, and URL for the ServiceNow instance
-        [Parameter(ParameterSetName='UseConnectionObject', Mandatory=$True)] 
+        [Parameter(ParameterSetName = 'UseConnectionObject', Mandatory)]
         [ValidateNotNullOrEmpty()]
-        [Hashtable]
-        $Connection
+        [Hashtable] $Connection,
+
+        [Parameter(ParameterSetName = 'Session')]
+        [ValidateNotNullOrEmpty()]
+        [hashtable] $ServiceNowSession = $script:ServiceNowSession
     )
 
-	#Get credential and ServiceNow REST URL
-    if ($Connection -ne $null)
-    {
-        $SecurePassword = ConvertTo-SecureString $Connection.Password -AsPlainText -Force
-        $ServiceNowCredential = New-Object System.Management.Automation.PSCredential ($Connection.Username, $SecurePassword)
-        $ServiceNowURL = 'https://' + $Connection.ServiceNowUri + '/api/now/v1'
-        
-    } 
-    elseif ($ServiceNowCredential -ne $null -and $ServiceNowURL -ne $null)
-    {
-        $ServiceNowURL = 'https://' + $ServiceNowURL + '/api/now/v1'
+    $params = @{
+        Method            = 'Delete'
+        Table             = $Table
+        SysId             = $SysId
+        Connection        = $Connection
+        Credential        = $Credential
+        ServiceNowUrl     = $ServiceNowURL
+        ServiceNowSession = $ServiceNowSession
     }
-    elseif((Test-ServiceNowAuthIsSet))
-    {
-        $ServiceNowCredential = $Global:ServiceNowCredentials
-        $ServiceNowURL = $global:ServiceNowRESTURL
-    } 
-    else 
-    {
-        throw "Exception:  You must do one of the following to authenticate: `n 1. Call the Set-ServiceNowAuth cmdlet `n 2. Pass in an Azure Automation connection object `n 3. Pass in an endpoint and credential"
-    }
-
-    # Fire and return
-    $Uri = $ServiceNowURL + "/table/$Table/$SysID"
-    return (Invoke-RestMethod -Uri $uri -Method Delete -Credential $ServiceNowCredential -Body $Body -ContentType "application/json").result
+    Invoke-ServiceNowRestMethod @params
 }
