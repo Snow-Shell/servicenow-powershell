@@ -7,7 +7,7 @@ $config = ConvertFrom-Json (Get-Content "$PSScriptRoot\Config\main.json" -Raw)
 $Script:ServiceNowOperator = $config.FilterOperators
 $script:ServiceNowTable = $config.Tables
 
-Export-ModuleMember -Variable ServiceNowOperator
+Export-ModuleMember -Variable ServiceNowOperator, ServiceNowTable
 
 Write-Verbose 'Import everything in sub folders folder'
 foreach ($Folder in @('Private', 'Public')) {
@@ -28,7 +28,8 @@ $Script:ServiceNowSession = @{}
 Export-ModuleMember -Variable ServiceNowSession
 
 $aliases = @{
-    'Get-ServiceNowRequestItem' = 'Get-ServiceNowRequestedItem'
+    'Get-ServiceNowRequestItem'    = 'Get-ServiceNowRequestedItem'
+    'Update-ServiceNowRequestItem' = 'Update-ServiceNowRequestedItem'
 }
 $aliases.GetEnumerator() | ForEach-Object {
     Set-Alias -Name $_.Key -Value $_.Value

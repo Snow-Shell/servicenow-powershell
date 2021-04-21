@@ -62,7 +62,7 @@ NestedModules = @()
     FunctionsToExport = @('Get-ServiceNowRecord','New-ServiceNowSession','Add-ServiceNowAttachment','Get-ServiceNowAttachment','Get-ServiceNowAttachmentDetail','Get-ServiceNowChangeRequest','Get-ServiceNowConfigurationItem','Get-ServiceNowIncident','Get-ServiceNowRequest','Get-ServiceNowRequestedItem','Get-ServiceNowTable','Get-ServiceNowTableEntry','Get-ServiceNowUser','Get-ServiceNowUserGroup','New-ServiceNowChangeRequest','New-ServiceNowIncident','New-ServiceNowQuery','New-ServiceNowTableEntry','Remove-ServiceNowAttachment','Remove-ServiceNowAuth','Remove-ServiceNowTableEntry','Set-ServiceNowAuth','Test-ServiceNowAuthIsSet','Update-ServiceNowChangeRequest','Update-ServiceNowIncident','Update-ServiceNowNumber','Update-ServiceNowRequestItem','Update-ServiceNowTableEntry')
 
     # Variables to export from this module
-    VariablesToExport = 'ServiceNowSession', 'ServiceNowOperator'
+    VariablesToExport = 'ServiceNowSession', 'ServiceNowOperator', 'ServiceNowTable'
 
     # List of all modules packaged with this module
 # ModuleList = @()

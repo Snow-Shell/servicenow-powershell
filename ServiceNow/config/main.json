@@ -22,7 +22,7 @@
         },
         {
             "Name": "sc_req_item",
-            "ClassName": "Request Item",
+            "ClassName": "Requested Item",
             "Type": "ServiceNow.RequestItem"
         },
         {
