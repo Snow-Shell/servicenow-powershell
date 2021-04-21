@@ -76,13 +76,13 @@
         {
             "Name": "-like",
             "QueryOperator": "LIKE",
-            "Description": "string is found anywhere in field",
+            "Description": "value is found anywhere in field",
             "RequiresValue": true
         },
         {
             "Name": "-notlike",
             "QueryOperator": "NOTLIKE",
-            "Description": "string is not found anywhere in field",
+            "Description": "value is not found anywhere in field",
             "RequiresValue": true
         },
         {
