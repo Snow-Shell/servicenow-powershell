@@ -1,5 +1,5 @@
 ## v2.2
-- Add advanced filtering and sorting.  Initially implemented with `New-ServiceNowQuery` and `Get-ServiceNowRecord`.  Filter with many different comparison operators as well as 'and', 'or', and 'group'ing.  Sort ascending or desending against multiple fields.  Comparison operators are the same as PowerShell for ease of use.
+- Add advanced filtering and sorting.  Initially implemented with `New-ServiceNowQuery` and `Get-ServiceNowRecord`.  Filter with many different comparison operators as well as 'and', 'or', and 'group'ing.  Sort ascending or descending against multiple fields.  Comparison operators are the same as PowerShell for ease of use.
 - Add `Get-ServiceNowRecord`.  This function implements the new advanced filtering and sorting.  As long as you know your table name, this can replace all other Get functions.
 - Enumerate implemented tables and advanced filtering operators in a json config to easily manage going forward; make available via script session variables.
 Be able to reference type names from this config per table, removing the need to have separate Get functions for every table.
