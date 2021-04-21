@@ -15,7 +15,7 @@
 
 .PARAMETER Filter
     Array or multidimensional array of fields and values to filter on.
-    Each array should be of the format @(field, comparison operator, value) separated by a join, either 'and', 'or', or 'group.
+    Each array should be of the format @(field, comparison operator, value) separated by a join, either 'and', 'or', or 'group'.
     For a complete list of comparison operators, see $script:ServiceNowOperator and use Name in your filter.
     See the examples.
     Also, see https://docs.servicenow.com/bundle/quebec-platform-user-interface/page/use/common-ui-elements/reference/r_OpAvailableFiltersQueries.html
@@ -101,7 +101,7 @@ function New-ServiceNowQuery {
         if ( $Filter ) {
             $filterList = $Filter
             # see if we're working with 1 array or multidimensional array
-            # we're looking for multidimensional so convert if not
+            # we want multidimensional so convert if not
             if ($Filter[0].GetType().Name -eq 'String') {
                 $filterList = @(, $Filter)
             }
@@ -149,7 +149,7 @@ function New-ServiceNowQuery {
                     }
 
                     2 {
-                        # should be a non-value operator
+                        # should be a non-value operator, eg. ='' / ISEMPTY
                         $thisOperator = $script:ServiceNowOperator | Where-Object { $_.Name -eq $thisFilter[1] }
                         if ( -not $thisOperator ) {
                             throw ('Operator ''{0}'' is not valid' -f $thisFilter[1])
@@ -161,7 +161,7 @@ function New-ServiceNowQuery {
                     }
 
                     3 {
-                        # should be key operator value
+                        # should be field operator value
                         $thisOperator = $script:ServiceNowOperator | Where-Object { $_.Name -eq $thisFilter[1] }
                         if ( -not $thisOperator ) {
                             throw ('Operator ''{0}'' is not valid', $thisFilter[1])
@@ -186,7 +186,7 @@ function New-ServiceNowQuery {
 
         $orderList = $Sort
         # see if we're working with 1 array or multidimensional array
-        # we're looking for multidimensional so convert if not
+        # we want multidimensional so convert if not
         if ($Sort[0].GetType().Name -eq 'String') {
             $orderList = @(, $Sort)
         }
