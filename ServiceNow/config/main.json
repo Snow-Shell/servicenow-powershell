@@ -1,38 +1,38 @@
 {
     "Tables": [
         {
-            "Name": "Incident",
-            "DbTableName": "incident",
+            "Name": "incident",
+            "CommonName": "Incident",
             "Type": "ServiceNow.Incident"
         },
         {
-            "Name": "Change Request",
-            "DbTableName": "change_request",
+            "Name": "change_request",
+            "CommonName": "Change Request",
             "Type": "ServiceNow.ChangeRequest"
         },
         {
-            "Name": "Configuration Item",
-            "DbTableName": "cmdb_ci",
+            "Name": "cmdb_ci",
+            "CommonName": "Configuration Item",
             "Type": "ServiceNow.ConfigurationItem"
         },
         {
-            "Name": "Request",
-            "DbTableName": "sc_request",
+            "Name": "sc_request",
+            "CommonName": "Request",
             "Type": "ServiceNow.Request"
         },
         {
-            "Name": "Request Item",
-            "DbTableName": "sc_req_item",
+            "Name": "sc_req_item",
+            "CommonName": "Request Item",
             "Type": "ServiceNow.RequestItem"
         },
         {
-            "Name": "User",
-            "DbTableName": "sys_user",
+            "Name": "sys_user",
+            "CommonName": "User",
             "Type": "ServiceNow.UserAndUserGroup"
         },
         {
-            "Name": "User Group",
-            "DbTableName": "sys_user_group",
+            "Name": "sys_user_group",
+            "CommonName": "User Group",
             "Type": "ServiceNow.UserAndUserGroup"
         }
     ],
