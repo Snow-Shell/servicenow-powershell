@@ -1,4 +1,3 @@
-#Requires -Version 3.0
 [cmdletbinding()]
 param()
 
@@ -27,3 +26,11 @@ Export-ModuleMember -Function (Get-ChildItem -Path "$PSScriptRoot\Public\*.ps1")
 
 $Script:ServiceNowSession = @{}
 Export-ModuleMember -Variable ServiceNowSession
+
+$aliases = @{
+    'Get-ServiceNowRequestItem' = 'Get-ServiceNowRequestedItem'
+}
+$aliases.GetEnumerator() | ForEach-Object {
+    Set-Alias -Name $_.Key -Value $_.Value
+}
+Export-ModuleMember -Alias *

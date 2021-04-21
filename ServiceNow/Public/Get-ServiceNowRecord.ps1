@@ -7,7 +7,7 @@
     Given you know the table name, you shouldn't need any other 'Get-' function.
 
 .PARAMETER Table
-    Name of the table to be queried
+    Name of the table to be queried, by either table name or class name
 
 .PARAMETER Properties
     Limit the fields returned to this list
@@ -55,8 +55,8 @@
     Get incident records where state equals New and first sort by the field opened_at descending and then sort by the field state ascending
 
 .EXAMPLE
-    Get-ServiceNowRecord -Table incident -Filter @('opened_at', '-ge', 'javascript:gs.daysAgoEnd(30)')
-    Get incident records opened in the last 30 days
+    Get-ServiceNowRecord -Table 'change request' -Filter @('opened_at', '-ge', 'javascript:gs.daysAgoEnd(30)')
+    Get change requests opened in the last 30 days.  Use class name as opposed to table name.
 
 .INPUTS
     None
@@ -75,6 +75,7 @@ function Get-ServiceNowRecord {
     Param (
         [parameter(Mandatory)]
         [ValidateNotNullOrEmpty()]
+        [Alias('sys_class_name')]
         [string] $Table,
 
         [Parameter()]
@@ -108,7 +109,7 @@ function Get-ServiceNowRecord {
     $result = Invoke-ServiceNowRestMethod @PSBoundParameters
 
     If ( $result -and -not $Properties) {
-        $type = $script:ServiceNowTable | Where-Object {$_.Name -eq $Table} | Select-Object -ExpandProperty Type
+        $type = $script:ServiceNowTable | Where-Object {$_.Name -eq $Table -or $_.ClassName -eq $Table} | Select-Object -ExpandProperty Type
         if ($type) {
             $result | ForEach-Object { $_.PSObject.TypeNames.Insert(0, $type) }
         }

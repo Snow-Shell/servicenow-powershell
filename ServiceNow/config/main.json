@@ -2,38 +2,43 @@
     "Tables": [
         {
             "Name": "incident",
-            "CommonName": "Incident",
+            "ClassName": "Incident",
             "Type": "ServiceNow.Incident"
         },
         {
             "Name": "change_request",
-            "CommonName": "Change Request",
+            "ClassName": "Change Request",
             "Type": "ServiceNow.ChangeRequest"
         },
         {
             "Name": "cmdb_ci",
-            "CommonName": "Configuration Item",
+            "ClassName": "Configuration Item",
             "Type": "ServiceNow.ConfigurationItem"
         },
         {
             "Name": "sc_request",
-            "CommonName": "Request",
+            "ClassName": "Request",
             "Type": "ServiceNow.Request"
         },
         {
             "Name": "sc_req_item",
-            "CommonName": "Request Item",
+            "ClassName": "Request Item",
             "Type": "ServiceNow.RequestItem"
         },
         {
             "Name": "sys_user",
-            "CommonName": "User",
+            "ClassName": "User",
             "Type": "ServiceNow.UserAndUserGroup"
         },
         {
             "Name": "sys_user_group",
-            "CommonName": "User Group",
+            "ClassName": "User Group",
             "Type": "ServiceNow.UserAndUserGroup"
+        },
+        {
+            "Name": "sc_task",
+            "ClassName": "Catalog Task",
+            "Type": "ServiceNow.CatalogTask"
         }
     ],
     "FilterOperators": [
