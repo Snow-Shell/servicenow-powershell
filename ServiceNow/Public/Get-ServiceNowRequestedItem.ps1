@@ -1,13 +1,13 @@
-function Get-ServiceNowRequestItem {
+function Get-ServiceNowRequestedItem {
 <#
     .SYNOPSIS
-        Query for Request Item (RITM) tickets.
+        Query for Requested Item (RITM) tickets.
 
     .DESCRIPTION
-        Query for Request Item (RITM) tickets from the sc_req_item table.
+        Query for Requested Item (RITM) tickets from the sc_req_item table.
 
     .EXAMPLE
-        Get-ServiceNowRequestItem -MatchExact @{number='RITM0000001'}
+        Get-ServiceNowRequestedItem -MatchExact @{number='RITM0000001'}
 
         Return the details for RITM0000001
 
