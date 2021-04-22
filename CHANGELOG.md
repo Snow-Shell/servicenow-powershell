@@ -5,7 +5,7 @@
 Be able to reference types from this config per table, removing the need to have separate Get functions for every table.
 - Add type for catalog task
 - Fix error when getting an empty result from the api and performing a type lookup
-- Rename `Get-ServiceNowRequestItem` to `Get-ServiceNowRequestedItem` which is the actual name.  Function alias created.
+- Rename `RequestItem` to `RequestedItem` which is the actual name.  Function aliases created.
 
 ## v2.1
 - Add proxy support to `New-ServiceNowSession`, [#97](https://github.com/Snow-Shell/servicenow-powershell/issues/97).
