@@ -166,6 +166,32 @@ function New-ServiceNowSession {
         }
     }
 
+    # Write-Verbose 'Retrieving list of classes for this instance.  This will take a few seconds...'
+    # $cmdbParams = @{
+    #     Table             = 'sys_db_object'
+    #     # Query             = 'nameSTARTSWITHcmdb_ci'
+    #     Properties        = 'name', 'sys_id', 'label'
+    #     First             = 100000
+    #     ServiceNowSession = $newSession
+    # }
+
+    # $class = Get-ServiceNowTable @cmdbParams -ErrorAction SilentlyContinue |
+    # Select-Object @{
+    #     'n' = 'Name'
+    #     'e' = { $_.name }
+    # },
+    # @{
+    #     'n' = 'SysId'
+    #     'e' = { $_.sys_id }
+    # },
+    # @{
+    #     'n' = 'ClassName'
+    #     'e' = { $_.label }
+    # }
+    # if ( $class ) {
+    #     $newSession.Add('Classes', $class)
+    # }
+
     Write-Verbose ($newSession | ConvertTo-Json)
 
     if ( $PassThru ) {

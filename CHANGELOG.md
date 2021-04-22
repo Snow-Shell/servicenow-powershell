@@ -1,3 +1,12 @@
+## v2.2
+- Add advanced filtering and sorting.  Initially implemented with `New-ServiceNowQuery` and `Get-ServiceNowRecord`.  Filter with many different comparison operators as well as 'and', 'or', and 'group'ing.  Sort ascending or descending against multiple fields.  Comparison operators are the same as PowerShell for ease of use.  Please use the GitHub Discussions section to provide feedback, thoughts, etc.
+- Add `Get-ServiceNowRecord`.  This function implements the new advanced filtering and sorting.  As long as you know your table name, this can replace all other Get functions.
+- Enumerate implemented tables and advanced filtering operators in a json config to easily manage going forward; make available via script scoped variables.
+Be able to reference types from this config per table, removing the need to have separate Get functions for every table.
+- Add type for catalog task
+- Fix error when getting an empty result from the api and performing a type lookup
+- Rename `RequestItem` to `RequestedItem` which is the actual name.  Function aliases created.
+
 ## v2.1
 - Add proxy support to `New-ServiceNowSession`, [#97](https://github.com/Snow-Shell/servicenow-powershell/issues/97).
 

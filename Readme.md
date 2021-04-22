@@ -18,7 +18,7 @@ Building on the great work the community has done thus far, a lot of new updates
 
 ## Requirements
 
-Requires PowerShell 3.0 or above as this is when `Invoke-RestMethod` was introduced.
+Requires PowerShell 5.1 or above.
 
 Requires authorization in your ServiceNow tenant.  Due to the custom nature of ServiceNow your organization may have REST access restricted.  The following are some tips to ask for if you're having to go to your admin for access:
 
@@ -32,25 +32,52 @@ The ServiceNow module should be installed from the PowerShell Gallery with `inst
 
 ### Creating a new session
 
+Creating a new session will create a script scoped variable `$ServiceNowSession` which will be used by default in other functions.
+
+Basic authentication with just a credential...
 ```PowerShell
-New-ServiceNowSession -url InstanceName.service-now.com -Credentials (Get-Credential)
+$params @{
+    Url = 'instance.service-now.com'
+    Credential = $userCred
+}
+New-ServiceNowSession @params
 ```
 
-This example is using basic authentication, but OAuth is available as well; see the built-in help for `New-ServiceNowSession`.  All examples below assume a new session has already been created.
+Oauth authentication with user credential as well as application/client credential.  The application/client credential can be found in the System OAuth->Application Registry section of ServiceNow.
+```PowerShell
+$params @{
+    Url = 'instance.service-now.com'
+    Credential = $userCred
+    ClientCredential = $clientCred
+}
+New-ServiceNowSession @params
+```
 
-### Example - Retrieving an Incident Containing the Word 'PowerShell'
+All examples below assume a new session has already been created.
+
+### Getting incidents opened in the last 30 days
+```PowerShell
+$filter = @('opened_at', '-ge', 'javascript:gs.daysAgoEnd(30)')
+Get-ServiceNowRecord -Table incident -Filter $filter
+```
+
+### Retrieving an Incident Containing the Word 'PowerShell'
 
 ```PowerShell
 Get-ServiceNowIncident -MatchContains @{short_description='PowerShell'}
 ```
+or new with v2.2
+```PowerShell
+Get-ServiceNowRecord -Table incident -Filter @('short_description','-eq','PowerShell')
+```
 
-### Example - Update a Ticket
+### Update a Ticket
 
 ```PowerShell
 Get-ServiceNowIncident -Limit 1 -MatchContains @{short_description='PowerShell'} | Update-ServiceNowIncident -Values @{comments='Updated via PowerShell'}
 ```
 
-### Example - Creating a Incident with custom table entries
+### Creating an Incident with custom table entries
 
 ```PowerShell
 $IncidentParams = @{Caller = "UserName"

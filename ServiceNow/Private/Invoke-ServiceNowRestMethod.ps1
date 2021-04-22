@@ -23,6 +23,7 @@ function Invoke-ServiceNowRestMethod {
         # Name of the table we're querying (e.g. incidents)
         [parameter(Mandatory, ParameterSetName = 'Table')]
         [ValidateNotNullOrEmpty()]
+        [Alias('sys_class_name')]
         [string] $Table,
 
         [parameter(ParameterSetName = 'Table')]
@@ -38,6 +39,13 @@ function Invoke-ServiceNowRestMethod {
 
         [parameter()]
         [hashtable] $Values,
+
+        [parameter()]
+        [System.Collections.ArrayList] $Filter,
+
+        [parameter()]
+        [ValidateNotNullOrEmpty()]
+        [System.Collections.ArrayList] $Sort = @('opened_at', 'desc'),
 
         # sysparm_query param in the format of a ServiceNow encoded query string (see http://wiki.servicenow.com/index.php?title=Encoded_Query_Strings)
         [Parameter()]
@@ -82,7 +90,15 @@ function Invoke-ServiceNowRestMethod {
     $params.ContentType = 'application/json'
 
     if ( $Table ) {
-        $params.Uri += "/table/$Table"
+        # table can either be the actual table name or class name
+        # look up the actual table name
+        $tableName = $script:ServiceNowTable | Where-Object { $_.Name -eq $Table -or $_.ClassName -eq $Table } | Select-Object -ExpandProperty Name
+        # if not in our lookup, just use the table name as provided
+        if ( -not $tableName ) {
+            $tableName = $Table
+        }
+
+        $params.Uri += "/table/$tableName"
         if ( $SysId ) {
             $params.Uri += "/$SysId"
         }
@@ -135,6 +151,8 @@ function Invoke-ServiceNowRestMethod {
         # Populate the query
         if ($Query) {
             $Body.sysparm_query = $Query
+        } else {
+            $body.sysparm_query = (New-ServiceNowQuery -Filter $Filter -Sort $Sort)
         }
 
         if ($Properties) {
@@ -159,7 +177,7 @@ function Invoke-ServiceNowRestMethod {
 
     switch ($Method) {
         'Get' {
-            if ( $response.result ) {
+            if ( $response.PSobject.Properties.Name -contains "result" ) {
 
                 $result = $response | Select-Object -ExpandProperty result
                 $ConvertToDateField = @('closed_at', 'expected_start', 'follow_up', 'opened_at', 'sys_created_on', 'sys_updated_on', 'work_end', 'work_start')
