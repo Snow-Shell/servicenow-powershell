@@ -72,7 +72,7 @@ function Update-ServiceNowRequestItem {
             ServiceNowSession = $ServiceNowSession
         }
 
-        If ($PSCmdlet.ShouldProcess("Request Item $SysID", 'Update values')) {
+        If ($PSCmdlet.ShouldProcess("Requested Item $SysID", 'Update values')) {
             $response = Invoke-ServiceNowRestMethod @params
             if ( $PassThru.IsPresent ) {
                 $response

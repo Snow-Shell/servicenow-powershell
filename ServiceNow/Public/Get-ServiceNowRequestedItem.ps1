@@ -1,61 +1,76 @@
-function Get-ServiceNowTask {
+function Get-ServiceNowRequestedItem {
+<#
+    .SYNOPSIS
+        Query for Requested Item (RITM) tickets.
+
+    .DESCRIPTION
+        Query for Requested Item (RITM) tickets from the sc_req_item table.
+
+    .EXAMPLE
+        Get-ServiceNowRequestedItem -MatchExact @{number='RITM0000001'}
+
+        Return the details for RITM0000001
+
+    .OUTPUTS
+        System.Management.Automation.PSCustomObject
+#>
+
     [OutputType([System.Management.Automation.PSCustomObject])]
     [CmdletBinding(DefaultParameterSetName = 'Session', SupportsPaging)]
-    Param(
+    param(
         # Machine name of the field to order by
-        [Parameter()]
-        [string] $OrderBy = 'opened_at',
+        [parameter()]
+        [string]$OrderBy = 'opened_at',
 
         # Direction of ordering (Desc/Asc)
-        [Parameter()]
+        [parameter()]
         [ValidateSet('Desc', 'Asc')]
-        [string] $OrderDirection = 'Desc',
+        [string]$OrderDirection = 'Desc',
 
         # Maximum number of records to return
-        [Parameter()]
-        [int] $Limit,
+        [parameter()]
+        [int]$Limit,
 
         # Fields to return
         [Parameter()]
         [Alias('Fields')]
-        [string[]] $Properties,
+        [string[]]$Properties,
 
         # Hashtable containing machine field names and values returned must match exactly (will be combined with AND)
-        [Parameter()]
-        [hashtable] $MatchExact = @{},
+        [parameter()]
+        [hashtable]$MatchExact = @{},
 
         # Hashtable containing machine field names and values returned rows must contain (will be combined with AND)
-        [Parameter()]
-        [hashtable] $MatchContains = @{},
+        [parameter()]
+        [hashtable]$MatchContains = @{},
 
         # Whether or not to show human readable display values instead of machine values
-        [Parameter()]
+        [parameter()]
         [ValidateSet('true', 'false', 'all')]
-        [string] $DisplayValues = 'true',
+        [string]$DisplayValues = 'true',
 
         [Parameter(ParameterSetName = 'SpecifyConnectionFields', Mandatory)]
         [ValidateNotNullOrEmpty()]
         [Alias('ServiceNowCredential')]
-        [PSCredential] $Credential,
+        [PSCredential]$Credential,
 
         [Parameter(ParameterSetName = 'SpecifyConnectionFields', Mandatory)]
-        [ValidateScript( { $_ | Test-ServiceNowURL })]
-        [Alias('Url')]
-        [string] $ServiceNowURL,
+        [ValidateNotNullOrEmpty()]
+        [string]$ServiceNowURL,
 
         [Parameter(ParameterSetName = 'UseConnectionObject', Mandatory)]
         [ValidateNotNullOrEmpty()]
-        [hashtable] $Connection,
+        [hashtable]$Connection,
 
         [Parameter(ParameterSetName = 'Session')]
         [ValidateNotNullOrEmpty()]
         [hashtable] $ServiceNowSession = $script:ServiceNowSession
     )
 
-    $result = Get-ServiceNowTableEntry @PSBoundParameters -Table 'task'
+    $result = Get-ServiceNowTableEntry @PSBoundParameters -Table 'sc_req_item'
 
     If ( $result -and -not $Properties) {
-        $result | ForEach-Object { $_.PSObject.TypeNames.Insert(0, "ServiceNow.Task") }
+        $result | ForEach-Object { $_.PSObject.TypeNames.Insert(0, "ServiceNow.RequestItem") }
     }
     $result
 }
