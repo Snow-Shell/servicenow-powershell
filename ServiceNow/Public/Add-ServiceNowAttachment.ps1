@@ -114,8 +114,12 @@ Function Add-ServiceNowAttachment {
         ForEach ($Object in $File) {
             $FileData = Get-ChildItem $Object -ErrorAction Stop
             If (-not $ContentType) {
-                Add-Type -AssemblyName 'System.Web'
-                $ContentType = [System.Web.MimeMapping]::GetMimeMapping($FileData.FullName)
+                # Thanks to https://github.com/samuelneff/MimeTypeMap/blob/master/MimeTypeMap.cs from which
+                # MimeTypeMap.json was adapted
+                $ContentTypeHash = ConvertFrom-Json (Get-Content "$PSScriptRoot\..\config\MimeTypeMap.json" -Raw)
+
+                $Extension = [IO.Path]::GetExtension($FileData.FullName)
+                $ContentType = $ContentTypeHash.$Extension
             }
 
             # POST: https://instance.service-now.com/api/now/attachment/file?table_name=incident&table_sys_id=d71f7935c0a8016700802b64c67c11c6&file_name=Issue_screenshot
