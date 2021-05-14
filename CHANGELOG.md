@@ -1,7 +1,8 @@
 ## v2.3
-- Add paging support to all `Get-` functions.  Use `-First`, `-Skip`, and `-IncludeTotalCount` parameters.
+- Add paging support to all `Get-` functions.  Use `-First`, `-Skip`, and `-IncludeTotalCount` parameters.  In support of this, api calls have been changed from Invoke-RestMethod to Invoke-WebRequest.
 - Additional pipline support added for Table and SysId parameters to pipe `Get-` functions to `Update-` and `Remove-`.
 - ***Breaking change:*** deprecate `-Limit` parameter.  The warning regarding deprecation went out over 2 years ago and now that paging has been implemented, it's a good time for this cleanup.  Use `-First` instead.
+- 'TableEntry' renamed to 'Record' for `New-`, `Update-`, and `Remove-` functions.  Aliases added.
 
 ## v2.2
 - Add advanced filtering and sorting.  Initially implemented with `New-ServiceNowQuery` and `Get-ServiceNowRecord`.  Filter with many different comparison operators as well as 'and', 'or', and 'group'ing.  Sort ascending or descending against multiple fields.  Comparison operators are the same as PowerShell for ease of use.  Please use the GitHub Discussions section to provide feedback, thoughts, etc.
