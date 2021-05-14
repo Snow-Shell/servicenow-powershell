@@ -5,9 +5,6 @@ Generates a new ServiceNow Incident
 .DESCRIPTION
 Generates a new ServiceNow Incident using predefined or custom fields by invoking the ServiceNow API
 
-.LINK
-https://github.com/Snow-Shell/servicenow-powershell
-
 .EXAMPLE
 Generate a basic Incident attributed to the caller "UserName" with descriptions, categories, assignment groups and CMDB items set.
     New-ServiceNowIncident -Caller "UserName" -ShortDescription = "New PS Incident" -Description = "This incident was created from Powershell" -AssignmentGroup "ServiceDesk" -Comment "Inline Comment" -Category "Office" -Subcategory "Outlook" -ConfigurationItem UserPC1

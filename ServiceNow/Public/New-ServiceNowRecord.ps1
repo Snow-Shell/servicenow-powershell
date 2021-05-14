@@ -1,3 +1,35 @@
+<#
+.SYNOPSIS
+    Create a new record in any table
+
+.DESCRIPTION
+    Create a new record in any table by specifying the table name and values required for that table
+
+.PARAMETER Table
+    Name or class name of the table to create the new record
+
+.PARAMETER Values
+    Hashtable with all the key/value pairs for the new record
+
+.PARAMETER Connection
+    Azure Automation Connection object containing username, password, and URL for the ServiceNow instance
+
+.PARAMETER ServiceNowSession
+    ServiceNow session created by New-ServiceNowSession.  Will default to script-level variable $ServiceNowSession.
+
+.PARAMETER PassThru
+    If provided, the new record will be returned
+    
+.EXAMPLE
+    New-ServiceNowTableEntry -Table incident -Values @{'Caller'='me';'short_description'='my issue'}
+    Create a new record in the incident table
+
+.INPUTS
+    None
+
+.OUTPUTS
+    PSCustomObject if PassThru provided
+#>
 function New-ServiceNowRecord {
 
     [CmdletBinding(DefaultParameterSetName = 'Session', SupportsShouldProcess)]
@@ -20,14 +52,12 @@ function New-ServiceNowRecord {
         # The URL for the ServiceNow instance being used
         [Parameter(ParameterSetName = 'SpecifyConnectionFields', Mandatory)]
         [ValidateNotNullOrEmpty()]
-        [string]
-        $ServiceNowURL,
+        [string] $ServiceNowURL,
 
         #Azure Automation Connection object containing username, password, and URL for the ServiceNow instance
         [Parameter(ParameterSetName = 'UseConnectionObject', Mandatory)]
         [ValidateNotNullOrEmpty()]
-        [Hashtable]
-        $Connection,
+        [Hashtable] $Connection,
 
         [Parameter(ParameterSetName = 'Session')]
         [ValidateNotNullOrEmpty()]
