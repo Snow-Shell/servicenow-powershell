@@ -5,9 +5,6 @@ Generates a new ServiceNow Incident
 .DESCRIPTION
 Generates a new ServiceNow Incident using predefined or custom fields by invoking the ServiceNow API
 
-.LINK
-https://github.com/Snow-Shell/servicenow-powershell
-
 .EXAMPLE
 Generate a basic Incident attributed to the caller "UserName" with descriptions, categories, assignment groups and CMDB items set.
     New-ServiceNowIncident -Caller "UserName" -ShortDescription = "New PS Incident" -Description = "This incident was created from Powershell" -AssignmentGroup "ServiceDesk" -Comment "Inline Comment" -Category "Office" -Subcategory "Outlook" -ConfigurationItem UserPC1
@@ -124,7 +121,8 @@ function New-ServiceNowIncident {
                 If (($TableEntryValues.ContainsKey($Key) -eq $False)) {
                     # Add the unique entry to the table entry values hash table
                     $TableEntryValues.Add($Key, $CustomFields[$Key])
-                } Else {
+                }
+                Else {
                     # Capture the duplicate key name
                     $Key
                 }
@@ -151,6 +149,7 @@ function New-ServiceNowIncident {
         If ( $PSCmdlet.ShouldProcess($ShortDescription, 'Create new incident') ) {
             $response = Invoke-ServiceNowRestMethod @params
             If ($PassThru.IsPresent) {
+                $response.PSObject.TypeNames.Insert(0, "ServiceNow.Incident")
                 $response
             }
         }

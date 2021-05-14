@@ -1,17 +1,17 @@
-function Invoke-ServiceNowRestMethod {
-    <#
-    .SYNOPSIS
-        Retrieves records for the specified table
-    .DESCRIPTION
-        The Get-ServiceNowTable function retrieves records for the specified table
-    .INPUTS
-        None
-    .OUTPUTS
-        System.Management.Automation.PSCustomObject
-    .LINK
-        Service-Now Kingston REST Table API: https://docs.servicenow.com/bundle/kingston-application-development/page/integrate/inbound-rest/concept/c_TableAPI.html
-        Service-Now Table API FAQ: https://hi.service-now.com/kb_view.do?sysparm_article=KB0534905
+<#
+.SYNOPSIS
+    Retrieves records for the specified table
+.DESCRIPTION
+    The Get-ServiceNowTable function retrieves records for the specified table
+.INPUTS
+    None
+.OUTPUTS
+    System.Management.Automation.PSCustomObject
+.LINK
+    Service-Now Kingston REST Table API: https://docs.servicenow.com/bundle/kingston-application-development/page/integrate/inbound-rest/concept/c_TableAPI.html
+    Service-Now Table API FAQ: https://hi.service-now.com/kb_view.do?sysparm_article=KB0534905
 #>
+function Invoke-ServiceNowRestMethod {
 
     [OutputType([System.Management.Automation.PSCustomObject])]
     [CmdletBinding(SupportsPaging)]
@@ -50,10 +50,6 @@ function Invoke-ServiceNowRestMethod {
         # sysparm_query param in the format of a ServiceNow encoded query string (see http://wiki.servicenow.com/index.php?title=Encoded_Query_Strings)
         [Parameter()]
         [string] $Query,
-
-        # Maximum number of records to return
-        [Parameter()]
-        [int] $Limit,
 
         # Fields to return
         [Parameter()]
@@ -102,63 +98,47 @@ function Invoke-ServiceNowRestMethod {
         if ( $SysId ) {
             $params.Uri += "/$SysId"
         }
-    } else {
+    }
+    else {
         $params.Uri += $UriLeaf
     }
 
     if ( $Method -eq 'Get') {
         $Body = @{
             'sysparm_display_value' = $DisplayValues
+            'sysparm_query'         = (New-ServiceNowQuery -Filter $Filter -Sort $Sort)
+            'sysparm_limit'         = 10
         }
 
         # Handle paging parameters
-        # If -Limit was provided, write a warning message, but prioritize it over -First.
         # The value of -First defaults to [uint64]::MaxValue if not specified.
         # If no paging information was provided, default to the legacy behavior, which was to return 10 records.
 
-        if ($PSBoundParameters.ContainsKey('Limit')) {
-            Write-Warning "The -Limit parameter is deprecated, and may be removed in a future release. Use the -First parameter instead."
-            $Body['sysparm_limit'] = $Limit
-        } elseif ($PSCmdlet.PagingParameters.First -ne [uint64]::MaxValue) {
+        if ($PSCmdlet.PagingParameters.First -ne [uint64]::MaxValue) {
             $Body['sysparm_limit'] = $PSCmdlet.PagingParameters.First
-        } else {
-            $Body['sysparm_limit'] = 10
         }
+        # else {
+        #     $Body['sysparm_limit'] = 10
+        # }
 
         if ($PSCmdlet.PagingParameters.Skip) {
             $Body['sysparm_offset'] = $PSCmdlet.PagingParameters.Skip
         }
 
-        if ($PSCmdlet.PagingParameters.IncludeTotalCount) {
-            # Accuracy is a double between 0.0 and 1.0 representing an estimated percentage accuracy.
-            # 0.0 means we have no idea and 1.0 means the number is exact.
-
-            # ServiceNow does return this information in the X-Total-Count response header,
-            # but we're currently using Invoke-RestMethod to perform the API call, and Invoke-RestMethod
-            # does not provide the response headers, so we can't capture this info.
-
-            # To properly support this parameter, we'd need to fall back on Invoke-WebRequest, read the
-            # X-Total-Count header of the response, and update this parameter after performing the API
-            # call.
-
-            # Reference:
-            # https://developer.servicenow.com/app.do#!/rest_api_doc?v=jakarta&id=r_TableAPI-GET
-
-            [double] $accuracy = 0.0
-            $PSCmdlet.PagingParameters.NewTotalCount($PSCmdlet.PagingParameters.First, $accuracy)
-        }
-
-        # Populate the query
         if ($Query) {
             $Body.sysparm_query = $Query
-        } else {
-            $body.sysparm_query = (New-ServiceNowQuery -Filter $Filter -Sort $Sort)
         }
 
         if ($Properties) {
             $Body.sysparm_fields = ($Properties -join ',').ToLower()
         }
     }
+
+    # Populate the query
+    # else {
+    #     $body['sysparm_query'] = (New-ServiceNowQuery -Filter $Filter -Sort $Sort)
+    # }
+
 
     if ( $Values ) {
         $Body = $Values | ConvertTo-Json
@@ -173,44 +153,94 @@ function Invoke-ServiceNowRestMethod {
 
     Write-Verbose ($params | ConvertTo-Json)
 
-    $response = Invoke-RestMethod @params
+    # hide invoke-webrequest progress
+    $oldProgressPreference = $ProgressPreference
+    $ProgressPreference = 'SilentlyContinue'
+
+    $response = Invoke-WebRequest @params
+
+    $content = $response.content | ConvertFrom-Json
+    if ( $content.PSobject.Properties.Name -contains "result" ) {
+        $records = @($content | Select-Object -ExpandProperty result)
+    }
+    else {
+        $records = @($content)
+    }
+
+    # if option to get all records was provided, loop and get them all
+    if ( $PSCmdlet.PagingParameters.IncludeTotalCount.IsPresent ) {
+
+        $totalRecordCount = [int]$response.Headers.'X-Total-Count'
+        Write-Verbose "Total number of records found was $totalRecordCount"
+        Write-Warning "Getting $($totalRecordCount - $PSCmdlet.PagingParameters.Skip) records, this could take a while..."
+
+        $setPoint = $params.body.sysparm_offset + $params.body.sysparm_limit
+
+        while ($totalRecordCount -gt $setPoint) {
+
+            # up the offset so we get the next set of records
+            $params.body.sysparm_offset += $params.body.sysparm_limit
+            $setPoint = $params.body.sysparm_offset + $params.body.sysparm_limit
+
+            $end = if ( $totalRecordCount -lt $setPoint ) {
+                $totalRecordCount
+            }
+            else { 
+                $setPoint
+            }
+
+            Write-Verbose ('getting {0}-{1} of {2}' -f ($params.body.sysparm_offset + 1), $end, $totalRecordCount)
+            $response = Invoke-WebRequest @params -Verbose:$false
+
+            $content = $response.content | ConvertFrom-Json
+            if ( $content.PSobject.Properties.Name -contains "result" ) {
+                $records += $content | Select-Object -ExpandProperty result
+            }
+            else {
+                $records += $content
+            }
+        }
+
+        if ( $totalRecordCount -ne ($records.count + $PSCmdlet.PagingParameters.Skip) ) {
+            Write-Error ('The expected number of records was not received.  This can occur if your -First value, how many records retrieved at once, is too large.  Lower this value and try again.  Received: {0}, expected: {1}' -f $records.count, ($totalRecordCount - $PSCmdlet.PagingParameters.Skip))
+        }
+    }
+
+    # set the progress pref back now that done with invoke-webrequest
+    $ProgressPreference = $oldProgressPreference
 
     switch ($Method) {
         'Get' {
-            if ( $response.PSobject.Properties.Name -contains "result" ) {
-
-                $result = $response | Select-Object -ExpandProperty result
-                $ConvertToDateField = @('closed_at', 'expected_start', 'follow_up', 'opened_at', 'sys_created_on', 'sys_updated_on', 'work_end', 'work_start')
-                ForEach ($SNResult in $Result) {
-                    ForEach ($Property in $ConvertToDateField) {
-                        If (-not [string]::IsNullOrEmpty($SNResult.$Property)) {
+            $ConvertToDateField = @('closed_at', 'expected_start', 'follow_up', 'opened_at', 'sys_created_on', 'sys_updated_on', 'work_end', 'work_start')
+            ForEach ($SNResult in $records) {
+                ForEach ($Property in $ConvertToDateField) {
+                    If (-not [string]::IsNullOrEmpty($SNResult.$Property)) {
+                        Try {
+                            # Extract the default Date/Time formatting from the local computer's "Culture" settings, and then create the format to use when parsing the date/time from Service-Now
+                            $CultureDateTimeFormat = (Get-Culture).DateTimeFormat
+                            $DateFormat = $CultureDateTimeFormat.ShortDatePattern
+                            $TimeFormat = $CultureDateTimeFormat.LongTimePattern
+                            $DateTimeFormat = "$DateFormat $TimeFormat"
+                            $SNResult.$Property = [DateTime]::ParseExact($($SNResult.$Property), $DateTimeFormat, [System.Globalization.DateTimeFormatInfo]::InvariantInfo, [System.Globalization.DateTimeStyles]::None)
+                        }
+                        Catch {
                             Try {
-                                # Extract the default Date/Time formatting from the local computer's "Culture" settings, and then create the format to use when parsing the date/time from Service-Now
-                                $CultureDateTimeFormat = (Get-Culture).DateTimeFormat
-                                $DateFormat = $CultureDateTimeFormat.ShortDatePattern
-                                $TimeFormat = $CultureDateTimeFormat.LongTimePattern
-                                $DateTimeFormat = "$DateFormat $TimeFormat"
+                                # Universal Format
+                                $DateTimeFormat = 'yyyy-MM-dd HH:mm:ss'
                                 $SNResult.$Property = [DateTime]::ParseExact($($SNResult.$Property), $DateTimeFormat, [System.Globalization.DateTimeFormatInfo]::InvariantInfo, [System.Globalization.DateTimeStyles]::None)
-                            } Catch {
-                                Try {
-                                    # Universal Format
-                                    $DateTimeFormat = 'yyyy-MM-dd HH:mm:ss'
-                                    $SNResult.$Property = [DateTime]::ParseExact($($SNResult.$Property), $DateTimeFormat, [System.Globalization.DateTimeFormatInfo]::InvariantInfo, [System.Globalization.DateTimeStyles]::None)
-                                } Catch {
-                                    # If the local culture and universal formats both fail keep the property as a string (Do nothing)
-                                    $null = 'Silencing a PSSA alert with this line'
-                                }
+                            }
+                            Catch {
+                                # If the local culture and universal formats both fail keep the property as a string (Do nothing)
+                                $null = 'Silencing a PSSA alert with this line'
                             }
                         }
                     }
                 }
-            } else {
-                $response
             }
         }
 
         { $_ -in 'Post', 'Patch' } {
-            $result = $response | Select-Object -ExpandProperty result
+            $records = $content | Select-Object -ExpandProperty result
         }
 
         'Delete' {
@@ -222,6 +252,5 @@ function Invoke-ServiceNowRestMethod {
         }
     }
 
-    $result
-    # Invoke-RestMethod -Uri $Uri -Credential $Credential -Body $Body -ContentType "application/json" | Select-Object -ExpandProperty Result
+    $records
 }

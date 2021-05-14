@@ -1,12 +1,14 @@
-function Remove-ServiceNowTableEntry {
+function Remove-ServiceNowRecord {
     [CmdletBinding(DefaultParameterSetName = 'Session', ConfirmImpact = 'High')]
     Param(
         # Table containing the entry we're deleting
-        [parameter(Mandatory)]
+        [parameter(Mandatory, ValueFromPipelineByPropertyName)]
+        [Alias('sys_class_name')]
         [string] $Table,
 
         # sys_id of the entry we're deleting
-        [parameter(Mandatory)]
+        [parameter(Mandatory, ValueFromPipelineByPropertyName)]
+        [Alias('sys_id')]
         [string] $SysId,
 
         # Credential used to authenticate to ServiceNow

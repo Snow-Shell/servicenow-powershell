@@ -11,10 +11,6 @@ function Get-ServiceNowChangeRequest {
         [ValidateSet('Desc', 'Asc')]
         [string] $OrderDirection = 'Desc',
 
-        # Maximum number of records to return
-        [Parameter()]
-        [int] $Limit,
-
         # Fields to return
         [Parameter()]
         [Alias('Fields')]

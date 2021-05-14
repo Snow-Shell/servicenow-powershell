@@ -5,6 +5,7 @@
 .DESCRIPTION
     Retrieve records from any table with the option to filter, sort, and choose fields.
     Given you know the table name, you shouldn't need any other 'Get-' function.
+    Paging is supported with -First, -Skip, and -IncludeTotalCount.
 
 .PARAMETER Table
     Name of the table to be queried, by either table name or class name
@@ -58,6 +59,10 @@
     Get-ServiceNowRecord -Table 'change request' -Filter @('opened_at', '-ge', 'javascript:gs.daysAgoEnd(30)')
     Get change requests opened in the last 30 days.  Use class name as opposed to table name.
 
+.EXAMPLE
+    Get-ServiceNowRecord -Table 'change request' -First 100 -IncludeTotalCount
+    Get all change requests, paging 100 at a time.
+
 .INPUTS
     None
 
@@ -74,7 +79,6 @@ function Get-ServiceNowRecord {
 
     Param (
         [parameter(Mandatory)]
-        [ValidateNotNullOrEmpty()]
         [Alias('sys_class_name')]
         [string] $Table,
 

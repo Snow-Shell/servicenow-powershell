@@ -152,7 +152,8 @@ function New-ServiceNowChangeRequest {
                 If (($TableEntryValues.ContainsKey($Key) -eq $False)) {
                     # Add the unique entry to the table entry values hash table
                     $TableEntryValues.Add($Key, $CustomFields[$Key])
-                } Else {
+                }
+                Else {
                     # Capture the duplicate key name
                     $Key
                 }
@@ -179,6 +180,7 @@ function New-ServiceNowChangeRequest {
         If ( $PSCmdlet.ShouldProcess($ShortDescription, 'Create new change request') ) {
             $response = Invoke-ServiceNowRestMethod @params
             If ($PassThru.IsPresent) {
+                $response.PSObject.TypeNames.Insert(0, "ServiceNow.ChangeRequest")
                 $response
             }
         }

@@ -25,10 +25,6 @@ function Get-ServiceNowTable {
         [Parameter()]
         [string] $Query,
 
-        # Maximum number of records to return
-        [Parameter()]
-        [int] $Limit,
-
         # Fields to return
         [Parameter()]
         [Alias('Fields')]
@@ -68,11 +64,6 @@ function Get-ServiceNowTable {
         Credential        = $Credential
         ServiceNowUrl     = $ServiceNowURL
         ServiceNowSession = $ServiceNowSession
-    }
-
-    # # Only add the Limit parameter if it was explicitly provided
-    if ($PSBoundParameters.ContainsKey('Limit')) {
-        $getServiceNowTableSplat.Add('Limit', $Limit)
     }
 
     # # Add all provided paging parameters
