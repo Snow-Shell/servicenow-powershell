@@ -27,10 +27,6 @@ function Get-ServiceNowRequestedItem {
         [ValidateSet('Desc', 'Asc')]
         [string]$OrderDirection = 'Desc',
 
-        # Maximum number of records to return
-        [parameter()]
-        [int]$Limit,
-
         # Fields to return
         [Parameter()]
         [Alias('Fields')]

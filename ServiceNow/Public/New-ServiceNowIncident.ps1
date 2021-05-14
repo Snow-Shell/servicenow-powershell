@@ -124,7 +124,8 @@ function New-ServiceNowIncident {
                 If (($TableEntryValues.ContainsKey($Key) -eq $False)) {
                     # Add the unique entry to the table entry values hash table
                     $TableEntryValues.Add($Key, $CustomFields[$Key])
-                } Else {
+                }
+                Else {
                     # Capture the duplicate key name
                     $Key
                 }
@@ -151,6 +152,7 @@ function New-ServiceNowIncident {
         If ( $PSCmdlet.ShouldProcess($ShortDescription, 'Create new incident') ) {
             $response = Invoke-ServiceNowRestMethod @params
             If ($PassThru.IsPresent) {
+                $response.PSObject.TypeNames.Insert(0, "ServiceNow.Incident")
                 $response
             }
         }

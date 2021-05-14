@@ -1,4 +1,4 @@
-function New-ServiceNowTableEntry {
+function New-ServiceNowRecord {
 
     [CmdletBinding(DefaultParameterSetName = 'Session', SupportsShouldProcess)]
 
@@ -37,9 +37,16 @@ function New-ServiceNowTableEntry {
         [switch] $PassThru
     )
 
+    $invokeParams = $PSBoundParameters
+    $invokeParams.Remove('PassThru') | Out-Null
+
     If ( $PSCmdlet.ShouldProcess($Table, 'Create new entry') ) {
-        $response = Invoke-ServiceNowRestMethod @PSBoundParameters -Method 'Post'
+        $response = Invoke-ServiceNowRestMethod @invokeParams -Method 'Post'
         If ($PassThru.IsPresent) {
+            $type = $script:ServiceNowTable | Where-Object {$_.Name -eq $Table -or $_.ClassName -eq $Table} | Select-Object -ExpandProperty Type
+            if ($type) {
+                $response | ForEach-Object { $_.PSObject.TypeNames.Insert(0, $type) }
+            }
             $response
         }
     }

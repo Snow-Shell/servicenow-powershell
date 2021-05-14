@@ -30,6 +30,9 @@ Export-ModuleMember -Variable ServiceNowSession
 $aliases = @{
     'Get-ServiceNowRequestItem'    = 'Get-ServiceNowRequestedItem'
     'Update-ServiceNowRequestItem' = 'Update-ServiceNowRequestedItem'
+    'Remove-ServiceNowTableEntry'  = 'Remove-ServiceNowRecord'
+    'New-ServiceNowTableEntry'     = 'New-ServiceNowRecord'
+    'Update-ServiceNowTableEntry'  = 'Update-ServiceNowRecord'
 }
 $aliases.GetEnumerator() | ForEach-Object {
     Set-Alias -Name $_.Key -Value $_.Value

@@ -1,8 +1,9 @@
-function Update-ServiceNowTableEntry {
+function Update-ServiceNowRecord {
     [CmdletBinding(DefaultParameterSetName = 'Session', SupportsShouldProcess)]
     Param(
         # Table containing the entry we're updating
         [parameter(Mandatory)]
+        [Alias('sys_class_name')]
         [string] $Table,
 
         # sys_id of the entry we're updating
