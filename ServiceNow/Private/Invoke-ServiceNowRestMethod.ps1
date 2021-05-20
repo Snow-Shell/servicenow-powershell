@@ -167,11 +167,12 @@ function Invoke-ServiceNowRestMethod {
         $records = @($content)
     }
 
+    $totalRecordCount = [int]$response.Headers.'X-Total-Count'
+    Write-Verbose "Total number of records for this query: $totalRecordCount"
+
     # if option to get all records was provided, loop and get them all
     if ( $PSCmdlet.PagingParameters.IncludeTotalCount.IsPresent ) {
 
-        $totalRecordCount = [int]$response.Headers.'X-Total-Count'
-        Write-Verbose "Total number of records found was $totalRecordCount"
         Write-Warning "Getting $($totalRecordCount - $PSCmdlet.PagingParameters.Skip) records, this could take a while..."
 
         $setPoint = $params.body.sysparm_offset + $params.body.sysparm_limit
