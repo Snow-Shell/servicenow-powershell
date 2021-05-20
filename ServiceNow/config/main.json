@@ -86,7 +86,7 @@
         },
         {
             "Name": "-notlike",
-            "QueryOperator": "NOTLIKE",
+            "QueryOperator": "NOT LIKE",
             "Description": "value is not found anywhere in field",
             "RequiresValue": true
         },
@@ -98,7 +98,7 @@
         },
         {
             "Name": "-notin",
-            "QueryOperator": "NOTIN",
+            "QueryOperator": "NOT IN",
             "Description": "field is populated by any value except for these",
             "RequiresValue": true
         },
