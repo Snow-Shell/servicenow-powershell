@@ -1,3 +1,7 @@
+## 2.3.1
+- Fix query operator -notin and -notlike which had a missing space
+- Move verbose logging message for number of records so it always shows.  This is helpful when you change a filter and can see how many records would be returned without actually returning them.
+
 ## v2.3
 - Add paging support to all `Get-` functions.  Use `-First`, `-Skip`, and `-IncludeTotalCount` parameters.  In support of this, api calls have been changed from Invoke-RestMethod to Invoke-WebRequest.
 - Additional pipline support added for Table and SysId parameters to pipe `Get-` functions to `Update-` and `Remove-`.
