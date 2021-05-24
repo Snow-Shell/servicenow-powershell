@@ -17,12 +17,17 @@ Function Add-ServiceNowAttachment {
 
     .EXAMPLE
     Add-ServiceNowAttachment -Number $Number -Table $Table -File .\File01.txt, .\File02.txt
-
+    
     Upload one or more files to a ServiceNow ticket by specifing the number and table
 
     .EXAMPLE
-    Add-ServiceNowAttachment -Number $Number -Table $Table -File .\File01.txt -ContentType 'text/plain'
+    New-ServiceNowIncident @params -PassThru | Add-ServiceNowAttachment -File File01.txt
+    
+    Create a new incident and add an attachment
 
+    .EXAMPLE
+    Add-ServiceNowAttachment -Number $Number -Table $Table -File .\File01.txt -ContentType 'text/plain'
+    
     Upload a file and specify the MIME type (content type).  Should only be required if the function cannot automatically determine the type.
 
     .EXAMPLE
@@ -31,22 +36,20 @@ Function Add-ServiceNowAttachment {
     Upload a file and receive back the file details.
 
     .OUTPUTS
-    System.Management.Automation.PSCustomObject
-
-    .NOTES
-
+    System.Management.Automation.PSCustomObject if -PassThru provided
     #>
 
     [OutputType([PSCustomObject[]])]
     [CmdletBinding(DefaultParameterSetName = 'Session', SupportsShouldProcess)]
     Param(
-        # Object number
-        [Parameter(Mandatory)]
-        [string] $Number,
-
         # Table containing the entry
-        [Parameter(Mandatory)]
+        [Parameter(Mandatory, ValueFromPipelineByPropertyName)]
+        [Alias('sys_class_name')]
         [string]$Table,
+
+        # Object number
+        [Parameter(Mandatory, ValueFromPipelineByPropertyName)]
+        [string] $Number,
 
         # Filter results by file name
         [parameter(Mandatory)]
@@ -92,7 +95,7 @@ Function Add-ServiceNowAttachment {
 
         $getSysIdParams = @{
             Table             = $Table
-            Query             = (New-ServiceNowQuery -MatchExact @{'number' = $number })
+            Query             = (New-ServiceNowQuery -Filter @('number', '-eq', $number))
             Properties        = 'sys_id'
             Connection        = $Connection
             Credential        = $Credential

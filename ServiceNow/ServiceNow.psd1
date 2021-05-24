@@ -20,7 +20,7 @@ CompanyName = 'None'
 Copyright = '(c) 2015-2021 Snow-Shell. All rights reserved.'
 
 # Description of the functionality provided by this module
-Description = 'This module provides cmdlets allowing you to retrieve information from your ServiceNow instance''s REST API'
+Description = 'Automate against ServiceNow service and asset management.  This module can be used standalone or with Azure Automation.'
 
 # Minimum version of the Windows PowerShell engine required by this module
 # PowerShellVersion = '3.0'
