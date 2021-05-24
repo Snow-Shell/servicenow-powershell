@@ -1,3 +1,6 @@
+## 2.3.2
+- Added ability to pipe to `Add-ServiceNowAttachment` and `Get-ServiceNowAttachmentDetail`.  For example, `New-ServiceNowIncident @params -PassThru | Add-ServiceNowAttachment -File MyFile.txt`.  This will create an incident and add an attachment in one step.
+
 ## 2.3.1
 - Fix query operator -notin and -notlike which had a missing space
 - Move verbose logging message in `Invoke-ServiceNowRestMethod` for number of records so it always shows.  This is helpful when you change a filter and can see how many records would be returned without actually returning them.

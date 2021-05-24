@@ -27,20 +27,18 @@ Function Get-ServiceNowAttachmentDetail {
 
     .OUTPUTS
     System.Management.Automation.PSCustomObject
-
-    .NOTES
-
     #>
 
     [OutputType([System.Management.Automation.PSCustomObject[]])]
     [CmdletBinding(DefaultParameterSetName)]
     Param(
         # Table containing the entry
-        [Parameter(Mandatory)]
+        [Parameter(Mandatory, ValueFromPipelineByPropertyName)]
+        [Alias('sys_class_name')]
         [string] $Table,
 
         # Object number
-        [Parameter(Mandatory)]
+        [Parameter(Mandatory, ValueFromPipelineByPropertyName)]
         [string] $Number,
 
         # Filter results by file name
@@ -76,7 +74,7 @@ Function Get-ServiceNowAttachmentDetail {
 
         $getSysIdParams = @{
             Table             = $Table
-            Query             = (New-ServiceNowQuery -MatchExact @{'number' = $number })
+            Query             = (New-ServiceNowQuery -Filter @('number', '-eq', $number))
             Properties        = 'sys_id'
             Connection        = $Connection
             Credential        = $Credential
@@ -89,10 +87,13 @@ Function Get-ServiceNowAttachmentDetail {
 
         $params = @{
             Uri               = '/attachment'
-            Query             = (New-ServiceNowQuery -MatchExact @{
-                    table_name   = $Table
-                    table_sys_id = $sysId
-                })
+            Query             = (
+                New-ServiceNowQuery -Filter @(
+                    @('table_name', '-eq', $Table),
+                    'and',
+                    @('table_sys_id', '-eq', $sysId)
+                )
+            )
             Connection        = $Connection
             Credential        = $Credential
             ServiceNowUrl     = $ServiceNowURL
@@ -101,10 +102,13 @@ Function Get-ServiceNowAttachmentDetail {
         $response = Invoke-ServiceNowRestMethod @params
 
         if ( $FileName ) {
-            $response = $response | Where-Object { $_.file_name -in $FileName }
+            $response | Where-Object { $_.file_name -in $FileName }
+        }
+        else {
+            $response
         }
 
-        $response | Update-ServiceNowDateTimeField
+        # $response | Update-ServiceNowDateTimeField
     }
 
     end {}
