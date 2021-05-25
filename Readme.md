@@ -1,8 +1,10 @@
 # ServiceNow
 
-[![GitHub release](https://img.shields.io/github/release/Snow-Shell/servicenow-powershell.svg)](https://github.com/Snow-Shell/servicenow-powershell/releases/latest) [![GitHub license](https://img.shields.io/github/license/Snow-Shell/servicenow-powershell.svg)](LICENSE)
+[![PowerShell Gallery Version](https://img.shields.io/powershellgallery/v/ServiceNow?style=plastic)](https://www.powershellgallery.com/packages/ServiceNow)
+![PowerShell Gallery](https://img.shields.io/powershellgallery/dt/ServiceNow?style=plastic)
+[![GitHub license](https://img.shields.io/github/license/Snow-Shell/servicenow-powershell.svg?style=plastic)](LICENSE)
 
-This PowerShell module provides a series of cmdlets for interacting with the [ServiceNow REST API](http://wiki.servicenow.com/index.php?title=REST_API), performed by wrapping `Invoke-RestMethod` for the API calls.
+This PowerShell module provides a series of cmdlets for interacting with the [ServiceNow REST API](https://docs.servicenow.com/bundle/quebec-application-development/page/integrate/inbound-rest/concept/c_RESTAPI.html).
 
 **IMPORTANT:** Neither this module nor its creator are in any way affiliated with ServiceNow.
 
