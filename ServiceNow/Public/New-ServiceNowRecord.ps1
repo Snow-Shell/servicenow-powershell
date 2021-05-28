@@ -21,7 +21,7 @@
     If provided, the new record will be returned
     
 .EXAMPLE
-    New-ServiceNowTableEntry -Table incident -Values @{'Caller'='me';'short_description'='my issue'}
+    New-ServiceNowRecord -Table incident -Values @{'Caller'='me';'short_description'='my issue'}
     Create a new record in the incident table
 
 .INPUTS
