@@ -185,10 +185,13 @@ function New-ServiceNowQuery {
         }
 
         $orderList = $Sort
-        # see if we're working with 1 array or multidimensional array
-        # we want multidimensional so convert if not
-        if ($Sort[0].GetType().Name -eq 'String') {
-            $orderList = @(, $Sort)
+
+        if ( $Sort ) {
+            # see if we're working with 1 array or multidimensional array
+            # we want multidimensional so convert if not
+            if ($Sort[0].GetType().Name -eq 'String') {
+                $orderList = @(, $Sort)
+            }
         }
 
         $query += for ($i = 0; $i -lt $orderList.Count; $i++) {
