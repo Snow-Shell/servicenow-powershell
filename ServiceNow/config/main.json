@@ -133,7 +133,19 @@
             "RequiresValue": true
         },
         {
+            "Name": "-startswith",
+            "QueryOperator": "STARTSWITH",
+            "Description": "field starts with the value",
+            "RequiresValue": true
+        },
+        {
             "Name": ".endswith",
+            "QueryOperator": "%",
+            "Description": "field ends with the value",
+            "RequiresValue": true
+        },
+        {
+            "Name": "-endswith",
             "QueryOperator": "%",
             "Description": "field ends with the value",
             "RequiresValue": true

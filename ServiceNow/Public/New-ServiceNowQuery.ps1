@@ -125,15 +125,15 @@ function New-ServiceNowQuery {
                         # should be a join
 
                         switch ($thisFilter[0]) {
-                            'and' {
+                            { $_ -in 'and', '-and' } {
                                 '^'
                             }
 
-                            'or' {
+                            { $_ -in 'or', '-or' } {
                                 '^OR'
                             }
 
-                            'group' {
+                            { $_ -in 'group', '-group' } {
                                 '^NQ'
                             }
 
@@ -237,7 +237,8 @@ function New-ServiceNowQuery {
 
         $query -join ''
 
-    } else {
+    }
+    else {
         # Basic parameter set
 
         # Create StringBuilder
