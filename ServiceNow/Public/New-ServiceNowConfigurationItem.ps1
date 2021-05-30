@@ -85,7 +85,6 @@ function New-ServiceNowConfigurationItem {
 
     process {
         # Create a hash table of any defined parameters (not CustomFields) that have values
-        # $DefinedIncidentParameters = @('AssignmentGroup', 'Caller', 'Category', 'Comment', 'ConfigurationItem', 'Description', 'ShortDescription', 'Subcategory')
         $definedParams = @{
             'Name' = 'name'
         }
@@ -95,22 +94,6 @@ function New-ServiceNowConfigurationItem {
                 $tableEntryValues.Add($definedParams.$key, $PSBoundParameters.$key)
             }
         }
-        # ForEach ($Parameter in $DefinedIncidentParameters) {
-        #     If ($null -ne $PSBoundParameters.$Parameter) {
-        #         # Turn the defined parameter name into the ServiceNow attribute name
-        #         $KeyToAdd = Switch ($Parameter) {
-        #             AssignmentGroup { 'assignment_group'; break }
-        #             Caller { 'caller_id'; break }
-        #             Category { 'category'; break }
-        #             Comment { 'comments'; break }
-        #             ConfigurationItem { 'cmdb_ci'; break }
-        #             Description { 'description'; break }
-        #             ShortDescription { 'short_description'; break }
-        #             Subcategory { 'subcategory'; break }
-        #         }
-        #         $TableEntryValues.Add($KeyToAdd, $PSBoundParameters.$Parameter)
-        #     }
-        # }
 
         # Add CustomFields hash pairs to the Table Entry Values hash table
         $dupes = ForEach ($Key in $CustomFields.Keys) {
@@ -126,7 +109,7 @@ function New-ServiceNowConfigurationItem {
 
         # Throw an error if duplicate fields were provided
         If ($dupes) {
-            throw ('Ticket fields may only be used once and you have redefined ''{0}'' in $CustomFields' -f ($dupes -join ","))
+            throw ('You are attempting to redefine a value, ''{0}'', with $CustomFields that is already set' -f ($dupes -join ","))
         }
 
         # Table Entry Splat
