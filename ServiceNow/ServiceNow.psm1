@@ -9,6 +9,14 @@ $script:ServiceNowTable = $config.Tables
 
 Export-ModuleMember -Variable ServiceNowOperator, ServiceNowTable
 
+$tableArgCompleterSb = {
+    $ServiceNowTable.ClassName | ForEach-Object {
+        '''{0}''' -f $_
+    }
+}
+
+Register-ArgumentCompleter -CommandName 'Get-ServiceNowRecord' -ParameterName 'Table' -ScriptBlock $tableArgCompleterSb
+
 Write-Verbose 'Import everything in sub folders folder'
 foreach ($Folder in @('Private', 'Public')) {
     $Root = Join-Path -Path $PSScriptRoot -ChildPath $Folder
