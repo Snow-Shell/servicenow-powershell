@@ -5,26 +5,14 @@ Generates a new configuration item
 .DESCRIPTION
 Generates a new ServiceNow Incident using predefined or custom fields by invoking the ServiceNow API
 
+.PARAMETER Name
+    Name of the ci
+    
 .EXAMPLE
 Generate a basic Incident attributed to the caller "UserName" with descriptions, categories, assignment groups and CMDB items set.
     New-ServiceNowIncident -Caller "UserName" -ShortDescription = "New PS Incident" -Description = "This incident was created from Powershell" -AssignmentGroup "ServiceDesk" -Comment "Inline Comment" -Category "Office" -Subcategory "Outlook" -ConfigurationItem UserPC1
 
 .EXAMPLE
-Generate an Incident by "Splatting" all fields used in the 1st example plus some additional custom ServiceNow fields (These must exist in your ServiceNow Instance):
-
-    $IncidentParams = @{Caller = "UserName"
-        ShortDescription = "New PS Incident"
-        Description = "This incident was created from Powershell"
-        AssignmentGroup "ServiceDesk"
-        Comment "Inline Comment"
-        Category "Office"
-        Subcategory "Outlook"
-        ConfigurationItem UserPC1
-        CustomFields = @{u_custom1 = "Custom Field Entry"
-                        u_another_custom = "Related Test"}
-        }
-    New-ServiceNowIncident @Params
-
 #>
 function New-ServiceNowConfigurationItem {
 
@@ -32,37 +20,26 @@ function New-ServiceNowConfigurationItem {
 
     Param(
 
-        # sys_id of the caller of the incident (user Get-ServiceNowUser to retrieve this)
         [parameter(Mandatory)]
         [string] $Name,
 
-        # Short description of the incident
         [parameter(Mandatory)]
-        [string] $ShortDescription,
+        [string] $Class,
 
-        # Long description of the incident
         [parameter()]
         [string] $Description,
 
-        # sys_id of the assignment group (use Get-ServiceNowUserGroup to retrieve this)
         [parameter()]
-        [string] $AssignmentGroup,
+        [string] $OperationalStatus,
 
-        # Comment to include in the ticket
         [parameter()]
-        [string] $Comment,
+        [string] $Environment,
 
-        # Category of the incident (e.g. 'Network')
         [parameter()]
-        [string] $Category,
+        [string] $FQDN,
 
-        # Subcategory of the incident (e.g. 'Network')
         [parameter()]
-        [string] $Subcategory,
-
-        # sys_id of the configuration item of the incident
-        [parameter()]
-        [string] $ConfigurationItem,
+        [ipaddress] $IpAddress,
 
         # custom fields as hashtable
         [parameter()]
