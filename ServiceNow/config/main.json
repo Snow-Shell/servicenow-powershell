@@ -39,6 +39,11 @@
             "Name": "sc_task",
             "ClassName": "Catalog Task",
             "Type": "ServiceNow.CatalogTask"
+        },
+        {
+            "Name": "change_task",
+            "ClassName": "Change Task",
+            "Type": "ServiceNow.ChangeTask"
         }
     ],
     "FilterOperators": [
