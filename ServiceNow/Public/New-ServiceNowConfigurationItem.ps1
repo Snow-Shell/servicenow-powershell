@@ -63,7 +63,13 @@ function New-ServiceNowConfigurationItem {
     process {
         # Create a hash table of any defined parameters (not CustomFields) that have values
         $definedParams = @{
-            'Name' = 'name'
+            'Name'              = 'name'
+            'Class'             = 'sys_class_name'
+            'Description'       = 'description'
+            'OperationalStatus' = 'operational_status'
+            'Environment'       = 'environment'
+            'FQDN'              = ''
+            'IpAddress'         = ''
         }
         $tableEntryValues = @{}
         foreach ($key in $PSBoundParameters.Keys) {
