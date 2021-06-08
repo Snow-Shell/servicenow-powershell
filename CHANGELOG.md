@@ -4,7 +4,7 @@
 - Add tab ahead/completion for the `-Table` property in `Get-ServiceNowRecord`.  This will allow you to cycle through the different tables the module is aware of.  The values are the 'common' names, not table names so it's easier to understand for beginners.  You can also provide any other table name ad hoc.
 - Add Change Task to formatter and tab ahead
 - Fix null index error when executing `New-ServiceNowQuery` without providing a value for `-Sort`
-- Fix [#136](https://github.com/Snow-Shell/servicenow-powershell/issues/136) to account for PS v7.x Invoke-WebRequest headers all being arrays
+- Fix [#136](https://github.com/Snow-Shell/servicenow-powershell/issues/136) to account for PS v7.x Invoke-WebRequest response headers all being arrays
 
 ## 2.3.2
 - Added ability to pipe to `Add-ServiceNowAttachment` and `Get-ServiceNowAttachmentDetail`.  For example, `New-ServiceNowIncident @params -PassThru | Add-ServiceNowAttachment -File MyFile.txt`.  This will create an incident and add an attachment in one step.
