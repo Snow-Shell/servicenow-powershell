@@ -1,7 +1,7 @@
 ## 2.4
 - Add `New-ServiceNowConfigurationItem`, [#109](https://github.com/Snow-Shell/servicenow-powershell/issues/109)
-- Add grouping operators -and and -group as well as comparison operators -startwith and -endswith to keep with the -operator standard
-- Add tab ahead/completion for the Table field in `Get-ServiceNowRecord`.  This will allow you to either cycle through the different tables the module is aware of as well as provide your own value.
+- Add grouping operators -and and -group as well as comparison operators -startwith and -endswith to `Get-ServiceNowRecord -Filter` to keep with the -operator standard
+- Add tab ahead/completion for the `-Table` property in `Get-ServiceNowRecord`.  This will allow you to cycle through the different tables the module is aware of.  The values are the 'common' names, not table names so it's easier to understand for beginners.  You can also provide any other table name ad hoc.
 - Add Change Task to formatter and tab ahead
 - Fix null index error when executing `New-ServiceNowQuery` without providing a value for `-Sort`
 - Fix [#136](https://github.com/Snow-Shell/servicenow-powershell/issues/136) to account for PS v7.x Invoke-WebRequest headers all being arrays
