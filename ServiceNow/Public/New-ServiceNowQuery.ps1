@@ -125,15 +125,15 @@ function New-ServiceNowQuery {
                         # should be a join
 
                         switch ($thisFilter[0]) {
-                            'and' {
+                            { $_ -in 'and', '-and' } {
                                 '^'
                             }
 
-                            'or' {
+                            { $_ -in 'or', '-or' } {
                                 '^OR'
                             }
 
-                            'group' {
+                            { $_ -in 'group', '-group' } {
                                 '^NQ'
                             }
 
@@ -185,10 +185,13 @@ function New-ServiceNowQuery {
         }
 
         $orderList = $Sort
-        # see if we're working with 1 array or multidimensional array
-        # we want multidimensional so convert if not
-        if ($Sort[0].GetType().Name -eq 'String') {
-            $orderList = @(, $Sort)
+
+        if ( $Sort ) {
+            # see if we're working with 1 array or multidimensional array
+            # we want multidimensional so convert if not
+            if ($Sort[0].GetType().Name -eq 'String') {
+                $orderList = @(, $Sort)
+            }
         }
 
         $query += for ($i = 0; $i -lt $orderList.Count; $i++) {
@@ -234,7 +237,8 @@ function New-ServiceNowQuery {
 
         $query -join ''
 
-    } else {
+    }
+    else {
         # Basic parameter set
 
         # Create StringBuilder

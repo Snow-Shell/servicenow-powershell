@@ -8,7 +8,8 @@
     Paging is supported with -First, -Skip, and -IncludeTotalCount.
 
 .PARAMETER Table
-    Name of the table to be queried, by either table name or class name
+    Name of the table to be queried, by either table name or class name.  Use tab completion for list of known tables.
+    You can also provide any table name ad hoc.
 
 .PARAMETER Properties
     Limit the fields returned to this list
@@ -43,9 +44,9 @@
 
 .EXAMPLE
     $filter = @('state', '-eq', '1'),
-                'and',
+                '-and',
               @('short_description','-like', 'powershell'),
-                'group',
+                '-group',
               @('state', '-eq', '2')
     PS > Get-ServiceNowRecord -Table incident -Filter $filter
     Get incident records where state equals New and short description contains the word powershell or state equals In Progress.

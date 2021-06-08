@@ -167,8 +167,16 @@ function Invoke-ServiceNowRestMethod {
         $records = @($content)
     }
 
-    $totalRecordCount = [int]$response.Headers.'X-Total-Count'
-    Write-Verbose "Total number of records for this query: $totalRecordCount"
+    $totalRecordCount = 0
+    if ( $response.Headers.'X-Total-Count' ) {
+        if ($PSVersionTable.PSVersion.Major -lt 6) {
+            $totalRecordCount = [int]$response.Headers.'X-Total-Count'
+        }
+        else {
+            $totalRecordCount = [int]($response.Headers.'X-Total-Count'[0])
+        }
+        Write-Verbose "Total number of records for this query: $totalRecordCount"
+    }
 
     # if option to get all records was provided, loop and get them all
     if ( $PSCmdlet.PagingParameters.IncludeTotalCount.IsPresent ) {

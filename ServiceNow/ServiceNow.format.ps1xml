@@ -199,7 +199,15 @@
 				<TableHeaders>
 					<TableColumnHeader>
 						<Label>name</Label>
-						<Width>60</Width>
+						<Width>30</Width>
+					</TableColumnHeader>
+					<TableColumnHeader>
+						<Label>sys_id</Label>
+						<Width>32</Width>
+					</TableColumnHeader>
+					<TableColumnHeader>
+						<Label>sys_class_name</Label>
+						<Width>30</Width>
 					</TableColumnHeader>
 					<TableColumnHeader>
 						<Label>category</Label>
@@ -215,6 +223,12 @@
 						<TableColumnItems>
 							<TableColumnItem>
 								<PropertyName>name</PropertyName>
+							</TableColumnItem>
+							<TableColumnItem>
+								<PropertyName>sys_id</PropertyName>
+							</TableColumnItem>
+							<TableColumnItem>
+								<PropertyName>sys_class_name</PropertyName>
 							</TableColumnItem>
 							<TableColumnItem>
 								<PropertyName>category</PropertyName>

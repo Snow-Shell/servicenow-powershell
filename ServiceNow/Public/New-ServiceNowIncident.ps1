@@ -20,7 +20,7 @@ Generate an Incident by "Splatting" all fields used in the 1st example plus some
         Category "Office"
         Subcategory "Outlook"
         ConfigurationItem UserPC1
-        CustomFields = @{u_custom1 = "Custom Field Entry"
+        CustomField = @{u_custom1 = "Custom Field Entry"
                         u_another_custom = "Related Test"}
         }
     New-ServiceNowIncident @Params
@@ -66,7 +66,8 @@ function New-ServiceNowIncident {
 
         # custom fields as hashtable
         [parameter()]
-        [hashtable] $CustomFields,
+        [Alias('CustomFields')]
+        [hashtable] $CustomField,
 
         # Credential used to authenticate to ServiceNow
         [Parameter(ParameterSetName = 'SpecifyConnectionFields', Mandatory)]
@@ -95,7 +96,7 @@ function New-ServiceNowIncident {
     begin {}
 
     process {
-        # Create a hash table of any defined parameters (not CustomFields) that have values
+        # Create a hash table of any defined parameters (not CustomField) that have values
         $DefinedIncidentParameters = @('AssignmentGroup', 'Caller', 'Category', 'Comment', 'ConfigurationItem', 'Description', 'ShortDescription', 'Subcategory')
         $TableEntryValues = @{}
         ForEach ($Parameter in $DefinedIncidentParameters) {
@@ -115,12 +116,12 @@ function New-ServiceNowIncident {
             }
         }
 
-        # Add CustomFields hash pairs to the Table Entry Values hash table
-        If ($null -ne $PSBoundParameters.CustomFields) {
-            $DuplicateTableEntryValues = ForEach ($Key in $CustomFields.Keys) {
+        # Add CustomField hash pairs to the Table Entry Values hash table
+        If ($null -ne $PSBoundParameters.CustomField) {
+            $DuplicateTableEntryValues = ForEach ($Key in $CustomField.Keys) {
                 If (($TableEntryValues.ContainsKey($Key) -eq $False)) {
                     # Add the unique entry to the table entry values hash table
-                    $TableEntryValues.Add($Key, $CustomFields[$Key])
+                    $TableEntryValues.Add($Key, $CustomField[$Key])
                 }
                 Else {
                     # Capture the duplicate key name
