@@ -52,13 +52,14 @@ function Invoke-ServiceNowRestMethod {
 
         # Fields to return
         [Parameter()]
-        [Alias('Fields')]
-        [string[]] $Properties,
+        [Alias('Fields', 'Properties')]
+        [string[]] $Property,
 
         # Whether or not to show human readable display values instead of machine values
         [Parameter()]
         [ValidateSet('true', 'false', 'all')]
-        [string] $DisplayValues = 'true',
+        [Alias('DisplayValues')]
+        [string] $DisplayValue = 'true',
 
         [Parameter()]
         [PSCredential] $Credential,
@@ -104,7 +105,7 @@ function Invoke-ServiceNowRestMethod {
 
     if ( $Method -eq 'Get') {
         $Body = @{
-            'sysparm_display_value' = $DisplayValues
+            'sysparm_display_value' = $DisplayValue
             'sysparm_query'         = (New-ServiceNowQuery -Filter $Filter -Sort $Sort)
             'sysparm_limit'         = 10
         }
@@ -128,8 +129,8 @@ function Invoke-ServiceNowRestMethod {
             $Body.sysparm_query = $Query
         }
 
-        if ($Properties) {
-            $Body.sysparm_fields = ($Properties -join ',').ToLower()
+        if ($Property) {
+            $Body.sysparm_fields = ($Property -join ',').ToLower()
         }
     }
 

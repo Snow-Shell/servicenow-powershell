@@ -122,15 +122,18 @@ function Get-ServiceNowRecord {
         [hashtable] $ServiceNowSession = $script:ServiceNowSession
     )
 
-    $invokeParams = @{
-        Table             = $Table
-        Properties        = $Property
-        Filter            = $Filter
-        Sort              = $Sort
-        DisplayValues     = $DisplayValue
-        Connection        = $Connection
-        ServiceNowSession = $ServiceNowSession
-    }
+    # $invokeParams = @{
+    #     Table             = $Table
+    #     Properties        = $Property
+    #     Filter            = $Filter
+    #     Sort              = $Sort
+    #     DisplayValues     = $DisplayValue
+    #     Connection        = $Connection
+    #     ServiceNowSession = $ServiceNowSession
+    # }
+
+    $invokeParams = $PSBoundParameters
+    $invokeParams.Remove('IncludeCustomVariable') | Out-Null
 
     $addedSysIdProp = $false
 
@@ -138,7 +141,7 @@ function Get-ServiceNowRecord {
     # add it in if specific properties were requested and not part of the list
     if ( $IncludeCustomVariable.IsPresent ) {
         if ( $Property -and 'sys_id' -notin $Property ) {
-            $invokeParams.Properties += 'sys_id'
+            $invokeParams.Property += 'sys_id'
             $addedSysIdProp = $true
         }
     }
