@@ -44,7 +44,6 @@ function Invoke-ServiceNowRestMethod {
         [System.Collections.ArrayList] $Filter,
 
         [parameter()]
-        [ValidateNotNullOrEmpty()]
         [System.Collections.ArrayList] $Sort = @('opened_at', 'desc'),
 
         # sysparm_query param in the format of a ServiceNow encoded query string (see http://wiki.servicenow.com/index.php?title=Encoded_Query_Strings)

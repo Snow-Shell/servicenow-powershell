@@ -11,7 +11,7 @@
     Name of the table to be queried, by either table name or class name.  Use tab completion for list of known tables.
     You can also provide any table name ad hoc.
 
-.PARAMETER Properties
+.PARAMETER Property
     Limit the fields returned to this list
 
 .PARAMETER Filter
@@ -26,11 +26,14 @@
     Array or multidimensional array of fields to sort on.
     Each array should be of the format @(field, asc/desc).
 
-.PARAMETER DisplayValues
+.PARAMETER DisplayValue
     Option to display values for reference fields.
     'false' will only retrieve the reference
     'true' will only retrieve the underlying value
     'all' will retrieve both.  This is helpful when trying to translate values for a query.
+
+.PARAMETER IncludeCustomVariable
+    Include custom variables in the return object.
 
 .PARAMETER Connection
     Azure Automation Connection object containing username, password, and URL for the ServiceNow instance
@@ -64,6 +67,10 @@
     Get-ServiceNowRecord -Table 'change request' -First 100 -IncludeTotalCount
     Get all change requests, paging 100 at a time.
 
+.EXAMPLE
+    Get-ServiceNowRecord -Table 'change request' -IncludeCustomVariable -First 5
+    Get the first 5 change requests and retrieve custom variable info
+
 .INPUTS
     None
 
@@ -84,8 +91,8 @@ function Get-ServiceNowRecord {
         [string] $Table,
 
         [Parameter()]
-        [Alias('Fields')]
-        [string[]] $Properties,
+        [Alias('Fields', 'Properties')]
+        [string[]] $Property,
 
         [parameter(ParameterSetName = 'AutomationFilter')]
         [parameter(ParameterSetName = 'SessionFilter')]
@@ -98,7 +105,11 @@ function Get-ServiceNowRecord {
 
         [Parameter()]
         [ValidateSet('true', 'false', 'all')]
-        [string] $DisplayValues = 'true',
+        [Alias('DisplayValues')]
+        [string] $DisplayValue = 'true',
+
+        [Parameter()]
+        [switch] $IncludeCustomVariable,
 
         [Parameter(Mandatory, ParameterSetName = 'AutomationQuery')]
         [parameter(Mandatory, ParameterSetName = 'AutomationFilter')]
@@ -111,14 +122,68 @@ function Get-ServiceNowRecord {
         [hashtable] $ServiceNowSession = $script:ServiceNowSession
     )
 
-    $result = Invoke-ServiceNowRestMethod @PSBoundParameters
+    $invokeParams = @{
+        Table             = $Table
+        Properties        = $Property
+        Filter            = $Filter
+        Sort              = $Sort
+        DisplayValues     = $DisplayValue
+        Connection        = $Connection
+        ServiceNowSession = $ServiceNowSession
+    }
 
-    If ( $result -and -not $Properties) {
-        $type = $script:ServiceNowTable | Where-Object {$_.Name -eq $Table -or $_.ClassName -eq $Table} | Select-Object -ExpandProperty Type
-        if ($type) {
-            $result | ForEach-Object { $_.PSObject.TypeNames.Insert(0, $type) }
+    $addedSysIdProp = $false
+
+    # we need the sys_id value in order to get custom var data
+    # add it in if specific properties were requested and not part of the list
+    if ( $IncludeCustomVariable.IsPresent ) {
+        if ( $Property -and 'sys_id' -notin $Property ) {
+            $invokeParams.Properties += 'sys_id'
+            $addedSysIdProp = $true
         }
     }
 
-    $result
+    $result = Invoke-ServiceNowRestMethod @invokeParams
+
+    if ( $result ) {
+        if ( $IncludeCustomVariable.IsPresent ) {
+            # for each record, get the variable names and then get the variable values
+            foreach ($record in $result) {
+                $customVarParams = @{
+                    Table      = 'sc_item_option_mtom'
+                    Properties = 'sc_item_option.item_option_new.name', 'sc_item_option.item_option_new.sys_name', 'sc_item_option.item_option_new.type'
+                    Filter     = @('request_item', '-eq', $record.sys_id), 'and', @('sc_item_option.item_option_new.type', '-in', '1,2,3,4,5,6,7,8,9,10,16,18,21,22')
+                    First      = 1000 # hopefully there isn't more custom vars than this...
+                }
+                $customVars = Get-ServiceNowRecord @customVarParams
+
+                if ( $customVars ) {
+                    $customValues = Get-ServiceNowRecord -Table $Table -Filter @('sys_id', '-eq', $record.sys_id) -Properties ('variables.' + ($customVars.'sc_item_option.item_option_new.name' -join ',variables.'))
+                    $customValues | Get-Member -MemberType NoteProperty | ForEach-Object {
+                        $record | Add-Member @{
+                            $_.Name = $customValues."$($_.Name)"
+                        }
+                    }
+                }
+
+                if ( $addedSysIdProp ) {
+                    $record | Select-Object -Property * -ExcludeProperty sys_id
+                }
+                else {
+                    $record
+                }
+            }
+        }
+        else {
+
+            if ( -not $Property ) {
+                $type = $script:ServiceNowTable | Where-Object { $_.Name -eq $Table -or $_.ClassName -eq $Table } | Select-Object -ExpandProperty Type
+                if ($type) {
+                    $result | ForEach-Object { $_.PSObject.TypeNames.Insert(0, $type) }
+                }
+            }
+            $result
+        }
+    }
+
 }
