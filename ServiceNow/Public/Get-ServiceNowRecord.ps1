@@ -153,15 +153,20 @@ function Get-ServiceNowRecord {
             # for each record, get the variable names and then get the variable values
             foreach ($record in $result) {
                 $customVarParams = @{
-                    Table      = 'sc_item_option_mtom'
-                    Properties = 'sc_item_option.item_option_new.name', 'sc_item_option.item_option_new.sys_name', 'sc_item_option.item_option_new.type'
-                    Filter     = @('request_item', '-eq', $record.sys_id), 'and', @('sc_item_option.item_option_new.type', '-in', '1,2,3,4,5,6,7,8,9,10,16,18,21,22')
-                    First      = 1000 # hopefully there isn't more custom vars than this...
+                    Table    = 'sc_item_option_mtom'
+                    Property = 'sc_item_option.item_option_new.name', 'sc_item_option.item_option_new.sys_name', 'sc_item_option.item_option_new.type'
+                    Filter   = @('request_item', '-eq', $record.sys_id), 'and', @('sc_item_option.item_option_new.type', '-in', '1,2,3,4,5,6,7,8,9,10,16,18,21,22')
+                    First    = 1000 # hopefully there isn't more custom vars than this...
                 }
                 $customVars = Get-ServiceNowRecord @customVarParams
 
                 if ( $customVars ) {
-                    $customValues = Get-ServiceNowRecord -Table $Table -Filter @('sys_id', '-eq', $record.sys_id) -Properties ('variables.' + ($customVars.'sc_item_option.item_option_new.name' -join ',variables.'))
+                    $customValueParams = @{
+                        Table    = $Table
+                        Filter   = @('sys_id', '-eq', $record.sys_id)
+                        Property = $customVars.'sc_item_option.item_option_new.name' | ForEach-Object { "variables.$_" }
+                    }
+                    $customValues = Get-ServiceNowRecord @customValueParams
                     $customValues | Get-Member -MemberType NoteProperty | ForEach-Object {
                         $record | Add-Member @{
                             $_.Name = $customValues."$($_.Name)"
