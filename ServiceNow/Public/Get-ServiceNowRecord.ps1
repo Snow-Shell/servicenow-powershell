@@ -34,6 +34,8 @@
 
 .PARAMETER IncludeCustomVariable
     Include custom variables in the return object.
+    Some records may have associated custom variables, some may not.
+    For instance, an RITM may have custom variables, but the associated tasks may not.
 
 .PARAMETER Connection
     Azure Automation Connection object containing username, password, and URL for the ServiceNow instance
@@ -58,7 +60,7 @@
 .EXAMPLE
     Get-ServiceNowRecord -Table incident -Filter @('state', '-eq', '1') -Sort @('opened_at', 'desc'), @('state')
     Get incident records where state equals New and first sort by the field opened_at descending and then sort by the field state ascending
-
+]
 .EXAMPLE
     Get-ServiceNowRecord -Table 'change request' -Filter @('opened_at', '-ge', 'javascript:gs.daysAgoEnd(30)')
     Get change requests opened in the last 30 days.  Use class name as opposed to table name.
@@ -122,16 +124,6 @@ function Get-ServiceNowRecord {
         [hashtable] $ServiceNowSession = $script:ServiceNowSession
     )
 
-    # $invokeParams = @{
-    #     Table             = $Table
-    #     Properties        = $Property
-    #     Filter            = $Filter
-    #     Sort              = $Sort
-    #     DisplayValues     = $DisplayValue
-    #     Connection        = $Connection
-    #     ServiceNowSession = $ServiceNowSession
-    # }
-
     $invokeParams = $PSBoundParameters
     $invokeParams.Remove('IncludeCustomVariable') | Out-Null
 
@@ -156,7 +148,7 @@ function Get-ServiceNowRecord {
                     Table    = 'sc_item_option_mtom'
                     Property = 'sc_item_option.item_option_new.name', 'sc_item_option.item_option_new.sys_name', 'sc_item_option.item_option_new.type'
                     Filter   = @('request_item', '-eq', $record.sys_id), 'and', @('sc_item_option.item_option_new.type', '-in', '1,2,3,4,5,6,7,8,9,10,16,18,21,22')
-                    First    = 1000 # hopefully there isn't more custom vars than this...
+                    First    = 1000 # hopefully there isn't more custom vars than this, but we need to overwrite the default of 10
                 }
                 $customVars = Get-ServiceNowRecord @customVarParams
 
@@ -167,10 +159,18 @@ function Get-ServiceNowRecord {
                         Property = $customVars.'sc_item_option.item_option_new.name' | ForEach-Object { "variables.$_" }
                     }
                     $customValues = Get-ServiceNowRecord @customValueParams
-                    $customValues | Get-Member -MemberType NoteProperty | ForEach-Object {
-                        $record | Add-Member @{
-                            $_.Name = $customValues."$($_.Name)"
+
+                    # custom vars will be a separate property on the return object
+                    $customVarsOut = $customVars | ForEach-Object {
+                        $varName = $_.'sc_item_option.item_option_new.name'
+                        [pscustomobject] @{
+                            Name        = 'variables.{0}' -f $varName
+                            DisplayName = $_.'sc_item_option.item_option_new.sys_name'
+                            Value       = $customValues."variables.$varName"
                         }
+                    }
+                    $record | Add-Member @{
+                        'CustomVariable' = $customVarsOut
                     }
                 }
 
