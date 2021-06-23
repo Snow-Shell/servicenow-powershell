@@ -90,7 +90,6 @@ function New-ServiceNowQuery {
         [System.Collections.ArrayList] $Filter,
 
         [parameter(ParameterSetName = 'Advanced')]
-        [ValidateNotNullOrEmpty()]
         [System.Collections.ArrayList] $Sort
 
     )
