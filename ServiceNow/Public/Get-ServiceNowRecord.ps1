@@ -36,6 +36,7 @@
     Include custom variables in the return object.
     Some records may have associated custom variables, some may not.
     For instance, an RITM may have custom variables, but the associated tasks may not.
+    A property named 'CustomVariable' will be added to the return object.
 
 .PARAMETER Connection
     Azure Automation Connection object containing username, password, and URL for the ServiceNow instance
