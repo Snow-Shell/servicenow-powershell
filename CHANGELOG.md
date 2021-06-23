@@ -1,3 +1,6 @@
+## 2.4.1
+- Add `-IncludeCustomVariable` to `Get-ServiceNowRecord` to retrieve custom variables, eg. ritm form values, in addition to the standard fields.  [#138](https://github.com/Snow-Shell/servicenow-powershell/discussions/138)
+
 ## 2.4
 - Add `New-ServiceNowConfigurationItem`, [#109](https://github.com/Snow-Shell/servicenow-powershell/issues/109)
 - Add grouping operators -and and -group as well as comparison operators -startwith and -endswith to `Get-ServiceNowRecord -Filter` to keep with the -operator standard
