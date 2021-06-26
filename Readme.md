@@ -18,6 +18,8 @@ Building on the great work the community has done thus far, a lot of new updates
 - Pipeline support added to many functions
 - Standardizing on coding between all functions
 
+***It is recommended to use `Get-ServiceNowRecord` instead of the other 'Get' functions.***
+
 ## Requirements
 
 Requires PowerShell 5.1 or above.
@@ -66,7 +68,7 @@ Get-ServiceNowRecord -Table incident -Filter $filter
 ### Retrieving an Incident Containing the Word 'PowerShell'
 
 ```PowerShell
-Get-ServiceNowRecord -Table incident -Filter @('short_description','-eq','PowerShell')
+Get-ServiceNowRecord -Table incident -Filter @('short_description','-like','PowerShell')
 ```
 
 ### Update a Ticket
