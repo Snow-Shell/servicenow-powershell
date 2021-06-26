@@ -66,17 +66,13 @@ Get-ServiceNowRecord -Table incident -Filter $filter
 ### Retrieving an Incident Containing the Word 'PowerShell'
 
 ```PowerShell
-Get-ServiceNowIncident -MatchContains @{short_description='PowerShell'}
-```
-or new with v2.2
-```PowerShell
 Get-ServiceNowRecord -Table incident -Filter @('short_description','-eq','PowerShell')
 ```
 
 ### Update a Ticket
 
 ```PowerShell
-Get-ServiceNowIncident -Limit 1 -MatchContains @{short_description='PowerShell'} | Update-ServiceNowIncident -Values @{comments='Updated via PowerShell'}
+Get-ServiceNowRecord -First 1 -Filter @('short_description','-eq','PowerShell') | Update-ServiceNowIncident -Values @{comments='Updated via PowerShell'}
 ```
 
 ### Creating an Incident with custom table entries
