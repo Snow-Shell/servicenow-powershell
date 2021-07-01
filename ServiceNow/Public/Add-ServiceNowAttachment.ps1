@@ -106,13 +106,7 @@ Function Add-ServiceNowAttachment {
         # Use the number and table to determine the sys_id
         $sysId = Invoke-ServiceNowRestMethod @getSysIdParams | Select-Object -ExpandProperty sys_id
 
-        $getAuth = @{
-            Credential        = $Credential
-            ServiceNowUrl     = $ServiceNowUrl
-            Connection        = $Connection
-            ServiceNowSession = $ServiceNowSession
-        }
-        $auth = Get-ServiceNowAuth @getAuth
+        $auth = Get-ServiceNowAuth -C $Connection -S ServiceNowSession
 
         ForEach ($Object in $File) {
             $FileData = Get-ChildItem $Object -ErrorAction Stop
@@ -137,10 +131,17 @@ Function Add-ServiceNowAttachment {
 
             If ($PSCmdlet.ShouldProcess("$Table $Number", 'Add attachment')) {
                 Write-Verbose ($invokeRestMethodSplat | ConvertTo-Json)
-                $response = Invoke-RestMethod @invokeRestMethodSplat
+                $response = Invoke-WebRequest @invokeRestMethodSplat
 
-                If ($PassThru) {
-                    $response.result
+                if ( $response.Content ) {
+                    if ( $PassThru.IsPresent ) {
+                        $content = $response.content | ConvertFrom-Json
+                        $content.result
+                    }
+                }
+                else {
+                    # invoke-webrequest didn't throw an error, but we didn't get content back either
+                    throw ('"{0} : {1}' -f $response.StatusCode, $response | Out-String )
                 }
             }
         }

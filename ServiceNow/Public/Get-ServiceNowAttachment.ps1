@@ -1,88 +1,56 @@
+
 Function Get-ServiceNowAttachment {
     <#
+    
     .SYNOPSIS
-    Save a ServiceNow attachment identified by its sys_id property and saved as the filename specified.
-
+    List details for ServiceNow attachments associated with a ticket number.
+    
     .DESCRIPTION
-    Save a ServiceNow attachment identified by its sys_id property and saved as the filename specified.
-
-    .PARAMETER SysID
-    The ServiceNow sys_id of the file
-
+    List details for ServiceNow attachments associated with a ticket number.
+    
+    .PARAMETER Number
+    ServiceNow ticket number
+    
+    .PARAMETER Table
+    ServiceNow ticket table name
+    
     .PARAMETER FileName
-    File name the file is saved as.  Do not include the path.
-
-    .PARAMETER Destination
-    Path the file is saved to.  Do not include the file name.
-
-    .PARAMETER AllowOverwrite
-    Allows the function to overwrite the existing file.
-
-    .PARAMETER AppendNameWithSysID
-    Adds the SysID to the file name.  Intended for use when a ticket has multiple files with the same name.
-
+    Filter for one or more file names.  Works like a 'match' where partial file names are valid.
+    
     .EXAMPLE
-    Get-ServiceNowAttachment -SysID $SysID -FileName 'mynewfile.txt'
-
-    Save the attachment with the specified sys_id with a name of 'mynewfile.txt'
-
+    Get-ServiceNowAttachmentDetail -Number $Number -Table $Table
+    
+    List attachment details
+    
     .EXAMPLE
-    Get-ServiceNowAttachment -Number $Number -Table $Table | Get-ServiceNowAttachment
-
-    Save all attachments from the ticket.  Filenames will be assigned from the attachment name.
-
-    .EXAMPLE
-    Get-ServiceNowAttachment -Number $Number -Table $Table | Get-ServiceNowAttachment -AppendNameWithSysID
-
-    Save all attachments from the ticket.  Filenames will be assigned from the attachment name and appended with the sys_id.
-
-    .EXAMPLE
-    Get-ServiceNowAttachment -Number $Number -Table $Table | Get-ServiceNowAttachment -Destination $Destionion -AllowOverwrite
-
-    Save all attachments from the ticketto the destination allowing for overwriting the destination file.
-
-    .NOTES
-
+    Get-ServiceNowAttachmentDetail -Number $Number -Table $Table -FileName filename.txt,report.csv
+    
+    List details for only filename.txt and report.csv (if they exist).
+    
+    .OUTPUTS
+    System.Management.Automation.PSCustomObject
     #>
 
-    [CmdletBinding(DefaultParameterSetName, SupportsShouldProcess = $true)]
+    [OutputType([System.Management.Automation.PSCustomObject[]])]
+    [CmdletBinding(DefaultParameterSetName = 'BySysId')]
+
     Param(
-        # Object number
+        # Table containing the entry
         [Parameter(Mandatory, ValueFromPipelineByPropertyName)]
+        [Alias('sys_class_name')]
+        [string] $Table,
+
+        # Object number
+        [Parameter(ParameterSetName = 'ByNumber', Mandatory)]
+        [string] $Number,
+
+        [Parameter(ParameterSetName = 'BySysId', Mandatory, ValueFromPipelineByPropertyName)]
         [Alias('sys_id')]
         [string] $SysId,
 
-        [Parameter(Mandatory, ValueFromPipelineByPropertyName)]
-        [Alias('file_name')]
-        [string] $FileName,
-
-        # Out path to download files
+        # Filter results by file name
         [parameter()]
-        [ValidateScript( {
-                Test-Path $_
-            })]
-        [string] $Destination = $PWD.Path,
-
-        # Options impacting downloads
-        [parameter()]
-        [switch] $AllowOverwrite,
-
-        # Options impacting downloads
-        [parameter()]
-        [switch] $AppendNameWithSysID,
-
-        # Credential used to authenticate to ServiceNow
-        [Parameter(ParameterSetName = 'SpecifyConnectionFields', Mandatory)]
-        [ValidateNotNullOrEmpty()]
-        [Alias('ServiceNowCredential')]
-        [PSCredential] $Credential,
-
-        # The URL for the ServiceNow instance being used
-        [Parameter(ParameterSetName = 'SpecifyConnectionFields', Mandatory)]
-        [ValidateScript( { $_ | Test-ServiceNowURL })]
-        [ValidateNotNullOrEmpty()]
-        [Alias('Url')]
-        [string] $ServiceNowURL,
+        [string[]] $FileName,
 
         # Azure Automation Connection object containing username, password, and URL for the ServiceNow instance
         [Parameter(ParameterSetName = 'UseConnectionObject', Mandatory)]
@@ -97,35 +65,44 @@ Function Get-ServiceNowAttachment {
     begin {}
 
     process	{
-        $getAuth = @{
-            Credential        = $Credential
-            ServiceNowUrl     = $ServiceNowUrl
+
+        if ( $PSCmdlet.ParameterSetName -eq 'ByNumber' ) {
+            $getSysIdParams = @{
+                Table             = $Table
+                Query             = (New-ServiceNowQuery -Filter @('number', '-eq', $number))
+                Properties        = 'sys_id'
+                Connection        = $Connection
+                ServiceNowSession = $ServiceNowSession
+            }
+    
+            # Use the number and table to determine the sys_id
+            $sysId = Invoke-ServiceNowRestMethod @getSysIdParams | Select-Object -ExpandProperty sys_id
+        }
+
+        $params = @{
+            Uri               = '/attachment'
+            Query             = (
+                New-ServiceNowQuery -Filter @(
+                    @('table_name', '-eq', $Table),
+                    'and',
+                    @('table_sys_id', '-eq', $sysId)
+                )
+            )
             Connection        = $Connection
             ServiceNowSession = $ServiceNowSession
         }
-        $params = Get-ServiceNowAuth @getAuth
+        $response = Invoke-ServiceNowRestMethod @params
 
-        # URI format:  https://tenant.service-now.com/api/now/attachment/{sys_id}/file
-        $params.Uri += '/attachment/' + $SysID + '/file'
-
-        If ($AppendNameWithSysID.IsPresent) {
-            $FileName = "{0}_{1}{2}" -f [io.path]::GetFileNameWithoutExtension($FileName),
-            $SysID, [io.path]::GetExtension($FileName)
+        if ( $FileName ) {
+            # TODO: move into query
+            $response | Where-Object { $_.file_name -in $FileName }
         }
-        $OutFile = $Null
-        $OutFile = Join-Path $Destination $FileName
-
-        If ((Test-Path $OutFile) -and -not $AllowOverwrite.IsPresent) {
-            $ThrowMessage = "The file [{0}] already exists.  Please choose a different name, use the -AppendNameWithSysID switch parameter, or use the -AllowOverwrite switch parameter to overwrite the file." -f $OutFile
-            Throw $ThrowMessage
+        else {
+            $response
         }
 
-        $params.OutFile = $OutFile
-
-        If ($PSCmdlet.ShouldProcess("SysId $SysId", "Save attachment to file $OutFile")) {
-            Invoke-RestMethod @params
-        }
-
+        # $response | Update-ServiceNowDateTimeField
     }
+
     end {}
 }

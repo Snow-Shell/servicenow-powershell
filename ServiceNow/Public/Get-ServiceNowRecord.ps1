@@ -194,5 +194,4 @@ function Get-ServiceNowRecord {
             $result
         }
     }
-
 }

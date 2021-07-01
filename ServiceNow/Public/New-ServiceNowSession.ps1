@@ -108,7 +108,8 @@ function New-ServiceNowSession {
 
     if ( $ApiVersion -le 0 ) {
         $version = ''
-    } else {
+    }
+    else {
         $version = ('/v{0}' -f $ApiVersion)
     }
 
@@ -143,18 +144,27 @@ function New-ServiceNowSession {
                 $params.Add('Proxy', $Proxy)
                 if ( $PSBoundParameters.ContainsKey('ProxyCredential') ) {
                     $params.Add('ProxyCredential', $ProxyCredential)
-                } else {
+                }
+                else {
                     $params.Add('ProxyUseDefaultCredentials', $true)
                 }
             }
 
-            $token = Invoke-RestMethod @params
-            $newSession.Add('AccessToken', $token.access_token)
-            $newSession.Add('RefreshToken', $token.refresh_token)
+            $response = Invoke-WebRequest @params
+
+            if ( $response.Content ) {
+                $token = $response.Content | ConvertFrom-Json
+                $newSession.Add('AccessToken', (New-Object System.Management.Automation.PSCredential('AccessToken', ($token.access_token | ConvertTo-SecureString -AsPlainText -Force))))
+                $newSession.Add('RefreshToken', (New-Object System.Management.Automation.PSCredential('RefreshToken', ($token.refresh_token | ConvertTo-SecureString -AsPlainText -Force))))
+                }
+            else {
+                # invoke-webrequest didn't throw an error, but we didn't get a token back either
+                throw ('"{0} : {1}' -f $response.StatusCode, $response | Out-String )
+            }
         }
 
         'AccessToken*' {
-            $newSession.Add('AccessToken', $AccessToken)
+            $newSession.Add('AccessToken', (New-Object System.Management.Automation.PSCredential('AccessToken', ($AccessToken | ConvertTo-SecureString -AsPlainText -Force))))
         }
 
         'BasicAuth*' {
@@ -196,7 +206,8 @@ function New-ServiceNowSession {
 
     if ( $PassThru ) {
         $newSession
-    } else {
+    }
+    else {
         $Script:ServiceNowSession = $newSession
     }
 }
