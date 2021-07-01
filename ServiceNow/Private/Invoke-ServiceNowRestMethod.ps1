@@ -84,6 +84,7 @@ function Invoke-ServiceNowRestMethod {
 
     $params.Method = $Method
     $params.ContentType = 'application/json'
+    $params.UseBasicParsing = $true
 
     if ( $Table ) {
         # table can either be the actual table name or class name

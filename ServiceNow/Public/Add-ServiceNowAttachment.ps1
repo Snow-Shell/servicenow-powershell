@@ -130,6 +130,7 @@ Function Add-ServiceNowAttachment {
             $invokeRestMethodSplat = $auth
             $invokeRestMethodSplat.Uri += '/attachment/file?table_name={0}&table_sys_id={1}&file_name={2}' -f $Table, $sysId, $FileData.Name
             $invokeRestMethodSplat.Headers += @{'Content-Type' = $ContentType }
+            $invokeRestMethodSplat.UseBasicParsing = $true
             $invokeRestMethodSplat += @{
                 Method = 'POST'
                 InFile = $FileData.FullName

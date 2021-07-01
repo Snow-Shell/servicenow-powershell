@@ -108,7 +108,8 @@ function New-ServiceNowSession {
 
     if ( $ApiVersion -le 0 ) {
         $version = ''
-    } else {
+    }
+    else {
         $version = ('/v{0}' -f $ApiVersion)
     }
 
@@ -127,15 +128,16 @@ function New-ServiceNowSession {
     switch -Wildcard ($PSCmdLet.ParameterSetName) {
         'OAuth*' {
             $params = @{
-                Uri    = 'https://{0}/oauth_token.do' -f $Url
-                Body   = @{
+                Uri             = 'https://{0}/oauth_token.do' -f $Url
+                Body            = @{
                     'grant_type'    = 'password'
                     'client_id'     = $ClientCredential.UserName
                     'client_secret' = $ClientCredential.GetNetworkCredential().Password
                     'username'      = $Credential.UserName
                     'password'      = $Credential.GetNetworkCredential().Password
                 }
-                Method = 'Post'
+                Method          = 'Post'
+                UseBasicParsing = $true
             }
 
             # need to add this manually here, in addition to above, since we're making a rest call before our session is created
@@ -143,7 +145,8 @@ function New-ServiceNowSession {
                 $params.Add('Proxy', $Proxy)
                 if ( $PSBoundParameters.ContainsKey('ProxyCredential') ) {
                     $params.Add('ProxyCredential', $ProxyCredential)
-                } else {
+                }
+                else {
                     $params.Add('ProxyUseDefaultCredentials', $true)
                 }
             }
@@ -196,7 +199,8 @@ function New-ServiceNowSession {
 
     if ( $PassThru ) {
         $newSession
-    } else {
+    }
+    else {
         $Script:ServiceNowSession = $newSession
     }
 }
