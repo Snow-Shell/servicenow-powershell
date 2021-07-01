@@ -1,3 +1,6 @@
+## 2.4.2
+- Fix [#141](https://github.com/Snow-Shell/servicenow-powershell/issues/141), add `UseBasicParsing` to all API calls to keep AA from failing when IE hasn't been initialized
+
 ## 2.4.1
 - Add `-IncludeCustomVariable` to `Get-ServiceNowRecord` to retrieve custom variables, eg. ritm form values, in addition to the standard fields.  [#138](https://github.com/Snow-Shell/servicenow-powershell/discussions/138)
 
