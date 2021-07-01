@@ -107,6 +107,7 @@ Function Get-ServiceNowAttachment {
 
         # URI format:  https://tenant.service-now.com/api/now/attachment/{sys_id}/file
         $params.Uri += '/attachment/' + $SysID + '/file'
+        $params.UseBasicParsing = $true
 
         If ($AppendNameWithSysID.IsPresent) {
             $FileName = "{0}_{1}{2}" -f [io.path]::GetFileNameWithoutExtension($FileName),
