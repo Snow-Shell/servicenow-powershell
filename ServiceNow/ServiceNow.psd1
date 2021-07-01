@@ -5,7 +5,7 @@
 RootModule = 'ServiceNow.psm1'
 
 # Version number of this module.
-ModuleVersion = '2.4.1'
+ModuleVersion = '2.4.2'
 
 # ID used to uniquely identify this module
 GUID = 'b90d67da-f8d0-4406-ad74-89d169cd0633'

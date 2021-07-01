@@ -65,6 +65,17 @@ Function Get-ServiceNowAttachment {
     begin {}
 
     process	{
+        $getAuth = @{
+            Credential        = $Credential
+            ServiceNowUrl     = $ServiceNowUrl
+            Connection        = $Connection
+            ServiceNowSession = $ServiceNowSession
+        }
+        $params = Get-ServiceNowAuth @getAuth
+
+        # URI format:  https://tenant.service-now.com/api/now/attachment/{sys_id}/file
+        $params.Uri += '/attachment/' + $SysID + '/file'
+        $params.UseBasicParsing = $true
 
         if ( $PSCmdlet.ParameterSetName -eq 'ByNumber' ) {
             $getSysIdParams = @{

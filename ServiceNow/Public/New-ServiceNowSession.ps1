@@ -128,15 +128,16 @@ function New-ServiceNowSession {
     switch -Wildcard ($PSCmdLet.ParameterSetName) {
         'OAuth*' {
             $params = @{
-                Uri    = 'https://{0}/oauth_token.do' -f $Url
-                Body   = @{
+                Uri             = 'https://{0}/oauth_token.do' -f $Url
+                Body            = @{
                     'grant_type'    = 'password'
                     'client_id'     = $ClientCredential.UserName
                     'client_secret' = $ClientCredential.GetNetworkCredential().Password
                     'username'      = $Credential.UserName
                     'password'      = $Credential.GetNetworkCredential().Password
                 }
-                Method = 'Post'
+                Method          = 'Post'
+                UseBasicParsing = $true
             }
 
             # need to add this manually here, in addition to above, since we're making a rest call before our session is created
