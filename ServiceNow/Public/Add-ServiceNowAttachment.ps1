@@ -98,8 +98,6 @@ Function Add-ServiceNowAttachment {
             Query             = (New-ServiceNowQuery -Filter @('number', '-eq', $number))
             Properties        = 'sys_id'
             Connection        = $Connection
-            Credential        = $Credential
-            ServiceNowUrl     = $ServiceNowURL
             ServiceNowSession = $ServiceNowSession
         }
 
