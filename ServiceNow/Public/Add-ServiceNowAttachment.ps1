@@ -45,14 +45,18 @@ Function Add-ServiceNowAttachment {
         # Table containing the entry
         [Parameter(Mandatory, ValueFromPipelineByPropertyName)]
         [Alias('sys_class_name')]
-        [string]$Table,
+        [string] $Table,
 
-        # Object number
-        [Parameter(Mandatory, ValueFromPipelineByPropertyName)]
+        [Parameter(ParameterSetName = 'AutomationSysId', Mandatory, ValueFromPipelineByPropertyName)]
+        [Parameter(ParameterSetName = 'SessionSysId', Mandatory, ValueFromPipelineByPropertyName)]
+        [Alias('sys_id')]
+        [string] $SysId,
+
+        [Parameter(ParameterSetName = 'AutomationNumber', Mandatory)]
+        [Parameter(ParameterSetName = 'SessionNumber', Mandatory)]
         [string] $Number,
 
-        # Filter results by file name
-        [parameter(Mandatory)]
+        [Parameter(Mandatory)]
         [ValidateScript( {
                 Test-Path $_
             })]
@@ -62,25 +66,14 @@ Function Add-ServiceNowAttachment {
         [Parameter()]
         [string] $ContentType,
 
-        # Credential used to authenticate to ServiceNow
-        [Parameter(ParameterSetName = 'SpecifyConnectionFields', Mandatory)]
-        [ValidateNotNullOrEmpty()]
-        [Alias('ServiceNowCredential')]
-        [PSCredential] $Credential,
-
-        # The URL for the ServiceNow instance being used
-        [Parameter(ParameterSetName = 'SpecifyConnectionFields', Mandatory)]
-        [ValidateScript( { $_ | Test-ServiceNowURL })]
-        [ValidateNotNullOrEmpty()]
-        [Alias('Url')]
-        [string] $ServiceNowURL,
-
         # Azure Automation Connection object containing username, password, and URL for the ServiceNow instance
-        [Parameter(ParameterSetName = 'UseConnectionObject', Mandatory)]
+        [Parameter(ParameterSetName = 'AutomationSysId', Mandatory)]
+        [Parameter(ParameterSetName = 'AutomationNumber', Mandatory)]
         [ValidateNotNullOrEmpty()]
         [Hashtable] $Connection,
 
-        [Parameter(ParameterSetName = 'Session')]
+        [Parameter(ParameterSetName = 'SessionSysId')]
+        [Parameter(ParameterSetName = 'SessionNumber')]
         [ValidateNotNullOrEmpty()]
         [hashtable] $ServiceNowSession = $script:ServiceNowSession,
 
@@ -93,9 +86,10 @@ Function Add-ServiceNowAttachment {
 
     process	{
 
+
         $getSysIdParams = @{
             Table             = $Table
-            Query             = (New-ServiceNowQuery -Filter @('number', '-eq', $number))
+            Filter            = @('number', '-eq', $number)
             Properties        = 'sys_id'
             Connection        = $Connection
             ServiceNowSession = $ServiceNowSession

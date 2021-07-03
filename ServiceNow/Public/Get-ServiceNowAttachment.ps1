@@ -73,7 +73,7 @@ Function Get-ServiceNowAttachment {
         if ( $PSCmdlet.ParameterSetName -eq 'ByNumber' ) {
             $getSysIdParams = @{
                 Table             = $Table
-                Query             = (New-ServiceNowQuery -Filter @('number', '-eq', $number))
+                Filter            = @('number', '-eq', $number)
                 Properties        = 'sys_id'
                 Connection        = $Connection
                 ServiceNowSession = $ServiceNowSession
@@ -85,12 +85,10 @@ Function Get-ServiceNowAttachment {
 
         $params = @{
             Uri               = '/attachment'
-            Query             = (
-                New-ServiceNowQuery -Filter @(
-                    @('table_name', '-eq', $Table),
-                    'and',
-                    @('table_sys_id', '-eq', $sysId)
-                )
+            Filter            = @(
+                @('table_name', '-eq', $Table),
+                'and',
+                @('table_sys_id', '-eq', $sysId)
             )
             Connection        = $Connection
             ServiceNowSession = $ServiceNowSession

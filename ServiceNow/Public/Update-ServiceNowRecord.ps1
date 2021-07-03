@@ -1,37 +1,31 @@
 function Update-ServiceNowRecord {
-    [CmdletBinding(DefaultParameterSetName = 'Session', SupportsShouldProcess)]
+    [CmdletBinding(DefaultParameterSetName = 'SessionSysId', SupportsShouldProcess)]
     Param(
         # Table containing the entry we're updating
         [parameter(Mandatory)]
         [Alias('sys_class_name')]
         [string] $Table,
 
-        # sys_id of the entry we're updating
-        [parameter(Mandatory, ValueFromPipelineByPropertyName)]
+        [Parameter(ParameterSetName = 'AutomationSysId', Mandatory, ValueFromPipelineByPropertyName)]
+        [Parameter(ParameterSetName = 'SessionSysId', Mandatory, ValueFromPipelineByPropertyName)]
         [Alias('sys_id')]
         [string] $SysId,
+
+        [Parameter(ParameterSetName = 'AutomationNumber', Mandatory)]
+        [Parameter(ParameterSetName = 'SessionNumber', Mandatory)]
+        [string] $Number,
 
         # Hashtable of values to use as the record's properties
         [parameter()]
         [hashtable] $Values,
 
-        # Credential used to authenticate to ServiceNow
-        [Parameter(ParameterSetName = 'SpecifyConnectionFields', Mandatory)]
-        [ValidateNotNullOrEmpty()]
-        [Alias('ServiceNowCredential')]
-        [PSCredential] $Credential,
-
-        # The URL for the ServiceNow instance being used
-        [Parameter(ParameterSetName = 'SpecifyConnectionFields', Mandatory)]
-        [ValidateNotNullOrEmpty()]
-        [string] $ServiceNowURL,
-
-        # Azure Automation Connection object containing username, password, and URL for the ServiceNow instance
-        [Parameter(ParameterSetName = 'UseConnectionObject', Mandatory)]
+        [Parameter(ParameterSetName = 'AutomationSysId', Mandatory)]
+        [Parameter(ParameterSetName = 'AutomationNumber', Mandatory)]
         [ValidateNotNullOrEmpty()]
         [Hashtable] $Connection,
 
-        [Parameter(ParameterSetName = 'Session')]
+        [Parameter(ParameterSetName = 'SessionSysId')]
+        [Parameter(ParameterSetName = 'SessionNumber')]
         [ValidateNotNullOrEmpty()]
         [hashtable] $ServiceNowSession = $script:ServiceNowSession,
 
@@ -48,8 +42,6 @@ function Update-ServiceNowRecord {
             SysId             = $SysId
             Values            = $Values
             Connection        = $Connection
-            Credential        = $Credential
-            ServiceNowUrl     = $ServiceNowURL
             ServiceNowSession = $ServiceNowSession
         }
 
@@ -59,6 +51,5 @@ function Update-ServiceNowRecord {
                 $response
             }
         }
-
     }
 }

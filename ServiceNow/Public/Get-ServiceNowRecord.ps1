@@ -185,6 +185,7 @@ function Get-ServiceNowRecord {
         }
         else {
 
+            # format the results
             if ( -not $Property ) {
                 $type = $script:ServiceNowTable | Where-Object { $_.Name -eq $Table -or $_.ClassName -eq $Table } | Select-Object -ExpandProperty Type
                 if ($type) {

@@ -151,13 +151,19 @@ function New-ServiceNowSession {
                 }
             }
 
+            $oldProgressPreference = $ProgressPreference
+            $ProgressPreference = 'SilentlyContinue'
+        
             $response = Invoke-WebRequest @params
+
+            # set the progress pref back now that done with invoke-webrequest
+            $ProgressPreference = $oldProgressPreference
 
             if ( $response.Content ) {
                 $token = $response.Content | ConvertFrom-Json
                 $newSession.Add('AccessToken', (New-Object System.Management.Automation.PSCredential('AccessToken', ($token.access_token | ConvertTo-SecureString -AsPlainText -Force))))
                 $newSession.Add('RefreshToken', (New-Object System.Management.Automation.PSCredential('RefreshToken', ($token.refresh_token | ConvertTo-SecureString -AsPlainText -Force))))
-                }
+            }
             else {
                 # invoke-webrequest didn't throw an error, but we didn't get a token back either
                 throw ('"{0} : {1}' -f $response.StatusCode, $response | Out-String )

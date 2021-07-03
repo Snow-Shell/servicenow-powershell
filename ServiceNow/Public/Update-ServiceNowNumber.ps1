@@ -34,17 +34,6 @@ Function Update-ServiceNowNumber {
         [parameter()]
         [hashtable]$Values,
 
-        # Credential used to authenticate to ServiceNow
-        [Parameter(ParameterSetName = 'SpecifyConnectionFields', Mandatory)]
-        [ValidateNotNullOrEmpty()]
-        [Alias('ServiceNowCredential')]
-        [PSCredential]$Credential,
-
-        # The URL for the ServiceNow instance being used
-        [Parameter(ParameterSetName = 'SpecifyConnectionFields', Mandatory)]
-        [ValidateNotNullOrEmpty()]
-        [string]$ServiceNowURL,
-
         # Azure Automation Connection object containing username, password, and URL for the ServiceNow instance
         [Parameter(ParameterSetName = 'UseConnectionObject', Mandatory)]
         [ValidateNotNullOrEmpty()]
@@ -65,11 +54,9 @@ Function Update-ServiceNowNumber {
         # Prep a splat to use the provided number to find the sys_id
         $getSysIdParams = @{
             Table             = $Table
-            Query             = (New-ServiceNowQuery -MatchExact @{'number' = $number })
+            Filter             = @('number','-eq', $number)
             Properties        = 'sys_id'
             Connection        = $Connection
-            Credential        = $Credential
-            ServiceNowUrl     = $ServiceNowURL
             ServiceNowSession = $ServiceNowSession
         }
 

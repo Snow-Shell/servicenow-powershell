@@ -47,8 +47,8 @@ function Invoke-ServiceNowRestMethod {
         [System.Collections.ArrayList] $Sort = @('opened_at', 'desc'),
 
         # sysparm_query param in the format of a ServiceNow encoded query string (see http://wiki.servicenow.com/index.php?title=Encoded_Query_Strings)
-        [Parameter()]
-        [string] $Query,
+        # [Parameter()]
+        # [string] $Query,
 
         # Fields to return
         [Parameter()]
@@ -69,7 +69,7 @@ function Invoke-ServiceNowRestMethod {
     )
 
     # get header/body auth values
-    $params = Get-ServiceNowAuth -C $Connection -S ServiceNowSession
+    $params = Get-ServiceNowAuth -C $Connection -S $ServiceNowSession
 
     $params.Method = $Method
     $params.ContentType = 'application/json'
@@ -115,9 +115,9 @@ function Invoke-ServiceNowRestMethod {
             $Body['sysparm_offset'] = $PSCmdlet.PagingParameters.Skip
         }
 
-        if ($Query) {
-            $Body.sysparm_query = $Query
-        }
+        # if ($Query) {
+        #     $Body.sysparm_query = $Query
+        # }
 
         if ($Property) {
             $Body.sysparm_fields = ($Property -join ',').ToLower()
