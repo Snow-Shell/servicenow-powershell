@@ -47,8 +47,8 @@ function Invoke-ServiceNowRestMethod {
         [System.Collections.ArrayList] $Sort = @('opened_at', 'desc'),
 
         # sysparm_query param in the format of a ServiceNow encoded query string (see http://wiki.servicenow.com/index.php?title=Encoded_Query_Strings)
-        # [Parameter()]
-        # [string] $Query,
+        [Parameter()]
+        [string] $Query,
 
         # Fields to return
         [Parameter()]
@@ -78,7 +78,7 @@ function Invoke-ServiceNowRestMethod {
     if ( $Table ) {
         # table can either be the actual table name or class name
         # look up the actual table name
-        $tableName = $script:ServiceNowTable | Where-Object { $_.Name -eq $Table -or $_.ClassName -eq $Table } | Select-Object -ExpandProperty Name
+        $tableName = $script:ServiceNowTable | Where-Object { $_.Name.ToLower() -eq $Table.ToLower() -or $_.ClassName.ToLower() -eq $Table.ToLower() } | Select-Object -ExpandProperty Name
         # if not in our lookup, just use the table name as provided
         if ( -not $tableName ) {
             $tableName = $Table
@@ -115,9 +115,9 @@ function Invoke-ServiceNowRestMethod {
             $Body['sysparm_offset'] = $PSCmdlet.PagingParameters.Skip
         }
 
-        # if ($Query) {
-        #     $Body.sysparm_query = $Query
-        # }
+        if ($Query) {
+            $Body.sysparm_query = $Query
+        }
 
         if ($Property) {
             $Body.sysparm_fields = ($Property -join ',').ToLower()
