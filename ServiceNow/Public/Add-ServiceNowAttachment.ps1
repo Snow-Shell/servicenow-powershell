@@ -40,21 +40,20 @@ Function Add-ServiceNowAttachment {
     #>
 
     [OutputType([PSCustomObject[]])]
-    [CmdletBinding(DefaultParameterSetName = 'Session', SupportsShouldProcess)]
+    [CmdletBinding(SupportsShouldProcess)]
     Param(
         # Table containing the entry
-        [Parameter(Mandatory, ValueFromPipelineByPropertyName)]
+        [Parameter(ValueFromPipelineByPropertyName)]
         [Alias('sys_class_name')]
         [string] $Table,
 
-        [Parameter(ParameterSetName = 'AutomationSysId', Mandatory, ValueFromPipelineByPropertyName)]
-        [Parameter(ParameterSetName = 'SessionSysId', Mandatory, ValueFromPipelineByPropertyName)]
-        [Alias('sys_id')]
-        [string] $SysId,
+        [Parameter(Mandatory, ValueFromPipelineByPropertyName)]
+        [Alias('sys_id', 'SysId', 'number')]
+        [string] $Id,
 
-        [Parameter(ParameterSetName = 'AutomationNumber', Mandatory)]
-        [Parameter(ParameterSetName = 'SessionNumber', Mandatory)]
-        [string] $Number,
+        # [Parameter(ParameterSetName = 'AutomationNumber', Mandatory)]
+        # [Parameter(ParameterSetName = 'SessionNumber', Mandatory)]
+        # [string] $Number,
 
         [Parameter(Mandatory)]
         [ValidateScript( {
@@ -66,39 +65,41 @@ Function Add-ServiceNowAttachment {
         [Parameter()]
         [string] $ContentType,
 
-        # Azure Automation Connection object containing username, password, and URL for the ServiceNow instance
-        [Parameter(ParameterSetName = 'AutomationSysId', Mandatory)]
-        [Parameter(ParameterSetName = 'AutomationNumber', Mandatory)]
-        [ValidateNotNullOrEmpty()]
-        [Hashtable] $Connection,
-
-        [Parameter(ParameterSetName = 'SessionSysId')]
-        [Parameter(ParameterSetName = 'SessionNumber')]
-        [ValidateNotNullOrEmpty()]
-        [hashtable] $ServiceNowSession = $script:ServiceNowSession,
-
         # Allow the results to be shown
         [Parameter()]
-        [switch] $PassThru
+        [switch] $PassThru,
+
+        # Azure Automation Connection object containing username, password, and URL for the ServiceNow instance
+        [Parameter()]
+        # [ValidateNotNullOrEmpty()]
+        [Hashtable] $Connection,
+
+        [Parameter()]
+        # [ValidateNotNullOrEmpty()]
+        [hashtable] $ServiceNowSession = $script:ServiceNowSession
     )
 
     begin {}
 
     process	{
 
-
-        $getSysIdParams = @{
-            Table             = $Table
-            Filter            = @('number', '-eq', $number)
-            Properties        = 'sys_id'
+        $getParams = @{
+            Id                = $Id
+            Property          = 'sys_class_name', 'sys_id', 'number'
             Connection        = $Connection
             ServiceNowSession = $ServiceNowSession
         }
+        if ( $Table ) {
+            $getParams.Table = $Table
+        }
+        $tableRecord = Get-ServiceNowRecord @getParams
 
-        # Use the number and table to determine the sys_id
-        $sysId = Invoke-ServiceNowRestMethod @getSysIdParams | Select-Object -ExpandProperty sys_id
+        if ( -not $tableRecord ) {
+            Write-Error "Record not found for Id '$Id'"
+            continue
+        }
 
-        $auth = Get-ServiceNowAuth -C $Connection -S ServiceNowSession
+        $auth = Get-ServiceNowAuth -C $Connection -S $ServiceNowSession
 
         ForEach ($Object in $File) {
             $FileData = Get-ChildItem $Object -ErrorAction Stop
@@ -114,7 +115,7 @@ Function Add-ServiceNowAttachment {
             # POST: https://instance.service-now.com/api/now/attachment/file?table_name=incident&table_sys_id=d71f7935c0a8016700802b64c67c11c6&file_name=Issue_screenshot
             # $Uri = "{0}/file?table_name={1}&table_sys_id={2}&file_name={3}" -f $ApiUrl, $Table, $TableSysID, $FileData.Name
             $invokeRestMethodSplat = $auth
-            $invokeRestMethodSplat.Uri += '/attachment/file?table_name={0}&table_sys_id={1}&file_name={2}' -f $Table, $sysId, $FileData.Name
+            $invokeRestMethodSplat.Uri += '/attachment/file?table_name={0}&table_sys_id={1}&file_name={2}' -f $tableRecord.sys_class_name, $tableRecord.sys_id, $FileData.Name
             $invokeRestMethodSplat.Headers += @{'Content-Type' = $ContentType }
             $invokeRestMethodSplat.UseBasicParsing = $true
             $invokeRestMethodSplat += @{
@@ -122,7 +123,7 @@ Function Add-ServiceNowAttachment {
                 InFile = $FileData.FullName
             }
 
-            If ($PSCmdlet.ShouldProcess("$Table $Number", 'Add attachment')) {
+            If ($PSCmdlet.ShouldProcess(('{0} {1}' -f $tableRecord.sys_class_name, $tableRecord.number), ('Add attachment {0}' -f $FileData.FullName))) {
                 Write-Verbose ($invokeRestMethodSplat | ConvertTo-Json)
                 $response = Invoke-WebRequest @invokeRestMethodSplat
 
