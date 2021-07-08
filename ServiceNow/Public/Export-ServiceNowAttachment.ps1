@@ -22,42 +22,34 @@ Function Export-ServiceNowAttachment {
     Adds the SysID to the file name.  Intended for use when a ticket has multiple files with the same name.
 
     .EXAMPLE
-    Get-ServiceNowAttachment -SysID $SysID -FileName 'mynewfile.txt'
+    Export-ServiceNowAttachment -SysID $SysID -FileName 'mynewfile.txt'
 
     Save the attachment with the specified sys_id with a name of 'mynewfile.txt'
 
     .EXAMPLE
-    Get-ServiceNowAttachment -Number $Number -Table $Table | Get-ServiceNowAttachment
+    Get-ServiceNowAttachment -Id INC1234567 | Export-ServiceNowAttachment
 
     Save all attachments from the ticket.  Filenames will be assigned from the attachment name.
 
     .EXAMPLE
-    Get-ServiceNowAttachmentDetail -Number $Number -Table $Table | Get-ServiceNowAttachment -AppendNameWithSysID
+    Get-ServiceNowAttachment -Id INC1234567 | Export-ServiceNowAttachment -AppendNameWithSysID
 
     Save all attachments from the ticket.  Filenames will be assigned from the attachment name and appended with the sys_id.
 
     .EXAMPLE
-    Get-ServiceNowAttachmentDetail -Number $Number -Table $Table | Get-ServiceNowAttachment -Destination $Destination -AllowOverwrite
+    Get-ServiceNowAttachment -Id INC1234567 | Export-ServiceNowAttachment -Destination $path -AllowOverwrite
 
     Save all attachments from the ticket to the destination allowing for overwriting the destination file.
     #>
 
-    [CmdletBinding(DefaultParameterSetName = 'Table', SupportsShouldProcess = $true)]
+    [CmdletBinding(DefaultParameterSetName = 'Session', SupportsShouldProcess = $true)]
     Param(
         
-        [Parameter(ParameterSetName = 'Table', Mandatory, ValueFromPipelineByPropertyName)]
-        [Alias('sys_class_name')]
-        [string] $Table,
-
-        [Parameter(ParameterSetName = 'Table', Mandatory, ValueFromPipelineByPropertyName)]
-        [Alias('sys_id')]
-        [string] $TableId,
-
-        [Parameter(ParameterSetName = 'Attachment', Mandatory, ValueFromPipelineByPropertyName)]
+        [Parameter(Mandatory, ValueFromPipeline, ValueFromPipelineByPropertyName)]
         [Alias('sys_id')]
         [string] $SysId,
 
-        [Parameter(ParameterSetName = 'Attachment', Mandatory, ValueFromPipelineByPropertyName)]
+        [Parameter(ValueFromPipelineByPropertyName)]
         [Alias('file_name')]
         [string] $FileName,
 
@@ -77,7 +69,7 @@ Function Export-ServiceNowAttachment {
         [switch] $AppendNameWithSysId,
 
         # Azure Automation Connection object containing username, password, and URL for the ServiceNow instance
-        [Parameter(ParameterSetName = 'UseConnectionObject', Mandatory)]
+        [Parameter(ParameterSetName = 'Automation', Mandatory)]
         [ValidateNotNullOrEmpty()]
         [Hashtable] $Connection,
 
@@ -87,48 +79,28 @@ Function Export-ServiceNowAttachment {
     )
 
     begin {
-        $authParams = Get-ServiceNowAuth -C $Connection -S ServiceNowSession
+        $authParams = Get-ServiceNowAuth -C $Connection -S $ServiceNowSession
     }
 
     process	{
 
-        # URI format:  https://tenant.service-now.com/api/now/attachment/{sys_id}/file
         $params = $authParams.Clone()
 
-        # if table record provided, get the attachment details
-        if ( $PSCmdlet.ParameterSetName -eq 'Table' ) {
+        $params.Uri += '/attachment/' + $SysId + '/file'
 
-            $attachmentListParams = @{
-                Table             = $Table
-                Connection        = $Connection
-                ServiceNowSession = $ServiceNowSession
-            }
-
-            # determine if tableid is the number or sysid
-            try {
-                [guid] $TableId
-                $attachmentListParams.SysId = $TableId
-            }
-            catch {
-                $attachmentListParams.Number = $TableId
-            }
+        $thisFileName = $FileName
+        If ( $AppendNameWithSysId.IsPresent ) {
+            $thisFileName = "{0}_{1}{2}" -f [io.path]::GetFileNameWithoutExtension($thisFileName), $SysId, [io.path]::GetExtension($thisFileName)
         }
+        $outFile = Join-Path $Destination $thisFileName
 
-        $params.Uri += '/attachment/' + $SysID + '/file'
-
-        If ($AppendNameWithSysId.IsPresent) {
-            $FileName = "{0}_{1}{2}" -f [io.path]::GetFileNameWithoutExtension($FileName), $SysID, [io.path]::GetExtension($FileName)
-        }
-        $OutFile = $Null
-        $OutFile = Join-Path $Destination $FileName
-
-        If ((Test-Path $OutFile) -and -not $AllowOverwrite.IsPresent) {
+        If ((Test-Path $outFile) -and -not $AllowOverwrite.IsPresent) {
             throw ('The file ''{0}'' already exists.  Please choose a different name, use the -AppendNameWithSysID switch parameter, or use the -AllowOverwrite switch parameter to overwrite the file.' -f $OutFile)
         }
 
-        $params.OutFile = $OutFile
+        $params.OutFile = $outFile
 
-        If ($PSCmdlet.ShouldProcess("SysId $SysId", "Save attachment to file $OutFile")) {
+        If ($PSCmdlet.ShouldProcess($outFile, "Save attachment")) {
             Invoke-WebRequest @params
         }
     }
