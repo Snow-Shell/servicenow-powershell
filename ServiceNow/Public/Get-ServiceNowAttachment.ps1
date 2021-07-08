@@ -3,107 +3,153 @@ Function Get-ServiceNowAttachment {
     <#
     
     .SYNOPSIS
-    List details for ServiceNow attachments associated with a ticket number.
+    Retrieve attachment details
     
     .DESCRIPTION
-    List details for ServiceNow attachments associated with a ticket number.
-    
-    .PARAMETER Number
-    ServiceNow ticket number
+    Retrieve attachment details via table record or by advanced filtering.
     
     .PARAMETER Table
-    ServiceNow ticket table name
+    Name of the table to be queried, by either table name or class name.  Use tab completion for list of known tables.
+    You can also provide any table name ad hoc.
+    
+    .PARAMETER Id
+    Either the record sys_id or number.
+    If providing just an Id, not with Table, the Id prefix will be looked up to find the table name.
     
     .PARAMETER FileName
-    Filter for one or more file names.  Works like a 'match' where partial file names are valid.
+    Filter for a specific file name or part of a file name.
+    
+    .PARAMETER Filter
+    Array or multidimensional array of fields and values to filter on.
+    Each array should be of the format @(field, comparison operator, value) separated by a join, either 'and', 'or', or 'group'.
+    For a complete list of comparison operators, see $script:ServiceNowOperator and use Name in your filter.
+    See the examples.
+    Also, see https://docs.servicenow.com/bundle/quebec-platform-user-interface/page/use/common-ui-elements/reference/r_OpAvailableFiltersQueries.html
+    for how to represent date values with javascript.
+
+    .PARAMETER Sort
+    Array or multidimensional array of fields to sort on.
+    Each array should be of the format @(field, asc/desc).
+
+    .PARAMETER Connection
+    Azure Automation Connection object containing username, password, and URL for the ServiceNow instance
+
+    .PARAMETER ServiceNowSession
+    ServiceNow session created by New-ServiceNowSession.  Will default to script-level variable $ServiceNowSession.
+
+    .EXAMPLE
+    Get-ServiceNowAttachment -Id 'INC1234567'
+    
+    Get attachment details for a specific record
     
     .EXAMPLE
-    Get-ServiceNowAttachmentDetail -Number $Number -Table $Table
+    Get-ServiceNowAttachment -Id 'INC1234567' -FileName image.jpg
     
-    List attachment details
+    Get attachment details for a specific record where file names match all or part of image.jpg
     
     .EXAMPLE
-    Get-ServiceNowAttachmentDetail -Number $Number -Table $Table -FileName filename.txt,report.csv
+    Get-ServiceNowAttachment -Filter @('size_bytes', '-gt', '1000000')
     
-    List details for only filename.txt and report.csv (if they exist).
+    Get attachment details where size is greater than 1M.
     
+    .INPUTS
+    Table, Id
+
     .OUTPUTS
     System.Management.Automation.PSCustomObject
     #>
 
     [OutputType([System.Management.Automation.PSCustomObject[]])]
-    [CmdletBinding(DefaultParameterSetName = 'BySysId')]
+    [CmdletBinding(DefaultParameterSetName = 'Filter', SupportsPaging)]
 
     Param(
-        # Table containing the entry
-        [Parameter(Mandatory, ValueFromPipelineByPropertyName)]
+        [Parameter(ParameterSetName = 'Table', Mandatory, ValueFromPipelineByPropertyName)]
         [Alias('sys_class_name')]
         [string] $Table,
 
-        # Object number
-        [Parameter(ParameterSetName = 'ByNumber', Mandatory)]
-        [string] $Number,
+        [Parameter(ParameterSetName = 'Id', Mandatory, ValueFromPipelineByPropertyName)]
+        [Parameter(ParameterSetName = 'Table', Mandatory, ValueFromPipelineByPropertyName)]
+        [Alias('sys_id', 'SysId', 'number')]
+        [string] $Id,
 
-        [Parameter(ParameterSetName = 'BySysId', Mandatory, ValueFromPipelineByPropertyName)]
-        [Alias('sys_id')]
-        [string] $SysId,
-
-        # Filter results by file name
         [parameter()]
-        [string[]] $FileName,
+        [string] $FileName,
 
-        # Azure Automation Connection object containing username, password, and URL for the ServiceNow instance
-        [Parameter(ParameterSetName = 'UseConnectionObject', Mandatory)]
+        [Parameter()]
+        [System.Collections.ArrayList] $Filter,
+
+        [parameter()]
         [ValidateNotNullOrEmpty()]
+        [System.Collections.ArrayList] $Sort,
+
+        [Parameter()]
         [Hashtable] $Connection,
 
-        [Parameter(ParameterSetName = 'Session')]
-        [ValidateNotNullOrEmpty()]
+        [Parameter()]
         [hashtable] $ServiceNowSession = $script:ServiceNowSession
     )
 
     begin {}
 
     process	{
-        $params = Get-ServiceNowAuth -C $Connection -S ServiceNowSession
-
-        # URI format:  https://tenant.service-now.com/api/now/attachment/{sys_id}/file
-        $params.Uri += '/attachment/' + $SysID + '/file'
-
-        if ( $PSCmdlet.ParameterSetName -eq 'ByNumber' ) {
-            $getSysIdParams = @{
-                Table             = $Table
-                Filter            = @('number', '-eq', $number)
-                Properties        = 'sys_id'
-                Connection        = $Connection
-                ServiceNowSession = $ServiceNowSession
-            }
-    
-            # Use the number and table to determine the sys_id
-            $sysId = Invoke-ServiceNowRestMethod @getSysIdParams | Select-Object -ExpandProperty sys_id
-        }
-
         $params = @{
-            Uri               = '/attachment'
-            Filter            = @(
-                @('table_name', '-eq', $Table),
-                'and',
-                @('table_sys_id', '-eq', $sysId)
-            )
+            UriLeaf           = '/attachment'
+            First             = $PSCmdlet.PagingParameters.First
+            Skip              = $PSCmdlet.PagingParameters.Skip
+            IncludeTotalCount = $PSCmdlet.PagingParameters.IncludeTotalCount
             Connection        = $Connection
             ServiceNowSession = $ServiceNowSession
         }
-        $response = Invoke-ServiceNowRestMethod @params
+
+        if ( $PSCmdlet.ParameterSetName -in 'Table', 'Id' ) {
+            $getParams = @{
+                Id                = $Id
+                Property          = 'sys_class_name', 'sys_id'
+                Connection        = $Connection
+                ServiceNowSession = $ServiceNowSession
+            }
+            if ( $Table ) {
+                $getParams.Table = $Table
+            }
+            $tableRecord = Get-ServiceNowRecord @getParams
+    
+            if ( -not $tableRecord ) {
+                Write-Error "Record not found for Id '$Id'"
+                continue
+            }
+    
+            $params.Filter = @(
+                @('table_name', '-eq', $tableRecord.sys_class_name),
+                'and',
+                @('table_sys_id', '-eq', $tableRecord.sys_id)
+            )
+        }
 
         if ( $FileName ) {
-            # TODO: move into query
-            $response | Where-Object { $_.file_name -in $FileName }
+            if ( $params.Filter ) {
+                $params.Filter += 'and', @('file_name', '-like', $FileName)
+            }
+            else {
+                $params.Filter = @('file_name', '-like', $FileName)
+            }
         }
-        else {
+
+        if ( $Filter ) {
+            if ( $params.Filter ) {
+                $params.Filter += 'and', $Filter
+            }
+            else {
+                $params.Filter = $Filter
+            }
+        }
+
+        $response = Invoke-ServiceNowRestMethod @params
+
+        if ( $response ) {
+            $response | ForEach-Object { $_.PSObject.TypeNames.Insert(0, 'ServiceNow.Attachment') }
             $response
         }
 
-        # $response | Update-ServiceNowDateTimeField
     }
 
     end {}

@@ -86,23 +86,30 @@
 function Get-ServiceNowRecord {
 
     [OutputType([System.Management.Automation.PSCustomObject])]
-    [CmdletBinding(DefaultParameterSetName = 'SessionFilter', SupportsPaging)]
+    [CmdletBinding(DefaultParameterSetName = 'Id', SupportsPaging)]
+    [Alias('gsnr')]
 
     Param (
-        [parameter(Mandatory)]
+        [Parameter(ParameterSetName = 'Table', Mandatory)]
         [Alias('sys_class_name')]
         [string] $Table,
+
+        [Parameter(ParameterSetName = 'Id', Mandatory, Position = 0)]
+        [Parameter(ParameterSetName = 'Table')]
+        [Alias('sys_id', 'number')]
+        [string] $Id,
+
+        [Parameter()]
+        [string] $Name,
 
         [Parameter()]
         [Alias('Fields', 'Properties')]
         [string[]] $Property,
 
-        [parameter(ParameterSetName = 'AutomationFilter')]
-        [parameter(ParameterSetName = 'SessionFilter')]
+        [Parameter()]
         [System.Collections.ArrayList] $Filter,
 
-        [parameter(ParameterSetName = 'AutomationFilter')]
-        [parameter(ParameterSetName = 'SessionFilter')]
+        [parameter()]
         [ValidateNotNullOrEmpty()]
         [System.Collections.ArrayList] $Sort,
 
@@ -114,22 +121,70 @@ function Get-ServiceNowRecord {
         [Parameter()]
         [switch] $IncludeCustomVariable,
 
-        [Parameter(Mandatory, ParameterSetName = 'AutomationQuery')]
-        [parameter(Mandatory, ParameterSetName = 'AutomationFilter')]
-        [ValidateNotNullOrEmpty()]
+        # [Parameter(Mandatory, ParameterSetName = 'AutomationTable')]
+        # [Parameter(Mandatory, ParameterSetName = 'AutomationId')]
+        # [ValidateNotNullOrEmpty()]
+        # [AllowNull()]
+        [Parameter()]
         [hashtable] $Connection,
 
-        [Parameter(ParameterSetName = 'SessionQuery')]
-        [Parameter(ParameterSetName = 'SessionFilter')]
-        [ValidateNotNullOrEmpty()]
+        # [Parameter(ParameterSetName = 'SessionTable')]
+        # [Parameter(ParameterSetName = 'SessionId')]
+        # [ValidateNotNullOrEmpty()]
+        [Parameter()]
         [hashtable] $ServiceNowSession = $script:ServiceNowSession
     )
 
+    # it's easier this way to pass everything to invoke-servicenowrestmethod given paging params, etc
     $invokeParams = $PSBoundParameters
     $invokeParams.Remove('IncludeCustomVariable') | Out-Null
+    $invokeParams.Remove('Id') | Out-Null
+    $invokeParams.Remove('Name') | Out-Null
+
+    if ( $Id ) {
+        if ( $Id -match '[a-zA-Z0-9]{32}' ) {
+            if ( $PSCmdlet.ParameterSetName -like '*Id' ) {
+                throw 'Providing sys_id for -Id requires a value for -Table.  Alternatively, provide an Id with a prefix, eg. INC1234567.'
+            }
+
+            $idFilter = @('sys_id', '-eq', $Id)
+        }
+        else {
+            if ( $PSCmdlet.ParameterSetName -like '*Id' ) {
+                # get table name from prefix if only Id was provided
+                $thisTable = $script:ServiceNowTable | Where-Object { $_.NumberPrefix -and $Id.ToLower().StartsWith($_.NumberPrefix) } | Select-Object -ExpandProperty Name
+                if ( $thisTable ) {
+                    $invokeParams.Table = $thisTable
+                }
+                else {
+                    throw ('Prefix not found for Id ''{0}''.  Known prefixes are {1}.' -f $Id, ($ServiceNowTable.NumberPrefix.Where( { $_ }) -join ', '))
+                }
+            }
+            $idFilter = @('number', '-eq', $Id)
+        }
+
+        if ( $invokeParmas.Filter ) {
+            $invokeParams.Filter = $invokeParams.Filter, 'and', $idFilter
+        }
+        else {
+            $invokeParams.Filter = $idFilter
+        }
+    }
+    
+    if ( $Name ) {
+        # determine the field we should compare for 'name' and add the filter
+        $thisNameField = $script:ServiceNowTable | Where-Object { $_.Name.ToLower() -eq $Table.ToLower() -or $_.ClassName.ToLower() -eq $Table.ToLower() } | Select-Object -ExpandProperty TableNameField
+        if ( $thisNameField ) {
+            if ( $invokeParmas.Filter ) {
+                $invokeParams.Filter = $invokeParams.Filter, 'and', @($thisNameField, '-like', $Name)
+            }
+            else {
+                $invokeParams.Filter = @($thisNameField, '-like', $Name)
+            }
+        }
+    }
 
     $addedSysIdProp = $false
-
     # we need the sys_id value in order to get custom var data
     # add it in if specific properties were requested and not part of the list
     if ( $IncludeCustomVariable.IsPresent ) {
@@ -139,6 +194,11 @@ function Get-ServiceNowRecord {
         }
     }
 
+    if ( $Table -eq 'attachment' ) {
+        $invokeParams.Remove('Table') | Out-Null
+        $invokeParams.UriLeaf = '/attachment'
+    }
+    
     $result = Invoke-ServiceNowRestMethod @invokeParams
 
     if ( $result ) {
