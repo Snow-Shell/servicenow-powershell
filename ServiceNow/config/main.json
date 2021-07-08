@@ -3,47 +3,62 @@
         {
             "Name": "incident",
             "ClassName": "Incident",
-            "Type": "ServiceNow.Incident"
+            "Type": "ServiceNow.Incident",
+            "NumberPrefix": "inc",
+            "TableNameField": "short_description"
         },
         {
             "Name": "change_request",
             "ClassName": "Change Request",
-            "Type": "ServiceNow.ChangeRequest"
+            "Type": "ServiceNow.ChangeRequest",
+            "NumberPrefix": "chg",
+            "TableNameField": "short_description"
         },
         {
             "Name": "cmdb_ci",
             "ClassName": "Configuration Item",
-            "Type": "ServiceNow.ConfigurationItem"
+            "Type": "ServiceNow.ConfigurationItem",
+            "TableNameField": "name"
         },
         {
             "Name": "sc_request",
             "ClassName": "Request",
-            "Type": "ServiceNow.Request"
+            "Type": "ServiceNow.Request",
+            "NumberPrefix": "req",
+            "TableNameField": "short_description"
         },
         {
             "Name": "sc_req_item",
             "ClassName": "Requested Item",
-            "Type": "ServiceNow.RequestItem"
+            "Type": "ServiceNow.RequestItem",
+            "NumberPrefix": "ritm",
+            "TableNameField": "short_description"
         },
         {
             "Name": "sys_user",
             "ClassName": "User",
-            "Type": "ServiceNow.UserAndUserGroup"
+            "Type": "ServiceNow.UserAndUserGroup",
+            "TableNameField": "name"
         },
         {
             "Name": "sys_user_group",
             "ClassName": "User Group",
-            "Type": "ServiceNow.UserAndUserGroup"
+            "Type": "ServiceNow.UserAndUserGroup",
+            "TableNameField": "name"
         },
         {
             "Name": "sc_task",
             "ClassName": "Catalog Task",
-            "Type": "ServiceNow.CatalogTask"
+            "Type": "ServiceNow.CatalogTask",
+            "NumberPrefix": "sctask",
+            "TableNameField": "short_description"
         },
         {
             "Name": "change_task",
             "ClassName": "Change Task",
-            "Type": "ServiceNow.ChangeTask"
+            "Type": "ServiceNow.ChangeTask",
+            "NumberPrefix": "ctask",
+            "TableNameField": "short_description"
         }
     ],
     "FilterOperators": [
