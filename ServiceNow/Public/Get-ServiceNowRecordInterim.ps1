@@ -1,6 +1,6 @@
 function Get-ServiceNowRecordInterim {
     [OutputType([System.Management.Automation.PSCustomObject])]
-    [CmdletBinding(DefaultParameterSetName = 'Session', SupportsPaging)]
+    [CmdletBinding(SupportsPaging)]
     Param(
         # Machine name of the field to order by
         [Parameter()]
@@ -30,17 +30,15 @@ function Get-ServiceNowRecordInterim {
         [Alias('DisplayValues')]
         [string] $DisplayValue = 'true',
 
-        [Parameter(ParameterSetName = 'UseConnectionObject', Mandatory)]
-        [ValidateNotNullOrEmpty()]
+        [Parameter()]
         [hashtable] $Connection,
 
-        [Parameter(ParameterSetName = 'Session')]
-        [ValidateNotNullOrEmpty()]
+        [Parameter()]
         [hashtable] $ServiceNowSession = $script:ServiceNowSession
     )
 
     Write-Warning ('{0} will be deprecated in the near future.  Please use Get-ServiceNowRecord instead.' -f $PSCmdlet.MyInvocation.InvocationName)
-    
+
     $table = $ServiceNowTable | Where-Object { $PSCmdlet.MyInvocation.InvocationName.ToLower().Replace('get-servicenow', '') -eq $_.ClassName.Replace(' ', '').ToLower() }
 
     $newServiceNowQuerySplat = @{
@@ -49,11 +47,10 @@ function Get-ServiceNowRecordInterim {
         OrderDirection = $OrderDirection
         MatchContains  = $MatchContains
     }
-    $query = New-ServiceNowQuery @newServiceNowQuerySplat
 
     $params = @{
         Table             = $table.Name
-        Query             = $query
+        Query             = (New-ServiceNowQuery @newServiceNowQuerySplat)
         DisplayValue      = $DisplayValue
         First             = $PSCmdlet.PagingParameters.First
         Skip              = $PSCmdlet.PagingParameters.Skip

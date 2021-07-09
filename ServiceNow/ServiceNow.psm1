@@ -54,6 +54,7 @@ $aliases = @{
     'Remove-ServiceNowTableEntry'     = 'Remove-ServiceNowRecord'
     'New-ServiceNowTableEntry'        = 'New-ServiceNowRecord'
     'Update-ServiceNowTableEntry'     = 'Update-ServiceNowRecord'
+    'Update-ServiceNowNumber'     = 'Update-ServiceNowRecord'
     'gsnr'                            = 'Get-ServiceNowRecord'
 }
 $aliases.GetEnumerator() | ForEach-Object {

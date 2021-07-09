@@ -11,6 +11,12 @@
     Name of the table to be queried, by either table name or class name.  Use tab completion for list of known tables.
     You can also provide any table name ad hoc.
 
+.PARAMETER Id
+    Either the record sys_id or number.
+    If providing just an Id, not with Table, the Id prefix will be looked up to find the table name.
+
+.PARAMETER Name
+
 .PARAMETER Property
     Limit the fields returned to this list
 
@@ -121,16 +127,9 @@ function Get-ServiceNowRecord {
         [Parameter()]
         [switch] $IncludeCustomVariable,
 
-        # [Parameter(Mandatory, ParameterSetName = 'AutomationTable')]
-        # [Parameter(Mandatory, ParameterSetName = 'AutomationId')]
-        # [ValidateNotNullOrEmpty()]
-        # [AllowNull()]
         [Parameter()]
         [hashtable] $Connection,
 
-        # [Parameter(ParameterSetName = 'SessionTable')]
-        # [Parameter(ParameterSetName = 'SessionId')]
-        # [ValidateNotNullOrEmpty()]
         [Parameter()]
         [hashtable] $ServiceNowSession = $script:ServiceNowSession
     )
