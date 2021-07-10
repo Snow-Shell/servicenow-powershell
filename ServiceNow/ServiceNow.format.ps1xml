@@ -131,9 +131,9 @@
 			</TableControl>
 		</View>
 		<View>
-			<Name>ServiceNow.RequestItem</Name>
+			<Name>ServiceNow.RequestedItem</Name>
 			<ViewSelectedBy>
-				<TypeName>ServiceNow.RequestItem</TypeName>
+				<TypeName>ServiceNow.RequestedItem</TypeName>
 			</ViewSelectedBy>
 			<TableControl>
 				<TableHeaders>
@@ -147,7 +147,7 @@
 					</TableColumnHeader>
 					<TableColumnHeader>
 						<Label>state</Label>
-						<Width>8</Width>
+						<Width>12</Width>
 					</TableColumnHeader>
 					<TableColumnHeader>
 						<Label>assigned_to</Label>

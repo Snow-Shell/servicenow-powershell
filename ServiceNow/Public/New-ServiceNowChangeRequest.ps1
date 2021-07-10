@@ -33,12 +33,6 @@ function New-ServiceNowChangeRequest {
     .PARAMETER CustomFields
         Custom fields as hashtable
 
-    .PARAMETER ServiceNowCredential
-        Credential used to authenticate to ServiceNow
-
-    .PARAMETER ServiceNowURL
-        The URL for the ServiceNow instance being used (eg: instancename.service-now.com)
-
     .PARAMETER Connection
         Azure Automation Connection object containing username, password, and URL for the ServiceNow instance
 
@@ -73,7 +67,7 @@ function New-ServiceNowChangeRequest {
         New-ServiceNowChangeRequest @newServiceNowChangeRequestSplat
      #>
 
-    [CmdletBinding(DefaultParameterSetName = 'Session', SupportsShouldProcess)]
+    [CmdletBinding(SupportsShouldProcess)]
 
     Param(
         [parameter(Mandatory)]
@@ -103,20 +97,10 @@ function New-ServiceNowChangeRequest {
         [parameter()]
         [hashtable]$CustomFields,
 
-        [Parameter(ParameterSetName = 'SpecifyConnectionFields', Mandatory)]
-        [ValidateNotNullOrEmpty()]
-        [PSCredential]$ServiceNowCredential,
+        [Parameter()]
+        [Hashtable] $Connection,
 
-        [Parameter(ParameterSetName = 'SpecifyConnectionFields', Mandatory)]
-        [ValidateNotNullOrEmpty()]
-        [string]$ServiceNowURL,
-
-        [Parameter(ParameterSetName = 'UseConnectionObject', Mandatory)]
-        [ValidateNotNullOrEmpty()]
-        [Hashtable]$Connection,
-
-        [Parameter(ParameterSetName = 'Session')]
-        [ValidateNotNullOrEmpty()]
+        [Parameter()]
         [hashtable] $ServiceNowSession = $script:ServiceNowSession,
 
         [Parameter()]

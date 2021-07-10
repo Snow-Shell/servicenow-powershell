@@ -1,25 +1,46 @@
-function Update-ServiceNowRecord {
+<#
+.SYNOPSIS
+    Update record values
 
-    <#
-    .SYNOPSIS
-        Update record values
-    .DESCRIPTION
-        Update one or more record values and optionally return the updated record
-    .EXAMPLE
-        PS C:\> <example usage>
-        Explanation of what the example does
-    .INPUTS
-        Inputs (if any)
-    .OUTPUTS
-        Output (if any)
-    .NOTES
-        General notes
-    #>
+.DESCRIPTION
+    Update one or more record values and optionally return the updated record
+
+.PARAMETER Table
+    Name of the table to be queried, by either table name or class name.  Use tab completion for list of known tables.
+    You can also provide any table name ad hoc.
+
+.PARAMETER Id
+    Either the record sys_id or number.
+    If providing just an Id, not with Table, the Id prefix will be looked up to find the table name.
+
+.PARAMETER Values
+    Hashtable with all the field/value pairs for the updated record
+
+.PARAMETER PassThru
+    If provided, the updated record will be returned
+        
+.PARAMETER Connection
+    Azure Automation Connection object containing username, password, and URL for the ServiceNow instance
+
+.PARAMETER ServiceNowSession
+    ServiceNow session created by New-ServiceNowSession.  Will default to script-level variable $ServiceNowSession.
+    
+.EXAMPLE
+    Update-ServiceNowRecord -Table incident -Id 'INC0010001' -Values @{State = 'Closed'}
+    Close an incident record
+
+.INPUTS
+    Table, Id
+
+.OUTPUTS
+    PSCustomObject, if PassThru is provided
+#>
+
+function Update-ServiceNowRecord {
 
     [CmdletBinding(SupportsShouldProcess)]
 
     Param(
-        # Table containing the entry we're updating
         [parameter(ValueFromPipelineByPropertyName)]
         [Alias('sys_class_name')]
         [string] $Table,
@@ -28,7 +49,6 @@ function Update-ServiceNowRecord {
         [Alias('sys_id', 'SysId', 'number')]
         [string] $Id,
 
-        # Hashtable of values to use as the record's properties
         [parameter(Mandatory)]
         [hashtable] $Values,
 
@@ -71,7 +91,8 @@ function Update-ServiceNowRecord {
                 $sysId = $thisRecord.sys_id
             }
             else {
-                throw ('Record not found for Id ''{0}''' -f $Id)
+                Write-Error ('Record not found for Id ''{0}''' -f $Id)
+                continue
             }
         }
 

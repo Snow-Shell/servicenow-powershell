@@ -1,10 +1,9 @@
 <#
 .SYNOPSIS
-    Retrieves records for the specified table
+    Retrieves records for any and all tables
 
 .DESCRIPTION
-    Retrieve records from any table with the option to filter, sort, and choose fields.
-    Given you know the table name, you shouldn't need any other 'Get-' function.
+    Retrieve records from any table with the option to filter, sort, choose fields, and more.
     Paging is supported with -First, -Skip, and -IncludeTotalCount.
 
 .PARAMETER Table
@@ -15,10 +14,18 @@
     Either the record sys_id or number.
     If providing just an Id, not with Table, the Id prefix will be looked up to find the table name.
 
-.PARAMETER Name
+.PARAMETER ParentId
+    The sys_id or number of the parent record.
+    For example, to get catalog tasks for a requested item, provide the RITM number as ParentId.
+
+.PARAMETER Description
+    Filter results based on the 'description' field.  The field will be different for each table.
+    For many tables it will be short_description, but, for instance, the User table will be 'Name'.
+    For unknown tables, the field will be 'short_description'.
+    The comparison performed is a 'like'.
 
 .PARAMETER Property
-    Limit the fields returned to this list
+    Return one or more specific fields
 
 .PARAMETER Filter
     Array or multidimensional array of fields and values to filter on.
@@ -51,7 +58,19 @@
     ServiceNow session created by New-ServiceNowSession.  Will default to script-level variable $ServiceNowSession.
 
 .EXAMPLE
-    Get-ServiceNowRecord -Table incident -Filter @('state', '-eq', '1'), 'or', @('short_description','-like', 'powershell')
+    Get-ServiceNowRecord RITM0010001
+    Get a specific record by number
+
+.EXAMPLE
+    Get-ServiceNowRecord -Id RITM0010001 -Property 'short_description','sys_id'
+    Get specific properties for a record
+
+.EXAMPLE
+    Get-ServiceNowRecord -Table 'Catalog Task' -ParentId 'RITM0010001'
+    Get tasks for the parent requested item
+    
+.EXAMPLE
+    Get-ServiceNowRecord -Table incident -Filter @('state', '-eq', '1') -Description 'powershell'
     Get incident records where state equals New or short description contains the word powershell
 
 .EXAMPLE
@@ -61,7 +80,7 @@
                 '-group',
               @('state', '-eq', '2')
     PS > Get-ServiceNowRecord -Table incident -Filter $filter
-    Get incident records where state equals New and short description contains the word powershell or state equals In Progress.
+    Get incident records where state is New and short description contains the word powershell or state is In Progress.
     The first 2 filters are combined and then or'd against the last.
 
 .EXAMPLE
@@ -80,6 +99,10 @@
     Get-ServiceNowRecord -Table 'change request' -IncludeCustomVariable -First 5
     Get the first 5 change requests and retrieve custom variable info
 
+.EXAMPLE
+    gsnr RITM0010001
+    Get a specific record by number using the function alias
+    
 .INPUTS
     None
 
@@ -106,7 +129,10 @@ function Get-ServiceNowRecord {
         [string] $Id,
 
         [Parameter()]
-        [string] $Name,
+        [string] $ParentId,
+
+        [Parameter()]
+        [string] $Description,
 
         [Parameter()]
         [Alias('Fields', 'Properties')]
@@ -134,52 +160,84 @@ function Get-ServiceNowRecord {
         [hashtable] $ServiceNowSession = $script:ServiceNowSession
     )
 
-    # it's easier this way to pass everything to invoke-servicenowrestmethod given paging params, etc
-    $invokeParams = $PSBoundParameters
-    $invokeParams.Remove('IncludeCustomVariable') | Out-Null
-    $invokeParams.Remove('Id') | Out-Null
-    $invokeParams.Remove('Name') | Out-Null
+    $invokeParams = @{
+        Table             = $Table
+        Filter            = $Filter
+        Property          = $Property
+        Sort              = $Sort
+        DisplayValue      = $DisplayValue
+        First             = $PSCmdlet.PagingParameters.First
+        Skip              = $PSCmdlet.PagingParameters.Skip
+        IncludeTotalCount = $PSCmdlet.PagingParameters.IncludeTotalCount
+        Connection        = $Connection
+        ServiceNowSession = $ServiceNowSession
+    }
 
     if ( $Id ) {
         if ( $Id -match '[a-zA-Z0-9]{32}' ) {
-            if ( $PSCmdlet.ParameterSetName -like '*Id' ) {
-                throw 'Providing sys_id for -Id requires a value for -Table.  Alternatively, provide an Id with a prefix, eg. INC1234567.'
+            if ( $PSCmdlet.ParameterSetName -eq 'Id' ) {
+                throw 'Providing sys_id for -Id requires a value for -Table.  Alternatively, provide an Id with a prefix, eg. INC1234567, and the table will be automatically determined.'
             }
 
             $idFilter = @('sys_id', '-eq', $Id)
         }
         else {
-            if ( $PSCmdlet.ParameterSetName -like '*Id' ) {
+            if ( $PSCmdlet.ParameterSetName -eq 'Id' ) {
                 # get table name from prefix if only Id was provided
-                $thisTable = $script:ServiceNowTable | Where-Object { $_.NumberPrefix -and $Id.ToLower().StartsWith($_.NumberPrefix) } | Select-Object -ExpandProperty Name
+                $thisTable = $script:ServiceNowTable | Where-Object { $_.NumberPrefix -and $Id.ToLower().StartsWith($_.NumberPrefix) }
                 if ( $thisTable ) {
-                    $invokeParams.Table = $thisTable
+                    $invokeParams.Table = $thisTable.Name
                 }
                 else {
-                    throw ('Prefix not found for Id ''{0}''.  Known prefixes are {1}.' -f $Id, ($ServiceNowTable.NumberPrefix.Where( { $_ }) -join ', '))
+                    throw ('The prefix for Id ''{0}'' was not found and the appropriate table cannot be determined.  Known prefixes are {1}.  Please provide a value for -Table.' -f $Id, ($ServiceNowTable.NumberPrefix.Where( { $_ }) -join ', '))
                 }
             }
             $idFilter = @('number', '-eq', $Id)
         }
 
-        if ( $invokeParmas.Filter ) {
+        if ( $invokeParams.Filter ) {
             $invokeParams.Filter = $invokeParams.Filter, 'and', $idFilter
         }
         else {
             $invokeParams.Filter = $idFilter
         }
     }
+    else {
+        # table name was provided, get the config entry if there is one
+        $thisTable = $script:ServiceNowTable | Where-Object { $_.Name.ToLower() -eq $Table.ToLower() -or $_.ClassName.ToLower() -eq $Table.ToLower() }
+    }
     
-    if ( $Name ) {
-        # determine the field we should compare for 'name' and add the filter
-        $thisNameField = $script:ServiceNowTable | Where-Object { $_.Name.ToLower() -eq $Table.ToLower() -or $_.ClassName.ToLower() -eq $Table.ToLower() } | Select-Object -ExpandProperty TableNameField
-        if ( $thisNameField ) {
-            if ( $invokeParmas.Filter ) {
-                $invokeParams.Filter = $invokeParams.Filter, 'and', @($thisNameField, '-like', $Name)
-            }
-            else {
-                $invokeParams.Filter = @($thisNameField, '-like', $Name)
-            }
+    if ( $ParentId ) {
+        if ( $ParentId -match '[a-zA-Z0-9]{32}' ) {
+            $parentIdFilter = @('parent.sys_id', '-eq', $ParentId)
+        }
+        else {
+            $parentIdFilter = @('parent.number', '-eq', $ParentId)
+        }
+
+        if ( $invokeParams.Filter ) {
+            $invokeParams.Filter = $invokeParams.Filter, 'and', $parentIdFilter
+        }
+        else {
+            $invokeParams.Filter = $parentIdFilter
+        }
+    }
+    
+    if ( $Description ) {
+        # determine the field we should compare for 'description' and add the filter
+        if ( $thisTable ) {
+            $nameFilter = @($thisTable.DescriptionField, '-like', $Description)
+        }
+        else {
+            Write-Warning ('We do not have a description field for table ''{0}''; short_description will be used' -f $Table)
+            $nameFilter = @('short_description', '-like', $Description)
+        }
+
+        if ( $invokeParams.Filter ) {
+            $invokeParams.Filter = $invokeParams.Filter, 'and', $nameFilter
+        }
+        else {
+            $invokeParams.Filter = $nameFilter
         }
     }
 
@@ -193,6 +251,7 @@ function Get-ServiceNowRecord {
         }
     }
 
+    # should use Get-ServiceNowAttachment, but put this here for ease of access
     if ( $Table -eq 'attachment' ) {
         $invokeParams.Remove('Table') | Out-Null
         $invokeParams.UriLeaf = '/attachment'
@@ -246,9 +305,8 @@ function Get-ServiceNowRecord {
 
             # format the results
             if ( -not $Property ) {
-                $type = $script:ServiceNowTable | Where-Object { $_.Name -eq $Table -or $_.ClassName -eq $Table } | Select-Object -ExpandProperty Type
-                if ($type) {
-                    $result | ForEach-Object { $_.PSObject.TypeNames.Insert(0, $type) }
+                if ($thisTable.Type) {
+                    $result | ForEach-Object { $_.PSObject.TypeNames.Insert(0, $thisTable.Type) }
                 }
             }
             $result
