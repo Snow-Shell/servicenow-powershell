@@ -23,9 +23,8 @@ function Remove-ServiceNowRecord {
         Table             = $Table
         SysId             = $SysId
         Connection        = $Connection
-        Credential        = $Credential
-        ServiceNowUrl     = $ServiceNowURL
         ServiceNowSession = $ServiceNowSession
     }
+    
     Invoke-ServiceNowRestMethod @params
 }

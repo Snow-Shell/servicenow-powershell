@@ -51,10 +51,6 @@ Function Add-ServiceNowAttachment {
         [Alias('sys_id', 'SysId', 'number')]
         [string] $Id,
 
-        # [Parameter(ParameterSetName = 'AutomationNumber', Mandatory)]
-        # [Parameter(ParameterSetName = 'SessionNumber', Mandatory)]
-        # [string] $Number,
-
         [Parameter(Mandatory)]
         [ValidateScript( {
                 Test-Path $_

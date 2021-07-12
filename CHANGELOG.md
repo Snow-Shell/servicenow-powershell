@@ -1,3 +1,25 @@
+## 3.0
+- This is a big update and one that preps us for the future (in my opinion and hopefully  :smile:).  I've tried to limit the breaking changes, but there are some at the bottom of the list.  As always, any feedback is truly appreciated.
+- New functionality in `Get-ServiceNowRecord`
+  - Add `Id` property to easily retrieve a record by either number or sysid.
+  - Add `ParentId` property to easily retrieve records based on the parent number or sysid.  For example, to retrieve catalog tasks associated with a requested item execute `Get-ServiceNowRecord -ParentId RITM01234567`.
+  - Add `Description` property to retrieve records based on a table specific description field.  For many tables this field will be short_description, but will be different for others.  For example, when performing this against the 'User' table, the description field is 'Name'.
+  - Add ability to provide a known prefixed `Id` without providing `Table`, `Get-ServiceNowRecord -Id inc0010001`.  To see the list of known prefixes, execute `$ServiceNowTable.NumberPrefix` after importing the module.
+  - Add alias `gsnr`.  With the above change, a Get can be as simple as `gsnr inc0010001`.
+- Add autocomplete for `Table` parameter in `Add-ServiceNowAttachment` and `Get-ServiceNowAttachment`.
+- Add `Id` parameter to `Add-ServiceNowAttachment` and `Update-ServiceNowRecord` which accepts either number or sysid.  Just as with `Get-ServiceNowRecord` you can now provide just `Id` if it has a known prefix.
+- Add ability to `Get-ServiceNowAttachment` to get attachments either via associated record or directly from the attachments table when you want to search all attachments.
+- Add advanced filtering and sorting functionality to `Get-ServiceNowAttachment` which can be really useful when searching across the attachments table.
+- Convert access and refresh tokens in $ServiceNowSession from plain text to a credential for added security.
+- Pipeline enhancements added in many places.
+- Add Change Task and Attachments to formats.
+- `Update-ServiceNowNumber` has been deprecated and the functionality has been added to `Update-ServiceNowRecord`.  An alias has also been added so existing scripts do not break.
+- Prep for removal of all `Get-` functions except for `Get-ServiceNowRecord` and `Get-ServiceNowAttachment`.  Table specific Get functions have been deprecated.  `Get-ServiceNowRecordInterim` has been created and all table specific Get functions have been aliased so existing scripts do not break.  Please start to migrate to `Get-ServiceNowRecord` as these functions will all be deprecated in the near future.
+- As communicated in v2.0, authentication cleanup has occurred.  This involves removal of Credential/Url authentication in each function in favor of `ServiceNowSession`.  You can still authenticate with Credential/Url, but must use `New-ServiceNowSession`.  `Set-ServiceNowAuth`, `Remove-ServiceNowAuth`, and `Test-ServiceNowAuthIsSet` have been deprecated.
+- ***Breaking change:*** rename `Get-ServiceNowAttachmentDetail` to `Get-ServiceNowAttachment`.
+- ***Breaking change:*** rename `Get-ServiceNowAttachment` to `Export-ServiceNowAttachment`.
+- ***Breaking change:*** `Get-ServiceNowTable` and `Get-ServiceNowTableEntry` have been deprecated.  Use `Get-ServiceNowRecord`.
+
 ## 2.4.2
 - Fix [#141](https://github.com/Snow-Shell/servicenow-powershell/issues/141), add `UseBasicParsing` to all API calls to keep AA from failing when IE hasn't been initialized
 

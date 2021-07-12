@@ -35,8 +35,6 @@ function Update-ServiceNowChangeRequest {
             SysId             = $SysId
             Values            = $Values
             Connection        = $Connection
-            Credential        = $Credential
-            ServiceNowUrl     = $ServiceNowURL
             ServiceNowSession = $ServiceNowSession
         }
 

@@ -128,8 +128,6 @@ function New-ServiceNowIncident {
             Table             = 'incident'
             Values            = $TableEntryValues
             Connection        = $Connection
-            Credential        = $Credential
-            ServiceNowUrl     = $ServiceNowURL
             ServiceNowSession = $ServiceNowSession
         }
 

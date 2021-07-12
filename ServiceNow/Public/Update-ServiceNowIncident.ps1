@@ -31,8 +31,6 @@ function Update-ServiceNowIncident {
             SysId             = $SysId
             Values            = $Values
             Connection        = $Connection
-            Credential        = $Credential
-            ServiceNowUrl     = $ServiceNowURL
             ServiceNowSession = $ServiceNowSession
         }
 

@@ -156,8 +156,6 @@ function New-ServiceNowChangeRequest {
             Table             = 'change_request'
             Values            = $TableEntryValues
             Connection        = $Connection
-            Credential        = $Credential
-            ServiceNowUrl     = $ServiceNowURL
             ServiceNowSession = $ServiceNowSession
         }
 
