@@ -1,5 +1,4 @@
 ## 3.0
-- This is a big update and one that preps us for the future (in my opinion and hopefully  :smile:).  I've tried to limit the breaking changes, but there are some at the bottom of the list.  As always, any feedback is truly appreciated.
 - New functionality in `Get-ServiceNowRecord`
   - Add `Id` property to easily retrieve a record by either number or sysid.
   - Add `ParentId` property to easily retrieve records based on the parent number or sysid.  For example, to retrieve catalog tasks associated with a requested item execute `Get-ServiceNowRecord -ParentId RITM01234567`.
