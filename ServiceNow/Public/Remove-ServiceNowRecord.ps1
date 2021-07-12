@@ -1,5 +1,5 @@
 function Remove-ServiceNowRecord {
-    [CmdletBinding(DefaultParameterSetName = 'Session', ConfirmImpact = 'High')]
+    [CmdletBinding(ConfirmImpact = 'High')]
     Param(
         # Table containing the entry we're deleting
         [parameter(Mandatory, ValueFromPipelineByPropertyName)]
@@ -11,23 +11,10 @@ function Remove-ServiceNowRecord {
         [Alias('sys_id')]
         [string] $SysId,
 
-        # Credential used to authenticate to ServiceNow
-        [Parameter(ParameterSetName = 'SpecifyConnectionFields', Mandatory)]
-        [ValidateNotNullOrEmpty()]
-        [PSCredential] $ServiceNowCredential,
-
-        # The URL for the ServiceNow instance being used
-        [Parameter(ParameterSetName = 'SpecifyConnectionFields', Mandatory)]
-        [ValidateNotNullOrEmpty()]
-        [string] $ServiceNowURL,
-
-        #Azure Automation Connection object containing username, password, and URL for the ServiceNow instance
-        [Parameter(ParameterSetName = 'UseConnectionObject', Mandatory)]
-        [ValidateNotNullOrEmpty()]
+        [Parameter()]
         [Hashtable] $Connection,
 
-        [Parameter(ParameterSetName = 'Session')]
-        [ValidateNotNullOrEmpty()]
+        [Parameter()]
         [hashtable] $ServiceNowSession = $script:ServiceNowSession
     )
 
@@ -36,9 +23,8 @@ function Remove-ServiceNowRecord {
         Table             = $Table
         SysId             = $SysId
         Connection        = $Connection
-        Credential        = $Credential
-        ServiceNowUrl     = $ServiceNowURL
         ServiceNowSession = $ServiceNowSession
     }
+    
     Invoke-ServiceNowRestMethod @params
 }

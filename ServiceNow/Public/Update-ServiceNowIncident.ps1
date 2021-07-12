@@ -1,6 +1,6 @@
 function Update-ServiceNowIncident {
 
-    [CmdletBinding(DefaultParameterSetName = 'Session', SupportsShouldProcess)]
+    [CmdletBinding(SupportsShouldProcess)]
 
     Param
     (   # sys_id of the caller of the incident (use Get-ServiceNowUser to retrieve this)
@@ -12,24 +12,10 @@ function Update-ServiceNowIncident {
         [parameter(Mandatory)]
         [hashtable] $Values,
 
-        # Credential used to authenticate to ServiceNow
-        [Parameter(ParameterSetName = 'SpecifyConnectionFields', Mandatory)]
-        [ValidateNotNullOrEmpty()]
-        [Alias('ServiceNowCredential')]
-        [PSCredential] $Credential,
-
-        # The URL for the ServiceNow instance being used (eg: instancename.service-now.com)
-        [Parameter(ParameterSetName = 'SpecifyConnectionFields', Mandatory)]
-        [ValidateNotNullOrEmpty()]
-        [string] $ServiceNowURL,
-
-        #Azure Automation Connection object containing username, password, and URL for the ServiceNow instance
-        [Parameter(ParameterSetName = 'UseConnectionObject', Mandatory)]
-        [ValidateNotNullOrEmpty()]
+        [Parameter()]
         [Hashtable] $Connection,
 
-        [Parameter(ParameterSetName = 'Session')]
-        [ValidateNotNullOrEmpty()]
+        [Parameter()]
         [hashtable] $ServiceNowSession = $script:ServiceNowSession,
 
         [Parameter()]
@@ -45,8 +31,6 @@ function Update-ServiceNowIncident {
             SysId             = $SysId
             Values            = $Values
             Connection        = $Connection
-            Credential        = $Credential
-            ServiceNowUrl     = $ServiceNowURL
             ServiceNowSession = $ServiceNowSession
         }
 

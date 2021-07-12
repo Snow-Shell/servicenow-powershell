@@ -62,25 +62,14 @@ function Invoke-ServiceNowRestMethod {
         [string] $DisplayValue = 'true',
 
         [Parameter()]
-        [PSCredential] $Credential,
-
-        [Parameter()]
-        [string] $ServiceNowUrl,
-
-        [Parameter()]
         [hashtable] $Connection,
 
         [Parameter()]
         [hashtable] $ServiceNowSession = $script:ServiceNowSession
     )
 
-    $getAuth = @{
-        Credential        = $Credential
-        ServiceNowUrl     = $ServiceNowUrl
-        Connection        = $Connection
-        ServiceNowSession = $ServiceNowSession
-    }
-    $params = Get-ServiceNowAuth @getAuth
+    # get header/body auth values
+    $params = Get-ServiceNowAuth -C $Connection -S $ServiceNowSession
 
     $params.Method = $Method
     $params.ContentType = 'application/json'
@@ -89,7 +78,7 @@ function Invoke-ServiceNowRestMethod {
     if ( $Table ) {
         # table can either be the actual table name or class name
         # look up the actual table name
-        $tableName = $script:ServiceNowTable | Where-Object { $_.Name -eq $Table -or $_.ClassName -eq $Table } | Select-Object -ExpandProperty Name
+        $tableName = $script:ServiceNowTable | Where-Object { $_.Name.ToLower() -eq $Table.ToLower() -or $_.ClassName.ToLower() -eq $Table.ToLower() } | Select-Object -ExpandProperty Name
         # if not in our lookup, just use the table name as provided
         if ( -not $tableName ) {
             $tableName = $Table
@@ -160,12 +149,21 @@ function Invoke-ServiceNowRestMethod {
 
     $response = Invoke-WebRequest @params
 
-    $content = $response.content | ConvertFrom-Json
-    if ( $content.PSobject.Properties.Name -contains "result" ) {
-        $records = @($content | Select-Object -ExpandProperty result)
+    # TODO: this could use some work
+    # checking for content is good, but at times we'll get content that's not valid
+    # eg. html content when a dev instance is hibernating
+    if ( $response.Content ) {
+        $content = $response.content | ConvertFrom-Json
+        if ( $content.PSobject.Properties.Name -contains "result" ) {
+            $records = @($content | Select-Object -ExpandProperty result)
+        }
+        else {
+            $records = @($content)
+        }
     }
     else {
-        $records = @($content)
+        # invoke-webrequest didn't throw an error per se, but we didn't get content back either
+        throw ('"{0} : {1}' -f $response.StatusCode, $response | Out-String )
     }
 
     $totalRecordCount = 0

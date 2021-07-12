@@ -5,7 +5,7 @@
 RootModule = 'ServiceNow.psm1'
 
 # Version number of this module.
-ModuleVersion = '2.4.2'
+ModuleVersion = '3.0.0'
 
 # ID used to uniquely identify this module
 GUID = 'b90d67da-f8d0-4406-ad74-89d169cd0633'
@@ -59,10 +59,12 @@ FormatsToProcess = @('ServiceNow.format.ps1xml')
 NestedModules = @()
 
 # Functions to export from this module
-    FunctionsToExport = @('New-ServiceNowConfigurationItem','Get-ServiceNowRecord','New-ServiceNowSession','Add-ServiceNowAttachment','Get-ServiceNowAttachment','Get-ServiceNowAttachmentDetail','Get-ServiceNowChangeRequest','Get-ServiceNowConfigurationItem','Get-ServiceNowIncident','Get-ServiceNowRequest','Get-ServiceNowRequestedItem','Get-ServiceNowTable','Get-ServiceNowTableEntry','Get-ServiceNowUser','Get-ServiceNowUserGroup','New-ServiceNowChangeRequest','New-ServiceNowIncident','New-ServiceNowQuery','New-ServiceNowRecord','Remove-ServiceNowAttachment','Remove-ServiceNowAuth','Remove-ServiceNowRecord','Set-ServiceNowAuth','Test-ServiceNowAuthIsSet','Update-ServiceNowChangeRequest','Update-ServiceNowIncident','Update-ServiceNowNumber','Update-ServiceNowRequestItem','Update-ServiceNowRecord')
+    FunctionsToExport = @('Get-ServiceNowRecordInterim','New-ServiceNowConfigurationItem','Get-ServiceNowRecord','New-ServiceNowSession','Add-ServiceNowAttachment','Get-ServiceNowAttachment','Export-ServiceNowAttachment','Get-ServiceNowChangeRequest','Get-ServiceNowConfigurationItem','Get-ServiceNowIncident','Get-ServiceNowRequest','Get-ServiceNowRequestedItem','Get-ServiceNowTable','Get-ServiceNowTableEntry','Get-ServiceNowUser','Get-ServiceNowUserGroup','New-ServiceNowChangeRequest','New-ServiceNowIncident','New-ServiceNowQuery','New-ServiceNowRecord','Remove-ServiceNowAttachment','Remove-ServiceNowRecord','Update-ServiceNowChangeRequest','Update-ServiceNowIncident','Update-ServiceNowRequestedItem','Update-ServiceNowRecord')
 
     # Variables to export from this module
-    VariablesToExport = 'ServiceNowSession', 'ServiceNowOperator', 'ServiceNowTable'
+    VariablesToExport = @('ServiceNowSession', 'ServiceNowOperator', 'ServiceNowTable')
+
+    AliasesToExport = @('gsnr','Get-ServiceNowIncident','Get-ServiceNowChangeRequest', 'Get-ServiceNowConfigurationItem', 'Get-ServiceNowRequest', 'Get-ServiceNowRequestedItem', 'Get-ServiceNowUser', 'Get-ServiceNowUserGroup','Update-ServiceNowNumber')
 
     # List of all modules packaged with this module
 # ModuleList = @()
