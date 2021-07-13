@@ -1,7 +1,7 @@
 ## 3.0
 - New functionality in `Get-ServiceNowRecord`
   - Add `Id` property to easily retrieve a record by either number or sysid.
-  - Add `ParentId` property to easily retrieve records based on the parent number or sysid.  For example, to retrieve catalog tasks associated with a requested item execute `Get-ServiceNowRecord -ParentId RITM01234567`.
+  - Add `ParentId` property to easily retrieve records based on the parent number or sysid.  For example, to retrieve catalog tasks associated with a requested item execute `Get-ServiceNowRecord -Table 'Catalog Task' -ParentId RITM01234567`.
   - Add `Description` property to retrieve records based on a table specific description field.  For many tables this field will be short_description, but will be different for others.  For example, when performing this against the 'User' table, the description field is 'Name'.
   - Add ability to provide a known prefixed `Id` without providing `Table`, `Get-ServiceNowRecord -Id inc0010001`.  To see the list of known prefixes, execute `$ServiceNowTable.NumberPrefix` after importing the module.
   - Add alias `gsnr`.  With the above change, a Get can be as simple as `gsnr inc0010001`.
