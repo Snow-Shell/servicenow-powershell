@@ -161,7 +161,6 @@ function Get-ServiceNowRecord {
     )
 
     $invokeParams = @{
-        Table             = $Table
         Filter            = $Filter
         Property          = $Property
         Sort              = $Sort
@@ -173,40 +172,51 @@ function Get-ServiceNowRecord {
         ServiceNowSession = $ServiceNowSession
     }
 
+    if ( $Table ) {
+        $thisTable = $script:ServiceNowTable | Where-Object { $_.Name.ToLower() -eq $Table.ToLower() -or $_.ClassName.ToLower() -eq $Table.ToLower() }
+        if ( -not $thisTable ) {
+            # we aren't aware of this table, create default config
+            $thisTable = @{
+                Name             = $Table
+                ClassName        = $null
+                Type             = $null
+                NumberPrefix     = $null
+                DescriptionField = $null
+            }
+        }
+    }
+    
     if ( $Id ) {
         if ( $Id -match '[a-zA-Z0-9]{32}' ) {
-            if ( $PSCmdlet.ParameterSetName -eq 'Id' ) {
+            if ( -not $thisTable ) {
                 throw 'Providing sys_id for -Id requires a value for -Table.  Alternatively, provide an Id with a prefix, eg. INC1234567, and the table will be automatically determined.'
             }
-
+    
             $idFilter = @('sys_id', '-eq', $Id)
         }
         else {
-            if ( $PSCmdlet.ParameterSetName -eq 'Id' ) {
+            if ( -not $thisTable ) {
                 # get table name from prefix if only Id was provided
                 $thisTable = $script:ServiceNowTable | Where-Object { $_.NumberPrefix -and $Id.ToLower().StartsWith($_.NumberPrefix) }
-                if ( $thisTable ) {
-                    $invokeParams.Table = $thisTable.Name
-                }
-                else {
+                if ( -not $thisTable ) {
                     throw ('The prefix for Id ''{0}'' was not found and the appropriate table cannot be determined.  Known prefixes are {1}.  Please provide a value for -Table.' -f $Id, ($ServiceNowTable.NumberPrefix.Where( { $_ }) -join ', '))
                 }
             }
             $idFilter = @('number', '-eq', $Id)
         }
-
+    
         if ( $invokeParams.Filter ) {
             $invokeParams.Filter = $invokeParams.Filter, 'and', $idFilter
         }
         else {
             $invokeParams.Filter = $idFilter
         }
-    }
-    else {
-        # table name was provided, get the config entry if there is one
-        $thisTable = $script:ServiceNowTable | Where-Object { $_.Name.ToLower() -eq $Table.ToLower() -or $_.ClassName.ToLower() -eq $Table.ToLower() }
+    
     }
     
+    # we have the table, update the params
+    $invokeParams.Table = $thisTable.Name
+        
     if ( $ParentId ) {
         if ( $ParentId -match '[a-zA-Z0-9]{32}' ) {
             $parentIdFilter = @('parent.sys_id', '-eq', $ParentId)
@@ -225,19 +235,16 @@ function Get-ServiceNowRecord {
     
     if ( $Description ) {
         # determine the field we should compare for 'description' and add the filter
-        if ( $thisTable ) {
-            $nameFilter = @($thisTable.DescriptionField, '-like', $Description)
-        }
-        else {
-            Write-Warning ('We do not have a description field for table ''{0}''; short_description will be used' -f $Table)
-            $nameFilter = @('short_description', '-like', $Description)
+        if ( -not $thisTable.DescriptionField ) {
+            Write-Warning ('We do not have table ''{0}'' in the config; short_description will be used as the description field' -f $Table)
+            $thisTable.DescriptionField = 'short_description'
         }
 
         if ( $invokeParams.Filter ) {
-            $invokeParams.Filter = $invokeParams.Filter, 'and', $nameFilter
+            $invokeParams.Filter = $invokeParams.Filter, 'and', @($thisTable.DescriptionField, '-like', $Description)
         }
         else {
-            $invokeParams.Filter = $nameFilter
+            $invokeParams.Filter = @($thisTable.DescriptionField, '-like', $Description)
         }
     }
 
