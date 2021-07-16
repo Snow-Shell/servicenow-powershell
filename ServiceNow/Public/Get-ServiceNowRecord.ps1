@@ -229,7 +229,7 @@ function Get-ServiceNowRecord {
             $nameFilter = @($thisTable.DescriptionField, '-like', $Description)
         }
         else {
-            Write-Warning ('We do not have a description field for table ''{0}''; short_description will be used' -f $thisTable)
+            Write-Warning ('We do not have a description field for table ''{0}''; short_description will be used' -f $thisTable.Name)
             $nameFilter = @('short_description', '-like', $Description)
         }
 
@@ -252,7 +252,7 @@ function Get-ServiceNowRecord {
     }
 
     # should use Get-ServiceNowAttachment, but put this here for ease of access
-    if ( $thisTable -eq 'attachment' ) {
+    if ( $thisTable.Name -eq 'attachment' ) {
         $invokeParams.Remove('Table') | Out-Null
         $invokeParams.UriLeaf = '/attachment'
     }
@@ -273,7 +273,7 @@ function Get-ServiceNowRecord {
 
                 if ( $customVars ) {
                     $customValueParams = @{
-                        Table    = $thisTable
+                        Table    = $thisTable.Name
                         Filter   = @('sys_id', '-eq', $record.sys_id)
                         Property = $customVars.'sc_item_option.item_option_new.name' | ForEach-Object { "variables.$_" }
                     }
