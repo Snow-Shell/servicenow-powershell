@@ -1,159 +1,156 @@
+
 Function Get-ServiceNowAttachment {
     <#
+    
     .SYNOPSIS
-    Save a ServiceNow attachment identified by its sys_id property and saved as the filename specified.
-
+    Retrieve attachment details
+    
     .DESCRIPTION
-    Save a ServiceNow attachment identified by its sys_id property and saved as the filename specified.
-
-    .PARAMETER SysID
-    The ServiceNow sys_id of the file
-
+    Retrieve attachment details via table record or by advanced filtering.
+    
+    .PARAMETER Table
+    Name of the table to be queried, by either table name or class name.  Use tab completion for list of known tables.
+    You can also provide any table name ad hoc.
+    
+    .PARAMETER Id
+    Either the record sys_id or number.
+    If providing just an Id, not with Table, the Id prefix will be looked up to find the table name.
+    
     .PARAMETER FileName
-    File name the file is saved as.  Do not include the path.
+    Filter for a specific file name or part of a file name.
+    
+    .PARAMETER Filter
+    Array or multidimensional array of fields and values to filter on.
+    Each array should be of the format @(field, comparison operator, value) separated by a join, either 'and', 'or', or 'group'.
+    For a complete list of comparison operators, see $script:ServiceNowOperator and use Name in your filter.
+    See the examples.
+    Also, see https://docs.servicenow.com/bundle/quebec-platform-user-interface/page/use/common-ui-elements/reference/r_OpAvailableFiltersQueries.html
+    for how to represent date values with javascript.
 
-    .PARAMETER Destination
-    Path the file is saved to.  Do not include the file name.
+    .PARAMETER Sort
+    Array or multidimensional array of fields to sort on.
+    Each array should be of the format @(field, asc/desc).
 
-    .PARAMETER AllowOverwrite
-    Allows the function to overwrite the existing file.
+    .PARAMETER Connection
+    Azure Automation Connection object containing username, password, and URL for the ServiceNow instance
 
-    .PARAMETER AppendNameWithSysID
-    Adds the SysID to the file name.  Intended for use when a ticket has multiple files with the same name.
-
-    .EXAMPLE
-    Get-ServiceNowAttachment -SysID $SysID -FileName 'mynewfile.txt'
-
-    Save the attachment with the specified sys_id with a name of 'mynewfile.txt'
-
-    .EXAMPLE
-    Get-ServiceNowAttachment -Number $Number -Table $Table | Get-ServiceNowAttachment
-
-    Save all attachments from the ticket.  Filenames will be assigned from the attachment name.
-
-    .EXAMPLE
-    Get-ServiceNowAttachment -Number $Number -Table $Table | Get-ServiceNowAttachment -AppendNameWithSysID
-
-    Save all attachments from the ticket.  Filenames will be assigned from the attachment name and appended with the sys_id.
+    .PARAMETER ServiceNowSession
+    ServiceNow session created by New-ServiceNowSession.  Will default to script-level variable $ServiceNowSession.
 
     .EXAMPLE
-    Get-ServiceNowAttachment -Number $Number -Table $Table | Get-ServiceNowAttachment -Destination $Destionion -AllowOverwrite
+    Get-ServiceNowAttachment -Id 'INC1234567'
+    
+    Get attachment details for a specific record
+    
+    .EXAMPLE
+    Get-ServiceNowAttachment -Id 'INC1234567' -FileName image.jpg
+    
+    Get attachment details for a specific record where file names match all or part of image.jpg
+    
+    .EXAMPLE
+    Get-ServiceNowAttachment -Filter @('size_bytes', '-gt', '1000000')
+    
+    Get attachment details where size is greater than 1M.
+    
+    .INPUTS
+    Table, Id
 
-    Save all attachments from the ticketto the destination allowing for overwriting the destination file.
-
-    .NOTES
-
+    .OUTPUTS
+    System.Management.Automation.PSCustomObject
     #>
 
-    [System.Diagnostics.CodeAnalysis.SuppressMessage('PSAvoidUsingConvertToSecureStringWithPlainText','')]
-    [System.Diagnostics.CodeAnalysis.SuppressMessage('PSAvoidGlobalVars','')]
+    [OutputType([System.Management.Automation.PSCustomObject[]])]
+    [CmdletBinding(DefaultParameterSetName = 'Filter', SupportsPaging)]
 
-    [CmdletBinding(DefaultParameterSetName,SupportsShouldProcess=$true)]
     Param(
-        # Object number
-        [Parameter(
-            Mandatory=$true,
-            ValueFromPipelineByPropertyName = $true
-        )]
-        [Alias('sys_id')]
-        [string]$SysID,
+        [Parameter(ParameterSetName = 'Table', Mandatory, ValueFromPipelineByPropertyName)]
+        [Alias('sys_class_name')]
+        [string] $Table,
 
-        [Parameter(
-            Mandatory=$true,
-            ValueFromPipelineByPropertyName = $true
-        )]
-        [Alias('file_name')]
-        [string]$FileName,
+        [Parameter(ParameterSetName = 'Id', Mandatory, ValueFromPipelineByPropertyName)]
+        [Parameter(ParameterSetName = 'Table', Mandatory, ValueFromPipelineByPropertyName)]
+        [Alias('sys_id', 'SysId', 'number')]
+        [string] $Id,
 
-        # Out path to download files
-        [parameter(Mandatory=$false)]
-        [ValidateScript({
-            Test-Path $_
-        })]
-        [string]$Destination = $PWD.Path,
+        [parameter()]
+        [string] $FileName,
 
-        # Options impacting downloads
-        [parameter(Mandatory=$false)]
-        [switch]$AllowOverwrite,
+        [Parameter()]
+        [System.Collections.ArrayList] $Filter,
 
-        # Options impacting downloads
-        [parameter(Mandatory=$false)]
-        [switch]$AppendNameWithSysID,
-
-        # Credential used to authenticate to ServiceNow
-        [Parameter(ParameterSetName='SpecifyConnectionFields', Mandatory=$true)]
+        [parameter()]
         [ValidateNotNullOrEmpty()]
-        [Alias('ServiceNowCredential')]
-        [PSCredential]$Credential,
+        [System.Collections.ArrayList] $Sort,
 
-        # The URL for the ServiceNow instance being used
-        [Parameter(ParameterSetName='SpecifyConnectionFields', Mandatory=$true)]
-        [ValidateScript({Test-ServiceNowURL -Url $_})]
-        [ValidateNotNullOrEmpty()]
-        [Alias('Url')]
-        [string]$ServiceNowURL,
+        [Parameter()]
+        [Hashtable] $Connection,
 
-        # Azure Automation Connection object containing username, password, and URL for the ServiceNow instance
-        [Parameter(ParameterSetName='UseConnectionObject', Mandatory=$true)]
-        [ValidateNotNullOrEmpty()]
-        [Hashtable]$Connection
+        [Parameter()]
+        [hashtable] $ServiceNowSession = $script:ServiceNowSession
     )
 
-	begin {}
-	process	{
-        Try {
-            # Process credential steps based on parameter set name
-            Switch ($PSCmdlet.ParameterSetName) {
-                'SpecifyConnectionFields' {
-                    $ApiUrl = 'https://' + $ServiceNowURL + '/api/now/v1/attachment'
-                    break
-                }
-                'UseConnectionObject' {
-                    $SecurePassword = ConvertTo-SecureString $Connection.Password -AsPlainText -Force
-                    $Credential = New-Object System.Management.Automation.PSCredential ($Connection.Username, $SecurePassword)
-                    $ApiUrl = 'https://' + $Connection.ServiceNowUri + '/api/now/v1/attachment'
-                    break
-                }
-                Default {
-                    If ((Test-ServiceNowAuthIsSet)) {
-                        $Credential = $Global:ServiceNowCredentials
-                        $ApiUrl = $Global:ServiceNowRESTURL + '/attachment'
-                    }
-                    Else {
-                        Throw "Exception:  You must do one of the following to authenticate: `n 1. Call the Set-ServiceNowAuth cmdlet `n 2. Pass in an Azure Automation connection object `n 3. Pass in an endpoint and credential"
-                    }
-                }
+    begin {}
+
+    process	{
+        $params = @{
+            UriLeaf           = '/attachment'
+            First             = $PSCmdlet.PagingParameters.First
+            Skip              = $PSCmdlet.PagingParameters.Skip
+            IncludeTotalCount = $PSCmdlet.PagingParameters.IncludeTotalCount
+            Connection        = $Connection
+            ServiceNowSession = $ServiceNowSession
+        }
+
+        if ( $PSCmdlet.ParameterSetName -in 'Table', 'Id' ) {
+            $getParams = @{
+                Id                = $Id
+                Property          = 'sys_class_name', 'sys_id'
+                Connection        = $Connection
+                ServiceNowSession = $ServiceNowSession
             }
-
-            # URI format:  https://tenant.service-now.com/api/now/v1/attachment/{sys_id}/file
-            $Uri = $ApiUrl + '/' + $SysID + '/file'
-
-            If ($True -eq $PSBoundParameters.ContainsKey('AppendNameWithSysID')) {
-                $FileName = "{0}_{1}{2}" -f [io.path]::GetFileNameWithoutExtension($FileName),
-                $SysID,[io.path]::GetExtension($FileName)
+            if ( $Table ) {
+                $getParams.Table = $Table
             }
-            $OutFile = $Null
-            $OutFile = Join-Path $Destination $FileName
-
-            If ((Test-Path $OutFile) -and -not $PSBoundParameters.ContainsKey('AllowOverwrite')) {
-                $ThrowMessage = "The file [{0}] already exists.  Please choose a different name, use the -AppendNameWithSysID switch parameter, or use the -AllowOverwrite switch parameter to overwrite the file." -f $OutFile
-                Throw $ThrowMessage
+            $tableRecord = Get-ServiceNowRecord @getParams
+    
+            if ( -not $tableRecord ) {
+                Write-Error "Record not found for Id '$Id'"
+                continue
             }
+    
+            $params.Filter = @(
+                @('table_name', '-eq', $tableRecord.sys_class_name),
+                'and',
+                @('table_sys_id', '-eq', $tableRecord.sys_id)
+            )
+        }
 
-            $invokeRestMethodSplat = @{
-                Uri         = $Uri
-                Credential  = $Credential
-                OutFile     = $OutFile
+        if ( $FileName ) {
+            if ( $params.Filter ) {
+                $params.Filter += 'and', @('file_name', '-like', $FileName)
             }
-
-            If ($PSCmdlet.ShouldProcess($Uri,$MyInvocation.MyCommand)) {
-                Invoke-RestMethod @invokeRestMethodSplat
+            else {
+                $params.Filter = @('file_name', '-like', $FileName)
             }
         }
-        Catch {
-            Write-Error $PSItem
+
+        if ( $Filter ) {
+            if ( $params.Filter ) {
+                $params.Filter += 'and', $Filter
+            }
+            else {
+                $params.Filter = $Filter
+            }
+        }
+
+        $response = Invoke-ServiceNowRestMethod @params
+
+        if ( $response ) {
+            $response | ForEach-Object { $_.PSObject.TypeNames.Insert(0, 'ServiceNow.Attachment') }
+            $response
         }
 
     }
-	end {}
+
+    end {}
 }

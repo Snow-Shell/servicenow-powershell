@@ -1,20 +1,37 @@
-<#
-.EXAMPLE
-    Update-ServiceNowChangeRequest -Values @{ 'state' = 3 } -SysId <sysid>
-#>
-function Update-ServiceNowChangeRequest {
+function Update-ServiceNowRequestItem {
+    <#
+    .SYNOPSIS
+    Update an existing request item (RITM)
 
+    .DESCRIPTION
+    Update an existing request item (RITM)
+
+    .EXAMPLE
+    Update-ServiceNowRequestItem -SysId $SysId -Values @{property='value'}
+
+    Updates a ticket number with a value providing no return output.
+
+    .EXAMPLE
+    Update-ServiceNowRequestItem -SysId $SysId -Values @{property='value'} -PassThru
+
+    Updates a ticket number with a value providing return output.
+
+    .NOTES
+
+    #>
+
+    [OutputType([void], [System.Management.Automation.PSCustomObject])]
     [CmdletBinding(SupportsShouldProcess)]
 
-    Param(
-        # sys_id of the caller of the incident (use Get-ServiceNowUser to retrieve this)
+    Param (
+        # sys_id of the ticket to update
         [parameter(Mandatory, ValueFromPipelineByPropertyName)]
         [Alias('sys_id')]
         [string] $SysId,
 
         # Hashtable of values to use as the record's properties
-        [parameter(Mandatory)]
-        [hashtable]$Values,
+        [Parameter(Mandatory)]
+        [hashtable] $Values,
 
         [Parameter()]
         [Hashtable] $Connection,
@@ -29,21 +46,23 @@ function Update-ServiceNowChangeRequest {
     begin {}
 
     process {
+
         $params = @{
             Method            = 'Patch'
-            Table             = 'change_request'
+            Table             = 'sc_req_item'
             SysId             = $SysId
             Values            = $Values
             Connection        = $Connection
             ServiceNowSession = $ServiceNowSession
         }
 
-        If ($PSCmdlet.ShouldProcess("Change request $SysID", 'Update values')) {
+        If ($PSCmdlet.ShouldProcess("Requested Item $SysID", 'Update values')) {
             $response = Invoke-ServiceNowRestMethod @params
             if ( $PassThru.IsPresent ) {
                 $response
             }
         }
+
     }
 
     end {}

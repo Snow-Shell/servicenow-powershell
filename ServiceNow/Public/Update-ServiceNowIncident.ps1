@@ -1,49 +1,47 @@
 function Update-ServiceNowIncident {
+
+    [CmdletBinding(SupportsShouldProcess)]
+
     Param
     (   # sys_id of the caller of the incident (use Get-ServiceNowUser to retrieve this)
-        [parameter(mandatory=$true)]        
-        [parameter(ParameterSetName='SpecifyConnectionFields', mandatory=$true)]
-        [parameter(ParameterSetName='UseConnectionObject', mandatory=$true)]
-        [parameter(ParameterSetName='SetGlobalAuth', mandatory=$true)]       
-        [string]$SysId,
+        [parameter(Mandatory, ValueFromPipelineByPropertyName)]
+        [Alias('sys_id')]
+        [string] $SysId,
 
-         # Hashtable of values to use as the record's properties        
-        [parameter(mandatory=$true)]        
-        [hashtable]$Values,
+        # Hashtable of values to use as the record's properties
+        [parameter(Mandatory)]
+        [hashtable] $Values,
 
-         # Credential used to authenticate to ServiceNow  
-        [Parameter(ParameterSetName='SpecifyConnectionFields', Mandatory=$True)]
-        [ValidateNotNullOrEmpty()]
-        [PSCredential]$ServiceNowCredential, 
+        [Parameter()]
+        [Hashtable] $Connection,
 
-        # The URL for the ServiceNow instance being used (eg: instancename.service-now.com)
-        [Parameter(ParameterSetName='SpecifyConnectionFields', Mandatory=$True)]
-        [ValidateNotNullOrEmpty()]
-        [string]$ServiceNowURL, 
+        [Parameter()]
+        [hashtable] $ServiceNowSession = $script:ServiceNowSession,
 
-        #Azure Automation Connection object containing username, password, and URL for the ServiceNow instance
-        [Parameter(ParameterSetName='UseConnectionObject', Mandatory=$True)] 
-        [ValidateNotNullOrEmpty()]
-        [Hashtable]$Connection
-    )                      
+        [Parameter()]
+        [switch] $PassThru
+    )
 
-    $updateServiceNowTableEntrySplat = @{
-        SysId = $SysId
-        Table = 'incident'
-        Values = $Values
+    begin {}
+
+    process {
+        $params = @{
+            Method            = 'Patch'
+            Table             = 'incident'
+            SysId             = $SysId
+            Values            = $Values
+            Connection        = $Connection
+            ServiceNowSession = $ServiceNowSession
+        }
+
+        If ($PSCmdlet.ShouldProcess("Incident $SysID", 'Update values')) {
+            $response = Invoke-ServiceNowRestMethod @params
+            if ( $PassThru.IsPresent ) {
+                $response
+            }
+        }
     }
-    
-    # Update the splat if the parameters have values
-    if ($null -ne $PSBoundParameters.Connection)
-    {     
-        $updateServiceNowTableEntrySplat.Add('Connection',$Connection)
-    }
-    elseif ($null -ne $PSBoundParameters.ServiceNowCredential -and $null -ne $PSBoundParameters.ServiceNowURL) 
-    {
-         $updateServiceNowTableEntrySplat.Add('ServiceNowCredential',$ServiceNowCredential)
-         $updateServiceNowTableEntrySplat.Add('ServiceNowURL',$ServiceNowURL)
-    }
-       
-    Update-ServiceNowTableEntry @updateServiceNowTableEntrySplat
+
+    end {}
 }
 

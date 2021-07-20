@@ -17,12 +17,17 @@ Function Add-ServiceNowAttachment {
 
     .EXAMPLE
     Add-ServiceNowAttachment -Number $Number -Table $Table -File .\File01.txt, .\File02.txt
-
+    
     Upload one or more files to a ServiceNow ticket by specifing the number and table
 
     .EXAMPLE
-    Add-ServiceNowAttachment -Number $Number -Table $Table -File .\File01.txt -ContentType 'text/plain'
+    New-ServiceNowIncident @params -PassThru | Add-ServiceNowAttachment -File File01.txt
+    
+    Create a new incident and add an attachment
 
+    .EXAMPLE
+    Add-ServiceNowAttachment -Number $Number -Table $Table -File .\File01.txt -ContentType 'text/plain'
+    
     Upload a file and specify the MIME type (content type).  Should only be required if the function cannot automatically determine the type.
 
     .EXAMPLE
@@ -31,143 +36,106 @@ Function Add-ServiceNowAttachment {
     Upload a file and receive back the file details.
 
     .OUTPUTS
-    System.Management.Automation.PSCustomObject
-
-    .NOTES
-
+    System.Management.Automation.PSCustomObject if -PassThru provided
     #>
 
-    [System.Diagnostics.CodeAnalysis.SuppressMessage('PSAvoidUsingConvertToSecureStringWithPlainText','')]
-    [System.Diagnostics.CodeAnalysis.SuppressMessage('PSAvoidGlobalVars','')]
-
     [OutputType([PSCustomObject[]])]
-    [CmdletBinding(DefaultParameterSetName,SupportsShouldProcess=$true)]
+    [CmdletBinding(SupportsShouldProcess)]
     Param(
-        # Object number
-        [Parameter(Mandatory=$true)]
-        [string]$Number,
-
         # Table containing the entry
-        [Parameter(Mandatory=$true)]
-        [string]$Table,
+        [Parameter(ValueFromPipelineByPropertyName)]
+        [Alias('sys_class_name')]
+        [string] $Table,
 
-        # Filter results by file name
-        [parameter(Mandatory=$true)]
-        [ValidateScript({
-            Test-Path $_
-        })]
-        [string[]]$File,
+        [Parameter(Mandatory, ValueFromPipelineByPropertyName)]
+        [Alias('sys_id', 'SysId', 'number')]
+        [string] $Id,
+
+        [Parameter(Mandatory)]
+        [ValidateScript( {
+                Test-Path $_
+            })]
+        [string[]] $File,
 
         # Content (MIME) type - if not automatically determined
-        [Parameter(Mandatory=$false)]
-        [string]$ContentType,
-
-        # Credential used to authenticate to ServiceNow
-        [Parameter(ParameterSetName='SpecifyConnectionFields', Mandatory=$true)]
-        [ValidateNotNullOrEmpty()]
-        [Alias('ServiceNowCredential')]
-        [PSCredential]$Credential,
-
-        # The URL for the ServiceNow instance being used
-        [Parameter(ParameterSetName='SpecifyConnectionFields', Mandatory=$true)]
-        [ValidateScript({Test-ServiceNowURL -Url $_})]
-        [ValidateNotNullOrEmpty()]
-        [Alias('Url')]
-        [string]$ServiceNowURL,
-
-        # Azure Automation Connection object containing username, password, and URL for the ServiceNow instance
-        [Parameter(ParameterSetName='UseConnectionObject', Mandatory=$true)]
-        [ValidateNotNullOrEmpty()]
-        [Hashtable]$Connection,
+        [Parameter()]
+        [string] $ContentType,
 
         # Allow the results to be shown
         [Parameter()]
-        [switch]$PassThru
+        [switch] $PassThru,
+
+        # Azure Automation Connection object containing username, password, and URL for the ServiceNow instance
+        [Parameter()]
+        # [ValidateNotNullOrEmpty()]
+        [Hashtable] $Connection,
+
+        [Parameter()]
+        # [ValidateNotNullOrEmpty()]
+        [hashtable] $ServiceNowSession = $script:ServiceNowSession
     )
 
-	begin {}
-	process	{
-        Try {
-            # Use the number and table to determine the sys_id
-            $getServiceNowTableEntry = @{
-                Table         = $Table
-                MatchExact    = @{number = $number}
-                ErrorAction   = 'Stop'
-            }
+    begin {}
 
-            # Update the Table Splat if an applicable parameter set name is in use
-            Switch ($PSCmdlet.ParameterSetName) {
-                'SpecifyConnectionFields' {
-                    $getServiceNowTableEntry.Add('Credential', $Credential)
-                    $getServiceNowTableEntry.Add('ServiceNowURL', $ServiceNowURL)
-                    break
-                }
-                'UseConnectionObject' {
-                    $getServiceNowTableEntry.Add('Connection', $Connection)
-                    break
-                }
-                Default {
-                    If (-not (Test-ServiceNowAuthIsSet)) {
-                        Throw "Exception:  You must do one of the following to authenticate: `n 1. Call the Set-ServiceNowAuth cmdlet `n 2. Pass in an Azure Automation connection object `n 3. Pass in an endpoint and credential"
-                    }
-                }
-            }
+    process	{
 
-            $TableSysID = Get-ServiceNowTableEntry @getServiceNowTableEntry | Select-Object -Expand sys_id
-
-            # Process credential steps based on parameter set name
-            Switch ($PSCmdlet.ParameterSetName) {
-                'SpecifyConnectionFields' {
-                    $ApiUrl = 'https://' + $ServiceNowURL + '/api/now/v1/attachment'
-                    break
-                }
-                'UseConnectionObject' {
-                    $SecurePassword = ConvertTo-SecureString $Connection.Password -AsPlainText -Force
-                    $Credential = New-Object System.Management.Automation.PSCredential ($Connection.Username, $SecurePassword)
-                    $ApiUrl = 'https://' + $Connection.ServiceNowUri + '/api/now/v1/attachment'
-                    break
-                }
-                Default {
-                    If ((Test-ServiceNowAuthIsSet)) {
-                        $Credential = $Global:ServiceNowCredentials
-                        $ApiUrl = $Global:ServiceNowRESTURL + '/attachment'
-                    }
-                    Else {
-                        Throw "Exception:  You must do one of the following to authenticate: `n 1. Call the Set-ServiceNowAuth cmdlet `n 2. Pass in an Azure Automation connection object `n 3. Pass in an endpoint and credential"
-                    }
-                }
-            }
-
-            ForEach ($Object in $File) {
-                $FileData = Get-ChildItem $Object -ErrorAction Stop
-                If (-not $ContentType) {
-                    Add-Type -AssemblyName 'System.Web'
-                    $ContentType = [System.Web.MimeMapping]::GetMimeMapping($FileData.FullName)
-                }
-
-                # POST: https://instance.service-now.com/api/now/attachment/file?table_name=incident&table_sys_id=d71f7935c0a8016700802b64c67c11c6&file_name=Issue_screenshot
-                $Uri = "{0}/file?table_name={1}&table_sys_id={2}&file_name={3}" -f $ApiUrl,$Table,$TableSysID,$FileData.Name
-
-                $invokeRestMethodSplat = @{
-                    Uri        = $Uri
-                    Headers    = @{'Content-Type' = $ContentType}
-                    Method     = 'POST'
-                    InFile     = $FileData.FullName
-                    Credential = $Credential
-                }
-
-                If ($PSCmdlet.ShouldProcess($Uri,$MyInvocation.MyCommand)) {
-                    $Result = (Invoke-RestMethod @invokeRestMethodSplat).Result
-
-                    If ($PassThru) {
-                        $Result | Update-ServiceNowDateTimeField
-                    }
-                }
-            }
+        $getParams = @{
+            Id                = $Id
+            Property          = 'sys_class_name', 'sys_id', 'number'
+            Connection        = $Connection
+            ServiceNowSession = $ServiceNowSession
         }
-        Catch {
-            Write-Error $PSItem
+        if ( $Table ) {
+            $getParams.Table = $Table
+        }
+        $tableRecord = Get-ServiceNowRecord @getParams
+
+        if ( -not $tableRecord ) {
+            Write-Error "Record not found for Id '$Id'"
+            continue
+        }
+
+        $auth = Get-ServiceNowAuth -C $Connection -S $ServiceNowSession
+
+        ForEach ($Object in $File) {
+            $FileData = Get-ChildItem $Object -ErrorAction Stop
+            If (-not $ContentType) {
+                # Thanks to https://github.com/samuelneff/MimeTypeMap/blob/master/MimeTypeMap.cs from which
+                # MimeTypeMap.json was adapted
+                $ContentTypeHash = ConvertFrom-Json (Get-Content "$PSScriptRoot\..\config\MimeTypeMap.json" -Raw)
+
+                $Extension = [IO.Path]::GetExtension($FileData.FullName)
+                $ContentType = $ContentTypeHash.$Extension
+            }
+
+            # POST: https://instance.service-now.com/api/now/attachment/file?table_name=incident&table_sys_id=d71f7935c0a8016700802b64c67c11c6&file_name=Issue_screenshot
+            # $Uri = "{0}/file?table_name={1}&table_sys_id={2}&file_name={3}" -f $ApiUrl, $Table, $TableSysID, $FileData.Name
+            $invokeRestMethodSplat = $auth
+            $invokeRestMethodSplat.Uri += '/attachment/file?table_name={0}&table_sys_id={1}&file_name={2}' -f $tableRecord.sys_class_name, $tableRecord.sys_id, $FileData.Name
+            $invokeRestMethodSplat.Headers += @{'Content-Type' = $ContentType }
+            $invokeRestMethodSplat.UseBasicParsing = $true
+            $invokeRestMethodSplat += @{
+                Method = 'POST'
+                InFile = $FileData.FullName
+            }
+
+            If ($PSCmdlet.ShouldProcess(('{0} {1}' -f $tableRecord.sys_class_name, $tableRecord.number), ('Add attachment {0}' -f $FileData.FullName))) {
+                Write-Verbose ($invokeRestMethodSplat | ConvertTo-Json)
+                $response = Invoke-WebRequest @invokeRestMethodSplat
+
+                if ( $response.Content ) {
+                    if ( $PassThru.IsPresent ) {
+                        $content = $response.content | ConvertFrom-Json
+                        $content.result
+                    }
+                }
+                else {
+                    # invoke-webrequest didn't throw an error, but we didn't get content back either
+                    throw ('"{0} : {1}' -f $response.StatusCode, $response | Out-String )
+                }
+            }
         }
     }
-	end {}
+
+    end {}
 }
