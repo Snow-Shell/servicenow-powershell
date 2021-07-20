@@ -203,7 +203,7 @@ function Get-ServiceNowRecord {
     }
     
     if ( $Id ) {
-        if ( $Id -match '[a-zA-Z0-9]{32}' ) {
+        if ( $Id -match '^[a-zA-Z0-9]{32}$' ) {
             if ( -not $thisTable ) {
                 throw 'Providing sys_id for -Id requires a value for -Table.  Alternatively, provide an Id with a prefix, eg. INC1234567, and the table will be automatically determined.'
             }
@@ -213,7 +213,9 @@ function Get-ServiceNowRecord {
         else {
             if ( -not $thisTable ) {
                 # get table name from prefix if only Id was provided
-                $thisTable = $script:ServiceNowTable | Where-Object { $_.NumberPrefix -and $Id.ToLower().StartsWith($_.NumberPrefix) }
+                $idPrefix = ($Id | Select-String -Pattern '^([a-zA-Z]+)([0-9]+$)').Matches.Groups[1].Value.ToLower()
+                Write-Debug "Id prefix is $idPrefix"
+                $thisTable = $script:ServiceNowTable | Where-Object { $_.NumberPrefix -and $idPrefix -eq $_.NumberPrefix }
                 if ( -not $thisTable ) {
                     throw ('The prefix for Id ''{0}'' was not found and the appropriate table cannot be determined.  Known prefixes are {1}.  Please provide a value for -Table.' -f $Id, ($ServiceNowTable.NumberPrefix.Where( { $_ }) -join ', '))
                 }
@@ -234,7 +236,7 @@ function Get-ServiceNowRecord {
     $invokeParams.Table = $thisTable.Name
         
     if ( $ParentId ) {
-        if ( $ParentId -match '[a-zA-Z0-9]{32}' ) {
+        if ( $ParentId -match '^[a-zA-Z0-9]{32}$' ) {
             $parentIdFilter = @('parent.sys_id', '-eq', $ParentId)
         }
         else {
