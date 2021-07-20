@@ -125,10 +125,26 @@ function Get-ServiceNowRecord {
 
         [Parameter(ParameterSetName = 'Id', Mandatory, Position = 0)]
         [Parameter(ParameterSetName = 'Table')]
+        [ValidateScript( {
+                if ($_ -match '^[a-zA-Z0-9]{32}$' -or $_ -match '^([a-zA-Z]+)[0-9]+$') {
+                    $true
+                }
+                else {
+                    throw 'Id must be either a 32 character alphanumeric, ServiceNow sysid, or prefix/id, ServiceNow number.'
+                }
+            })]
         [Alias('sys_id', 'number')]
         [string] $Id,
 
         [Parameter()]
+        [ValidateScript( {
+                if ($_ -match '^[a-zA-Z0-9]{32}$' -or $_ -match '^([a-zA-Z]+)[0-9]+$') {
+                    $true
+                }
+                else {
+                    throw 'ParentId must be either a 32 character alphanumeric, ServiceNow sysid, or prefix/id, ServiceNow number.'
+                }
+            })]
         [string] $ParentId,
 
         [Parameter()]
