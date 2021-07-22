@@ -74,6 +74,10 @@
     Get incident records where state equals New or short description contains the word powershell
 
 .EXAMPLE
+    Get-ServiceNowRecord -Table incident -Filter @('assigned_to.name', '-like', 'greg')
+    Get incident records where the assigned to user's name contains greg
+
+.EXAMPLE
     $filter = @('state', '-eq', '1'),
                 '-and',
               @('short_description','-like', 'powershell'),
