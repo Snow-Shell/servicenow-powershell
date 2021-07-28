@@ -5,13 +5,17 @@ Write-Verbose $PSScriptRoot
 
 $config = ConvertFrom-Json (Get-Content "$PSScriptRoot\Config\main.json" -Raw)
 $Script:ServiceNowOperator = $config.FilterOperators
-$script:ServiceNowTable = $config.Tables
+[System.Collections.ArrayList] $script:ServiceNowTable = $config.Tables
 
 Export-ModuleMember -Variable ServiceNowOperator, ServiceNowTable
 
 $tableArgCompleterSb = {
-    $ServiceNowTable.ClassName | ForEach-Object {
-        '''{0}''' -f $_
+    $ServiceNowTable | ForEach-Object {
+        if ( $_.ClassName ) {
+            '''{0}''' -f $_.ClassName
+        } else {
+            '''{0}''' -f $_.Name
+        }
     }
 }
 
@@ -55,7 +59,7 @@ $aliases = @{
     'Remove-ServiceNowTableEntry'     = 'Remove-ServiceNowRecord'
     'New-ServiceNowTableEntry'        = 'New-ServiceNowRecord'
     'Update-ServiceNowTableEntry'     = 'Update-ServiceNowRecord'
-    'Update-ServiceNowNumber'     = 'Update-ServiceNowRecord'
+    'Update-ServiceNowNumber'         = 'Update-ServiceNowRecord'
     'gsnr'                            = 'Get-ServiceNowRecord'
 }
 $aliases.GetEnumerator() | ForEach-Object {
