@@ -1,3 +1,7 @@
+## 3.0.1
+- Fix [#149](https://github.com/Snow-Shell/servicenow-powershell/issues/149), combination of `-Id` and `-IncludeCustomVariable` failing.  Thanks @natescherer.
+- Fix [#150](https://github.com/Snow-Shell/servicenow-powershell/issues/150), Test-ServiceNowURL does not account for URL with a - character.  The validation was providing much value so was removed.
+
 ## 3.0
 - New functionality in `Get-ServiceNowRecord`
   - Add `Id` property to easily retrieve a record by either number or sysid.
