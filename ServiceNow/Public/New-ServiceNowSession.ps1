@@ -153,7 +153,7 @@ function New-ServiceNowSession {
 
             $oldProgressPreference = $ProgressPreference
             $ProgressPreference = 'SilentlyContinue'
-        
+
             $response = Invoke-WebRequest @params
 
             # set the progress pref back now that done with invoke-webrequest
@@ -216,5 +216,27 @@ function New-ServiceNowSession {
     }
     else {
         $Script:ServiceNowSession = $newSession
+    }
+
+    Write-Verbose 'Getting table number prefixes'
+    $defaultTable = $ServiceNowTable
+    try {
+        $numbers = Get-ServiceNowRecord -Table 'sys_number' -Property prefix, category -First 10000
+        foreach ($number in $numbers) {
+            if ( $number.prefix.ToLower() -notin $defaultTable.NumberPrefix ) {
+                $ServiceNowTable.Add(
+                    [pscustomobject] @{
+                        "Name"             = ($number.category.link | Select-String -Pattern '^.*\?name=(.*)$').matches.groups[1].Value
+                        "ClassName"        = $number.category.display_value
+                        "Type"             = $null
+                        "NumberPrefix"     = $number.prefix.ToLower()
+                        "DescriptionField" = "short_description"
+                    }
+                ) | Out-Null
+            }
+        }
+    }
+    catch {
+        Write-Verbose "Session created, but failed to populate ServiceNowTable.  Prefixes beyond the default won't be available.  $_"
     }
 }
