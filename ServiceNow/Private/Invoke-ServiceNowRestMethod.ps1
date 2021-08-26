@@ -149,6 +149,8 @@ function Invoke-ServiceNowRestMethod {
 
     $response = Invoke-WebRequest @params
 
+    Write-Debug ($response | ConvertTo-Json)
+
     # TODO: this could use some work
     # checking for content is good, but at times we'll get content that's not valid
     # eg. html content when a dev instance is hibernating
@@ -193,7 +195,7 @@ function Invoke-ServiceNowRestMethod {
             $end = if ( $totalRecordCount -lt $setPoint ) {
                 $totalRecordCount
             }
-            else { 
+            else {
                 $setPoint
             }
 
