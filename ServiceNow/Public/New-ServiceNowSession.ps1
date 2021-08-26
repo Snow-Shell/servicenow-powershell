@@ -68,7 +68,6 @@ function New-ServiceNowSession {
 
     param(
         [Parameter(Mandatory)]
-        [ValidateScript( { $_ | Test-ServiceNowURL })]
         [Alias('ServiceNowUrl')]
         [string] $Url,
 
