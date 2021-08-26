@@ -38,12 +38,14 @@
             "Name": "sys_user",
             "ClassName": "User",
             "Type": "ServiceNow.UserAndUserGroup",
+            "NumberPrefix": "",
             "DescriptionField": "name"
         },
         {
             "Name": "sys_user_group",
             "ClassName": "User Group",
             "Type": "ServiceNow.UserAndUserGroup",
+            "NumberPrefix": "",
             "DescriptionField": "name"
         },
         {
