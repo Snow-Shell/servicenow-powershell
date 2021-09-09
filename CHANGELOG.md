@@ -1,3 +1,6 @@
+## 3.0.2
+- Fix [#152](https://github.com/Snow-Shell/servicenow-powershell/issues/152), object conversion to json failing.
+
 ## 3.0.1
 - Fix [#149](https://github.com/Snow-Shell/servicenow-powershell/issues/149), combination of `-Id` and `-IncludeCustomVariable` failing.  Thanks @natescherer.
 - Fix [#150](https://github.com/Snow-Shell/servicenow-powershell/issues/150), Test-ServiceNowURL does not account for URL with a - character.  The validation wasn't providing much value so was removed.
