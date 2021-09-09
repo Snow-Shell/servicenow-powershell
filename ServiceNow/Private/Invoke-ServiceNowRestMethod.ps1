@@ -147,9 +147,14 @@ function Invoke-ServiceNowRestMethod {
     $oldProgressPreference = $ProgressPreference
     $ProgressPreference = 'SilentlyContinue'
 
-    $response = Invoke-WebRequest @params
-
-    Write-Debug ($response | ConvertTo-Json)
+    try {
+        $response = Invoke-WebRequest @params
+        Write-Debug $response
+    }
+    catch {
+        $ProgressPreference = $oldProgressPreference
+        throw $_
+    }
 
     # TODO: this could use some work
     # checking for content is good, but at times we'll get content that's not valid
@@ -200,7 +205,13 @@ function Invoke-ServiceNowRestMethod {
             }
 
             Write-Verbose ('getting {0}-{1} of {2}' -f ($params.body.sysparm_offset + 1), $end, $totalRecordCount)
-            $response = Invoke-WebRequest @params -Verbose:$false
+            try {
+                $response = Invoke-WebRequest @params -Verbose:$false
+            }
+            catch {
+                $ProgressPreference = $oldProgressPreference
+                throw $_
+            }
 
             $content = $response.content | ConvertFrom-Json
             if ( $content.PSobject.Properties.Name -contains "result" ) {
