@@ -1,3 +1,6 @@
+## 3.1.0
+- Add DateTime support to querying, [#68](https://github.com/Snow-Shell/servicenow-powershell/issues/68)
+
 ## 3.0.2
 - Fix [#152](https://github.com/Snow-Shell/servicenow-powershell/issues/152), object conversion to json failing.
 
