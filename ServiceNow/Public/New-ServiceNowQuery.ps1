@@ -145,31 +145,58 @@ function New-ServiceNowQuery {
                         if ( $i -eq $filterList.Count - 1) {
                             throw '$Filter cannot end with a join'
                         }
+
+                        break
                     }
 
-                    2 {
-                        # should be a non-value operator, eg. ='' / ISEMPTY
+                    { $_ -ne 1 } {
+                        # perform data validation on all filters other than a join operator
                         $thisOperator = $script:ServiceNowOperator | Where-Object { $_.Name -eq $thisFilter[1] }
                         if ( -not $thisOperator ) {
                             throw ('Operator ''{0}'' is not valid' -f $thisFilter[1])
                         }
-                        if ( $thisOperator.RequiresValue ) {
-                            throw ('Value not provided, {0} {1} ?' -f $thisFilter[0], $thisOperator.QueryOperator)
+                        if ( $thisOperator.NumValues -ne $thisFilter.Count - 2 ) {
+                            throw ('Operator ''{0}'' requires 1 field name and {1} value(s)' -f $thisFilter[1], $thisOperator.NumValues)
                         }
+                    }
+
+                    2 {
+                        # should be a non-value operator, eg. ='' / ISEMPTY
                         '{0}{1}' -f $thisFilter[0], $thisOperator.QueryOperator
+                        break
                     }
 
                     3 {
-                        # should be field operator value
-                        $thisOperator = $script:ServiceNowOperator | Where-Object { $_.Name -eq $thisFilter[1] }
-                        if ( -not $thisOperator ) {
-                            throw ('Operator ''{0}'' is not valid', $thisFilter[1])
+                        # should be format - field operator value
+
+                        if ( $thisFilter[2] -is [DateTime] ) {
+                            $dateGen = "'{0}','{1}'" -f $thisFilter[2].ToString('yyyy-MM-dd'), $thisFilter[2].ToString('HH:mm:ss')
+                            '{0}{1}javascript:gs.dateGenerate({2})' -f $thisFilter[0], $thisOperator.QueryOperator, $dateGen
                         }
-                        '{0}{1}{2}' -f $thisFilter[0], $thisOperator.QueryOperator, $thisFilter[2]
+                        else {
+                            '{0}{1}{2}' -f $thisFilter[0], $thisOperator.QueryOperator, $thisFilter[2]
+                        }
+
+                        break
+                    }
+
+                    4 {
+                        # should be format - field operator value1 value2, where applicable, eg. between
+
+                        if ( $thisFilter[2] -is [DateTime] ) {
+                            $dateGen1 = "'{0}','{1}'" -f $thisFilter[2].ToString('yyyy-MM-dd'), $thisFilter[2].ToString('HH:mm:ss')
+                            $dateGen2 = "'{0}','{1}'" -f $thisFilter[3].ToString('yyyy-MM-dd'), $thisFilter[3].ToString('HH:mm:ss')
+                            '{0}{1}javascript:gs.dateGenerate({2})@javascript:gs.dateGenerate({3})' -f $thisFilter[0], $thisOperator.QueryOperator, $dateGen1, $dateGen2
+                        }
+                        else {
+                            '{0}{1}{2}@{3}' -f $thisFilter[0], $thisOperator.QueryOperator, $thisFilter[2], $thisFilter[3]
+                        }
+
+                        break
                     }
 
                     Default {
-                        throw ('Too many items for {0}, see the help' -f $thisFilter[0])
+                        throw ('Too many filter items for {0}, see the help' -f $thisFilter[0])
                     }
                 }
             }
@@ -234,7 +261,7 @@ function New-ServiceNowQuery {
             }
         }
 
-        $query -join ''
+        ($query -join '').Trim('^')
 
     }
     else {
