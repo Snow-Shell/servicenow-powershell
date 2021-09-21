@@ -8,18 +8,6 @@ This PowerShell module provides a series of cmdlets for interacting with the [Se
 
 **IMPORTANT:** Neither this module nor its creator are in any way affiliated with ServiceNow.
 
-## Version 2
-
-Building on the great work the community has done thus far, a lot of new updates with this release.
-- Although still in the module for backward compatibility, `Set-ServiceNowAuth` is being replaced with `New-ServiceNowSession`.  With this comes OAuth support, removal of global variables, and much more folks have asked for.  The ability to provide credentials directly to functions has been retained for this release, but will be deprecated in a future release in favor of using `New-ServiceNowSession`.
-- Support for different api versions.  `Set-ServiceNowAuth` will continue to use v1 of the api, but `New-ServiceNowSession` defaults to the latest.  Check out the `-ApiVersion` parameter of `New-ServiceNowSession`.
-- `Remove-ServiceNowAuth` has been retained for this release, but as global variables have been removed, there is no longer a need for it; it will always return `$true`.  It will be removed in a future release.
-- `-PassThru` added to remaining `Update-` and `New-` functions.  Depending on your code, this may be a ***breaking change*** if you expected the result to be returned.
-- Pipeline support added to many functions
-- Standardizing on coding between all functions
-
-***It is recommended to use `Get-ServiceNowRecord` instead of the other 'Get' functions.***
-
 ## Requirements
 
 Requires PowerShell 5.1 or above.
@@ -32,7 +20,7 @@ Requires authorization in your ServiceNow tenant.  Due to the custom nature of S
 
 ## Usage
 
-The ServiceNow module should be installed from the PowerShell Gallery with `install-module ServiceNow`.
+The ServiceNow module should be installed from the [PowerShell Gallery](https://www.powershellgallery.com/packages/ServiceNow) with `install-module ServiceNow`.
 
 ### Creating a new session
 
@@ -61,7 +49,7 @@ All examples below assume a new session has already been created.
 
 ### Getting incidents opened in the last 30 days
 ```PowerShell
-$filter = @('opened_at', '-ge', 'javascript:gs.daysAgoEnd(30)')
+$filter = @('opened_at', '-ge', (Get-Date).AddDays(-30))
 Get-ServiceNowRecord -Table incident -Filter $filter
 ```
 
@@ -94,10 +82,6 @@ New-ServiceNowIncident @Params
 The module can use the `Connection` parameter in conjunction with the included `ServiceNow-Automation.json` file for use as an Azure automation integration module.  Details of the process is available at [Authoring Integration Modules for Azure Automation](https://azure.microsoft.com/en-us/blog/authoring-integration-modules-for-azure-automation).
 
 The `Connection` parameter accepts a hashtable object that requires a username, password, and ServiceNowURL.
-
-## Tests
-
-This module comes with limited [Pester](https://github.com/pester/Pester/) tests for unit testing.
 
 ## Scope & Contributing
 
