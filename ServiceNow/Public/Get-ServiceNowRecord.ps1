@@ -32,8 +32,6 @@
     Each array should be of the format @(field, comparison operator, value) separated by a join, either 'and', 'or', or 'group'.
     For a complete list of comparison operators, see $script:ServiceNowOperator and use Name in your filter.
     See the examples.
-    Also, see https://docs.servicenow.com/bundle/quebec-platform-user-interface/page/use/common-ui-elements/reference/r_OpAvailableFiltersQueries.html
-    for how to represent date values with javascript.
 
 .PARAMETER Sort
     Array or multidimensional array of fields to sort on.
@@ -86,6 +84,10 @@
     PS > Get-ServiceNowRecord -Table incident -Filter $filter
     Get incident records where state is New and short description contains the word powershell or state is In Progress.
     The first 2 filters are combined and then or'd against the last.
+
+.EXAMPLE
+    Get-ServiceNowRecord -Table 'Incident' -Filter @('opened_at', '-between', (Get-Date).AddMonths(-24), (get-date).AddMonths(-12)) -IncludeTotalCount
+    Get all incident records that were opened between 1 and 2 years ago
 
 .EXAMPLE
     Get-ServiceNowRecord -Table incident -Filter @('state', '-eq', '1') -Sort @('opened_at', 'desc'), @('state')
