@@ -44,6 +44,7 @@ $params @{
 }
 New-ServiceNowSession @params
 ```
+**Note: ServiceNow's API does not support SSO**
 
 All examples below assume a new session has already been created.
 
