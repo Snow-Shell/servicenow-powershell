@@ -1,3 +1,8 @@
+## 3.1.1
+- Fix [#158](https://github.com/Snow-Shell/servicenow-powershell/issues/68), failure on successful record deletion
+- Move table details retrieval in `New-ServiceNowSession` to be switch operated, `-GetAllTable` and reduce function time
+- Fix pipelining in `Remove-ServiceNowRecord`
+
 ## 3.1.0
 - Add DateTime support to querying, [#68](https://github.com/Snow-Shell/servicenow-powershell/issues/68)
 - Add `-between` operator
