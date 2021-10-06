@@ -156,21 +156,31 @@ function Invoke-ServiceNowRestMethod {
         throw $_
     }
 
-    # TODO: this could use some work
-    # checking for content is good, but at times we'll get content that's not valid
-    # eg. html content when a dev instance is hibernating
-    if ( $response.Content ) {
-        $content = $response.content | ConvertFrom-Json
-        if ( $content.PSobject.Properties.Name -contains "result" ) {
-            $records = @($content | Select-Object -ExpandProperty result)
+    # validate response
+    switch ($Method) {
+        'Delete' {
+            if ( $response.StatusCode -ne 204 ) {
+                throw ('"{0} : {1}' -f $response.StatusCode, $response | Out-String )
+            }
         }
-        else {
-            $records = @($content)
+        Default {
+            # TODO: this could use some work
+            # checking for content is good, but at times we'll get content that's not valid
+            # eg. html content when a dev instance is hibernating
+            if ( $response.Content ) {
+                $content = $response.content | ConvertFrom-Json
+                if ( $content.PSobject.Properties.Name -contains "result" ) {
+                    $records = @($content | Select-Object -ExpandProperty result)
+                }
+                else {
+                    $records = @($content)
+                }
+            }
+            else {
+                # invoke-webrequest didn't throw an error per se, but we didn't get content back either
+                throw ('"{0} : {1}' -f $response.StatusCode, $response | Out-String )
+            }
         }
-    }
-    else {
-        # invoke-webrequest didn't throw an error per se, but we didn't get content back either
-        throw ('"{0} : {1}' -f $response.StatusCode, $response | Out-String )
     }
 
     $totalRecordCount = 0
@@ -187,7 +197,10 @@ function Invoke-ServiceNowRestMethod {
     # if option to get all records was provided, loop and get them all
     if ( $PSCmdlet.PagingParameters.IncludeTotalCount.IsPresent ) {
 
-        Write-Warning "Getting $($totalRecordCount - $PSCmdlet.PagingParameters.Skip) records, this could take a while..."
+        $retrieveRecordCount = $totalRecordCount - $PSCmdlet.PagingParameters.Skip
+        if ( $retrieveRecordCount -ne 0 ) {
+            Write-Warning "Getting $retrieveRecordCount records..."
+        }
 
         $setPoint = $params.body.sysparm_offset + $params.body.sysparm_limit
 

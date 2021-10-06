@@ -29,6 +29,9 @@ Credential of user who can access Proxy.  If not provided, the current user will
 .PARAMETER ApiVersion
 Specific API version to use.  The default is the latest.
 
+.PARAMETER GetAllTable
+Populate $ServiceNowTable with data from all tables the user has access to
+
 .PARAMETER PassThru
 Provide the resulting session object to the pipeline as opposed to setting as a script scoped variable to be used by default for other calls.
 This is useful if you want to have multiple sessions with different api versions, credentials, etc.
@@ -98,6 +101,9 @@ function New-ServiceNowSession {
 
         [Parameter()]
         [int] $ApiVersion,
+
+        [Parameter()]
+        [switch] $GetAllTable,
 
         [Parameter()]
         [switch] $PassThru
@@ -217,25 +223,27 @@ function New-ServiceNowSession {
         $Script:ServiceNowSession = $newSession
     }
 
-    Write-Verbose 'Getting table number prefixes'
-    $defaultTable = $ServiceNowTable
-    try {
-        $numbers = Get-ServiceNowRecord -Table 'sys_number' -Property prefix, category -First 10000
-        foreach ($number in $numbers) {
-            if ( $number.prefix.ToLower() -notin $defaultTable.NumberPrefix ) {
-                $ServiceNowTable.Add(
-                    [pscustomobject] @{
-                        "Name"             = ($number.category.link | Select-String -Pattern '^.*\?name=(.*)$').matches.groups[1].Value
-                        "ClassName"        = $number.category.display_value
-                        "Type"             = $null
-                        "NumberPrefix"     = $number.prefix.ToLower()
-                        "DescriptionField" = "short_description"
-                    }
-                ) | Out-Null
+    if ( $GetAllTable.IsPresent ) {
+        Write-Verbose 'Getting table number prefixes'
+        $defaultTable = $ServiceNowTable
+        try {
+            $numbers = Get-ServiceNowRecord -Table 'sys_number' -Property prefix, category -First 10000 -IncludeTotalCount
+            foreach ($number in $numbers) {
+                if ( $number.prefix.ToLower() -notin $defaultTable.NumberPrefix ) {
+                    $ServiceNowTable.Add(
+                        [pscustomobject] @{
+                            "Name"             = ($number.category.link | Select-String -Pattern '^.*\?name=(.*)$').matches.groups[1].Value
+                            "ClassName"        = $number.category.display_value
+                            "Type"             = $null
+                            "NumberPrefix"     = $number.prefix.ToLower()
+                            "DescriptionField" = "short_description"
+                        }
+                    ) | Out-Null
+                }
             }
         }
-    }
-    catch {
-        Write-Verbose "Session created, but failed to populate ServiceNowTable.  Prefixes beyond the default won't be available.  $_"
+        catch {
+            Write-Verbose "Session created, but failed to populate ServiceNowTable.  Prefixes beyond the default won't be available.  $_"
+        }
     }
 }

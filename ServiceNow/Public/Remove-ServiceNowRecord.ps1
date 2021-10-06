@@ -1,13 +1,17 @@
 function Remove-ServiceNowRecord {
+
     [CmdletBinding(ConfirmImpact = 'High')]
+
     Param(
         # Table containing the entry we're deleting
         [parameter(Mandatory, ValueFromPipelineByPropertyName)]
+        [ValidateNotNullOrEmpty()]
         [Alias('sys_class_name')]
         [string] $Table,
 
         # sys_id of the entry we're deleting
         [parameter(Mandatory, ValueFromPipelineByPropertyName)]
+        [ValidateNotNullOrEmpty()]
         [Alias('sys_id')]
         [string] $SysId,
 
@@ -18,13 +22,19 @@ function Remove-ServiceNowRecord {
         [hashtable] $ServiceNowSession = $script:ServiceNowSession
     )
 
-    $params = @{
-        Method            = 'Delete'
-        Table             = $Table
-        SysId             = $SysId
-        Connection        = $Connection
-        ServiceNowSession = $ServiceNowSession
+    begin {
+
     }
-    
-    Invoke-ServiceNowRestMethod @params
+
+    process {
+        $params = @{
+            Method            = 'Delete'
+            Table             = $Table
+            SysId             = $SysId
+            Connection        = $Connection
+            ServiceNowSession = $ServiceNowSession
+        }
+
+        Invoke-ServiceNowRestMethod @params
+    }
 }
