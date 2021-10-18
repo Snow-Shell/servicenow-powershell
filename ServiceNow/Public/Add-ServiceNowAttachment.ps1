@@ -108,10 +108,14 @@ Function Add-ServiceNowAttachment {
                 $ContentType = $ContentTypeHash.$Extension
             }
 
+            If (-not $Table) {
+                $Table = $tableRecord.sys_class_name
+            }
+
             # POST: https://instance.service-now.com/api/now/attachment/file?table_name=incident&table_sys_id=d71f7935c0a8016700802b64c67c11c6&file_name=Issue_screenshot
             # $Uri = "{0}/file?table_name={1}&table_sys_id={2}&file_name={3}" -f $ApiUrl, $Table, $TableSysID, $FileData.Name
             $invokeRestMethodSplat = $auth
-            $invokeRestMethodSplat.Uri += '/attachment/file?table_name={0}&table_sys_id={1}&file_name={2}' -f $tableRecord.sys_class_name, $tableRecord.sys_id, $FileData.Name
+            $invokeRestMethodSplat.Uri += '/attachment/file?table_name={0}&table_sys_id={1}&file_name={2}' -f $Table, $tableRecord.sys_id, $FileData.Name
             $invokeRestMethodSplat.Headers += @{'Content-Type' = $ContentType }
             $invokeRestMethodSplat.UseBasicParsing = $true
             $invokeRestMethodSplat += @{
