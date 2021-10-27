@@ -1,3 +1,6 @@
+## 3.1.2
+- Fix [#160](https://github.com/Snow-Shell/servicenow-powershell/issues/160), adding an attachment to catalog tasks not working for instances created pre-Istanbul.  Thanks @natescherer!
+
 ## 3.1.1
 - Fix [#158](https://github.com/Snow-Shell/servicenow-powershell/issues/158), failure on successful record deletion
 - Move table details retrieval in `New-ServiceNowSession` to be switch operated, `-GetAllTable` and reduce function time
