@@ -1,3 +1,6 @@
+## 3.1.3
+- Fix [#167](https://github.com/Snow-Shell/servicenow-powershell/issues/167), fix ServiceNowTable not being populated on Linux due to file name case
+
 ## 3.1.2
 - Fix [#160](https://github.com/Snow-Shell/servicenow-powershell/issues/160), adding an attachment to catalog tasks not working for instances created pre-Istanbul.  Thanks @natescherer!
 

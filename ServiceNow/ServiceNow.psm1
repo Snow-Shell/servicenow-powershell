@@ -3,7 +3,7 @@ param()
 
 Write-Verbose $PSScriptRoot
 
-$config = ConvertFrom-Json (Get-Content "$PSScriptRoot\Config\main.json" -Raw)
+$config = ConvertFrom-Json (Get-Content "$PSScriptRoot\config\main.json" -Raw)
 $Script:ServiceNowOperator = $config.FilterOperators
 [System.Collections.ArrayList] $script:ServiceNowTable = $config.Tables
 
