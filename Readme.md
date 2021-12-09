@@ -28,7 +28,7 @@ Creating a new session will create a script scoped variable `$ServiceNowSession`
 
 Basic authentication with just a credential...
 ```PowerShell
-$params @{
+$params = @{
     Url = 'instance.service-now.com'
     Credential = $userCred
 }
@@ -37,7 +37,7 @@ New-ServiceNowSession @params
 
 Oauth authentication with user credential as well as application/client credential.  The application/client credential can be found in the System OAuth->Application Registry section of ServiceNow.
 ```PowerShell
-$params @{
+$params = @{
     Url = 'instance.service-now.com'
     Credential = $userCred
     ClientCredential = $clientCred
