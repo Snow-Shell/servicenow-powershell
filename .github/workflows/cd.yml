@@ -1,0 +1,55 @@
+name: CD
+
+on: workflow_dispatch
+
+jobs:
+  deployment:
+    runs-on: ubuntu-latest
+    env:
+      module_name: ServiceNow
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          token: ${{ secrets.CD_TOKEN }}
+      - name: Update psd version
+        shell: pwsh
+        run: |
+          $manifestPath = '${{ github.workspace }}/${{ env.module_name }}/${{ env.module_name }}.psd1'
+          $manifest = Import-PowerShellDataFile $manifestPath
+          [version]$version = $manifest.ModuleVersion
+          [version]$newVersion = "{0}.{1}.{2}" -f $Version.Major, $Version.Minor, ($Version.Build + 1)
+          Update-ModuleManifest -Path $manifestPath -ModuleVersion $newVersion
+
+          # update-modulemanifest introduces whitepsace so get rid of it
+          (Get-Content $manifestPath).TrimEnd() | Set-Content $manifestPath
+
+          "New version: $newVersion"
+          # set version to be used in later steps
+          "module_new_version=$newVersion" | Out-File -FilePath $env:GITHUB_ENV -Append
+      - name: Update changelog
+        shell: pwsh
+        run: |
+          $newVersionString = '## ${{ env.module_new_version }}'
+          $releaseNotes = Get-Content -Path '${{ github.workspace }}/RELEASE.md' -Raw
+          $changelog = Get-Content -Path '${{ github.workspace }}/CHANGELOG.md' -Raw
+          Set-Content -Path '${{ github.workspace }}/CHANGELOG.md' -Value ($newVersionString + "`r`n" + $releaseNotes + "`r`n`r`n" + $changelog)
+      - name: Update repo
+        run: |
+          git config --global user.name 'Greg Brownstein'
+          git config --global user.email 'greg@jagtechnical.com'
+          git add ${{ env.module_name }}
+          git add CHANGELOG.md
+          git status
+          git commit -m "Update manifest to ${{ env.module_new_version }}"
+          git push
+      - name: Create GitHub release
+        if: github.ref == 'refs/heads/master'
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v${{ env.module_new_version }}
+          body_path: ${{ github.workspace }}/RELEASE.md
+      - name: Publish
+        if: github.ref == 'refs/heads/master'
+        shell: pwsh
+        run: |
+          Publish-Module -Path "${{ github.workspace }}/${{ env.module_name }}" -NuGetApiKey ${{ secrets.NUGET_KEY }} -Verbose
