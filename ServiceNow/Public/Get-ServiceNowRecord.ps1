@@ -298,7 +298,7 @@ function Get-ServiceNowRecord {
                 $customVarParams = @{
                     Table    = 'sc_item_option_mtom'
                     Property = 'sc_item_option.item_option_new.name', 'sc_item_option.item_option_new.sys_name', 'sc_item_option.item_option_new.type'
-                    Filter   = @('request_item', '-eq', $record.sys_id), 'and', @('sc_item_option.item_option_new.type', '-in', '1,2,3,4,5,6,7,8,9,10,16,18,21,22')
+                    Filter   = @('request_item', '-eq', $record.sys_id), 'and', @('sc_item_option.item_option_new.type', '-in', '1,2,3,4,5,6,7,8,9,10,16,18,21,22,26')
                     First    = 1000 # hopefully there isn't more custom vars than this, but we need to overwrite the default of 10
                 }
                 $customVars = Get-ServiceNowRecord @customVarParams
