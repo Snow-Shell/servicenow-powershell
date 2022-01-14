@@ -11,6 +11,8 @@ function Get-ServiceNowAuth {
 
     [OutputType([Hashtable])]
     [CmdletBinding()]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage('PSAvoidUsingConvertToSecureStringWithPlainText', '', Justification = 'requirement of azure automation')]
+
     Param (
         [Parameter()]
         [Alias('C')]
@@ -37,7 +39,7 @@ function Get-ServiceNowAuth {
             else {
                 $hashOut.Credential = $ServiceNowSession.Credential
             }
-    
+
             if ( $ServiceNowSession.Proxy ) {
                 $hashOut.Proxy = $ServiceNowSession.Proxy
                 if ( $ServiceNowSession.ProxyCredential ) {
