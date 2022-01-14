@@ -15,6 +15,8 @@ function Invoke-ServiceNowRestMethod {
 
     [OutputType([System.Management.Automation.PSCustomObject])]
     [CmdletBinding(SupportsPaging)]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage('PSUseBOMForUnicodeEncodedFile', '', Justification = 'issuees with *nix machines and no benefit')]
+
     Param (
         [parameter()]
         [ValidateSet('Get', 'Post', 'Patch', 'Delete')]

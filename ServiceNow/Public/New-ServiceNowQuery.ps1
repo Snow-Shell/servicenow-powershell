@@ -63,7 +63,7 @@
 #>
 function New-ServiceNowQuery {
 
-    [System.Diagnostics.CodeAnalysis.SuppressMessage('PSUseShouldProcessForStateChangingFunctions', 'No state is actually changing')]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage('PSUseShouldProcessForStateChangingFunctions', '', Justification = 'No state is actually changing')]
 
     [CmdletBinding()]
     [OutputType([System.String])]

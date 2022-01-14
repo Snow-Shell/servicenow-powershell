@@ -68,6 +68,8 @@ https://docs.servicenow.com/bundle/quebec-platform-administration/page/administe
 function New-ServiceNowSession {
 
     [CmdletBinding(DefaultParameterSetName = 'BasicAuth')]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage('PSAvoidUsingConvertToSecureStringWithPlainText', '', Justification = 'api call provides in plain text')]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage('PSUseShouldProcessForStateChangingFunctions', '', Justification = 'No state is actually changing')]
 
     param(
         [Parameter(Mandatory)]
