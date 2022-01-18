@@ -1,3 +1,7 @@
+## 3.1.4
+- Add email type to custom variables, [#173](https://github.com/Snow-Shell/servicenow-powershell/issues/173)
+
+
 ## 3.1.3
 - Fix [#167](https://github.com/Snow-Shell/servicenow-powershell/issues/167), fix ServiceNowTable not being populated on Linux due to file name case
 
@@ -106,3 +110,4 @@ Be able to reference types from this config per table, removing the need to have
 - Add Get-ServiceNowAttachment
 - Add Get-ServiceNowAttachmentDetail
 - Add Remove-ServiceNowAttachment
+
