@@ -1,0 +1,1 @@
+- Add email type to custom variables, [#173](https://github.com/Snow-Shell/servicenow-powershell/issues/173)
