@@ -1,3 +1,7 @@
+## 3.1.5
+- Add table name translation to `Get-ServiceNowAttachment` where sys_class_name does not match table name
+- Change .endswith operator from % to ENDSWITH as % was not working
+
 ## 3.1.4
 - Add email type to custom variables, [#173](https://github.com/Snow-Shell/servicenow-powershell/issues/173)
 
@@ -110,4 +114,5 @@ Be able to reference types from this config per table, removing the need to have
 - Add Get-ServiceNowAttachment
 - Add Get-ServiceNowAttachmentDetail
 - Add Remove-ServiceNowAttachment
+
 
