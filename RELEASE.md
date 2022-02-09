@@ -1,1 +1,2 @@
-- Add email type to custom variables, [#173](https://github.com/Snow-Shell/servicenow-powershell/issues/173)
+- Add table name translation to `Get-ServiceNowAttachment` where sys_class_name does not match table name
+- Change .endswith operator from % to ENDSWITH as % was not working

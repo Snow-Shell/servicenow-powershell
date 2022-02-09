@@ -1,24 +1,24 @@
 
 Function Get-ServiceNowAttachment {
     <#
-    
+
     .SYNOPSIS
     Retrieve attachment details
-    
+
     .DESCRIPTION
     Retrieve attachment details via table record or by advanced filtering.
-    
+
     .PARAMETER Table
     Name of the table to be queried, by either table name or class name.  Use tab completion for list of known tables.
     You can also provide any table name ad hoc.
-    
+
     .PARAMETER Id
     Either the record sys_id or number.
     If providing just an Id, not with Table, the Id prefix will be looked up to find the table name.
-    
+
     .PARAMETER FileName
     Filter for a specific file name or part of a file name.
-    
+
     .PARAMETER Filter
     Array or multidimensional array of fields and values to filter on.
     Each array should be of the format @(field, comparison operator, value) separated by a join, either 'and', 'or', or 'group'.
@@ -39,19 +39,19 @@ Function Get-ServiceNowAttachment {
 
     .EXAMPLE
     Get-ServiceNowAttachment -Id 'INC1234567'
-    
+
     Get attachment details for a specific record
-    
+
     .EXAMPLE
     Get-ServiceNowAttachment -Id 'INC1234567' -FileName image.jpg
-    
+
     Get attachment details for a specific record where file names match all or part of image.jpg
-    
+
     .EXAMPLE
     Get-ServiceNowAttachment -Filter @('size_bytes', '-gt', '1000000')
-    
+
     Get attachment details where size is greater than 1M.
-    
+
     .INPUTS
     Table, Id
 
@@ -112,17 +112,20 @@ Function Get-ServiceNowAttachment {
                 $getParams.Table = $Table
             }
             $tableRecord = Get-ServiceNowRecord @getParams
-    
+
             if ( -not $tableRecord ) {
                 Write-Error "Record not found for Id '$Id'"
                 continue
             }
-    
-            $params.Filter = @(
-                @('table_name', '-eq', $tableRecord.sys_class_name),
-                'and',
-                @('table_sys_id', '-eq', $tableRecord.sys_id)
-            )
+
+            # perform lookup for known table names which might be different than sys_class_name
+            $tableName = $script:ServiceNowTable | Where-Object { $_.Name.ToLower() -eq $tableRecord.sys_class_name.ToLower() -or $_.ClassName.ToLower() -eq $tableRecord.sys_class_name.ToLower() } | Select-Object -ExpandProperty Name
+            if ( $tableName ) {
+                $params.Filter = @(@('table_name', '-eq', $tableName), 'and', @('table_sys_id', '-eq', $tableRecord.sys_id))
+            }
+            else {
+                $params.Filter = @(@('table_name', '-eq', $tableRecord.sys_class_name), 'and', @('table_sys_id', '-eq', $tableRecord.sys_id))
+            }
         }
 
         if ( $FileName ) {
