@@ -77,7 +77,7 @@ Function Export-ServiceNowAttachment {
         [parameter(ParameterSetName = 'ToFile')]
         [switch] $AppendNameWithSysId,
 
-        [Parameter(ParameterSetName='ToPipeline', Mandatory)]
+        [Parameter(ParameterSetName = 'ToPipeline', Mandatory)]
         [switch] $AsValue,
 
         [Parameter()]
