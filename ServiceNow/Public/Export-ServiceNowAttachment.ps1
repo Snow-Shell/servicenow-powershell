@@ -20,6 +20,9 @@ Allows the function to overwrite the existing file.
 .PARAMETER AppendNameWithSysID
 Adds the SysID to the file name.  Intended for use when a ticket has multiple files with the same name.
 
+.PARAMETER AsValue
+Instead of writing to a file, return the attachment contents
+
 .EXAMPLE
 Export-ServiceNowAttachment -SysID $SysID -FileName 'mynewfile.txt'
 
@@ -39,35 +42,43 @@ Save all attachments from the ticket.  Filenames will be assigned from the attac
 Get-ServiceNowAttachment -Id INC1234567 | Export-ServiceNowAttachment -Destination $path -AllowOverwrite
 
 Save all attachments from the ticket to the destination allowing for overwriting the destination file.
+
+.EXAMPLE
+Export-ServiceNowAttachment -SysId $SysId -AsValue
+Return the contents of the attachment instead of writing to a file
+
 #>
 Function Export-ServiceNowAttachment {
 
-    [CmdletBinding(SupportsShouldProcess)]
+    [CmdletBinding(SupportsShouldProcess, DefaultParameterSetName = 'ToFile')]
 
     Param(
-        
+
         [Parameter(Mandatory, ValueFromPipeline, ValueFromPipelineByPropertyName)]
         [Alias('sys_id')]
         [string] $SysId,
 
-        [Parameter(ValueFromPipelineByPropertyName)]
+        [Parameter(ParameterSetName = 'ToFile', ValueFromPipelineByPropertyName)]
         [Alias('file_name')]
         [string] $FileName,
 
         # Out path to download files
-        [parameter()]
+        [parameter(ParameterSetName = 'ToFile')]
         [ValidateScript( {
                 Test-Path $_
             })]
         [string] $Destination = $PWD.Path,
 
         # Options impacting downloads
-        [parameter()]
+        [parameter(ParameterSetName = 'ToFile')]
         [switch] $AllowOverwrite,
 
         # Options impacting downloads
-        [parameter()]
+        [parameter(ParameterSetName = 'ToFile')]
         [switch] $AppendNameWithSysId,
+
+        [Parameter(ParameterSetName='ToPipeline', Mandatory)]
+        [switch] $AsValue,
 
         [Parameter()]
         [Hashtable] $Connection,
@@ -86,20 +97,22 @@ Function Export-ServiceNowAttachment {
 
         $params.Uri += '/attachment/' + $SysId + '/file'
 
-        $thisFileName = $FileName
-        If ( $AppendNameWithSysId.IsPresent ) {
-            $thisFileName = "{0}_{1}{2}" -f [io.path]::GetFileNameWithoutExtension($thisFileName), $SysId, [io.path]::GetExtension($thisFileName)
-        }
-        $outFile = Join-Path $Destination $thisFileName
+        if ( $PSCmdlet.ParameterSetName -eq 'ToFile' ) {
+            $thisFileName = $FileName
+            If ( $AppendNameWithSysId.IsPresent ) {
+                $thisFileName = "{0}_{1}{2}" -f [io.path]::GetFileNameWithoutExtension($thisFileName), $SysId, [io.path]::GetExtension($thisFileName)
+            }
+            $outFile = Join-Path $Destination $thisFileName
 
-        If ((Test-Path $outFile) -and -not $AllowOverwrite.IsPresent) {
-            throw ('The file ''{0}'' already exists.  Please choose a different name, use the -AppendNameWithSysID switch parameter, or use the -AllowOverwrite switch parameter to overwrite the file.' -f $OutFile)
-        }
+            If ((Test-Path $outFile) -and -not $AllowOverwrite.IsPresent) {
+                throw ('The file ''{0}'' already exists.  Please choose a different name, use the -AppendNameWithSysID switch parameter, or use the -AllowOverwrite switch parameter to overwrite the file.' -f $OutFile)
+            }
 
-        $params.OutFile = $outFile
+            $params.OutFile = $outFile
+        }
 
         If ($PSCmdlet.ShouldProcess($outFile, "Save attachment")) {
-            Invoke-WebRequest @params
+            Invoke-RestMethod @params
         }
     }
     end {}
