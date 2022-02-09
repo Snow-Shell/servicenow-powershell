@@ -61,6 +61,13 @@
             "Type": "ServiceNow.ChangeTask",
             "NumberPrefix": "ctask",
             "DescriptionField": "short_description"
+        },
+        {
+            "Name": "cmdb_ci_certificate",
+            "ClassName": "Unique Certificate",
+            "Type": "ServiceNow.UniqueCertificate",
+            "NumberPrefix": "",
+            "DescriptionField": "name"
         }
     ],
     "FilterOperators": [
@@ -162,7 +169,7 @@
         },
         {
             "Name": ".endswith",
-            "QueryOperator": "%",
+            "QueryOperator": "ENDSWITH",
             "Description": "field ends with the value",
             "NumValues": 1
         },
