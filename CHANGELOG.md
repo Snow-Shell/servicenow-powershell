@@ -1,3 +1,6 @@
+## 3.1.6
+- Add `AsValue` parameter to `Export-ServiceNowAttachment` to return attachment contents instead of writing to a file
+
 ## 3.1.5
 - Add table name translation to `Get-ServiceNowAttachment` where sys_class_name does not match table name
 - Change .endswith operator from % to ENDSWITH as % was not working
@@ -114,5 +117,6 @@ Be able to reference types from this config per table, removing the need to have
 - Add Get-ServiceNowAttachment
 - Add Get-ServiceNowAttachmentDetail
 - Add Remove-ServiceNowAttachment
+
 
 
