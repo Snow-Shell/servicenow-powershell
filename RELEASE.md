@@ -1,2 +1,1 @@
-- Add table name translation to `Get-ServiceNowAttachment` where sys_class_name does not match table name
-- Change .endswith operator from % to ENDSWITH as % was not working
+- Add `AsValue` parameter to `Export-ServiceNowAttachment` to return attachment contents instead of writing to a file
