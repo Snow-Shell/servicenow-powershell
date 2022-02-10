@@ -49,6 +49,11 @@
     For instance, an RITM may have custom variables, but the associated tasks may not.
     A property named 'CustomVariable' will be added to the return object.
 
+.PARAMETER AsValue
+    Return the underlying value instead of pscustomobject.
+    Only valid when the Property parameter is set to 1 item.
+    Helpful when retrieving sys_id for example.
+
 .PARAMETER Connection
     Azure Automation Connection object containing username, password, and URL for the ServiceNow instance
 
@@ -104,6 +109,10 @@
 .EXAMPLE
     Get-ServiceNowRecord -Table 'change request' -IncludeCustomVariable -First 5
     Get the first 5 change requests and retrieve custom variable info
+
+.EXAMPLE
+    Get-ServiceNowRecord -Table 'cmdb_ci' -Property sys_id -First 1 -AsValue
+    Get the underlying value for a property instead of a pscustomobject where the value needs to be extracted
 
 .EXAMPLE
     gsnr RITM0010001
@@ -174,6 +183,9 @@ function Get-ServiceNowRecord {
 
         [Parameter()]
         [switch] $IncludeCustomVariable,
+
+        [Parameter()]
+        [switch] $AsValue,
 
         [Parameter()]
         [hashtable] $Connection,
@@ -336,12 +348,20 @@ function Get-ServiceNowRecord {
         else {
 
             # format the results
-            if ( -not $Property ) {
+            if ( $Property ) {
+                if ( $Property.Count -eq 1 -and $AsValue ) {
+                    $result | Select-Object -ExpandProperty $result.PSObject.Properties.Name
+                }
+                else {
+                    $result
+                }
+            }
+            else {
                 if ($thisTable.Type) {
                     $result | ForEach-Object { $_.PSObject.TypeNames.Insert(0, $thisTable.Type) }
                 }
+                $result
             }
-            $result
         }
     }
 }

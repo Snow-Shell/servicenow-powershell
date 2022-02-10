@@ -1,1 +1,2 @@
-- Add `AsValue` parameter to `Export-ServiceNowAttachment` to return attachment contents instead of writing to a file
+- Add `AsValue` parameter to `Get-ServiceNowRecord` to return the underlying value for a property instead of a pscustomobject.  Get your sys_id directly!
+- Add formatting for Unique Certificate (cmdb_ci_certificate) table

@@ -472,5 +472,62 @@
 				</TableRowEntries>
 			</TableControl>
 		</View>
+		<View>
+			<Name>ServiceNow.UniqueCertificate</Name>
+			<ViewSelectedBy>
+				<TypeName>ServiceNow.UniqueCertificate</TypeName>
+			</ViewSelectedBy>
+			<TableControl>
+				<TableHeaders>
+					<TableColumnHeader>
+						<Label>name</Label>
+						<Width>30</Width>
+					</TableColumnHeader>
+					<TableColumnHeader>
+						<Label>valid_to</Label>
+						<Width>20</Width>
+					</TableColumnHeader>
+					<TableColumnHeader>
+						<Label>state</Label>
+						<Width>15</Width>
+					</TableColumnHeader>
+					<TableColumnHeader>
+						<Label>issuer</Label>
+						<Width>30</Width>
+					</TableColumnHeader>
+					<TableColumnHeader>
+						<Label>sys_id</Label>
+						<Width>32</Width>
+					</TableColumnHeader>
+				</TableHeaders>
+				<TableRowEntries>
+					<TableRowEntry>
+						<TableColumnItems>
+							<TableColumnItem>
+								<PropertyName>name</PropertyName>
+							</TableColumnItem>
+							<TableColumnItem>
+								<PropertyName>valid_to</PropertyName>
+							</TableColumnItem>
+							<TableColumnItem>
+								<PropertyName>state</PropertyName>
+							</TableColumnItem>
+							<TableColumnItem>
+								<ScriptBlock>
+								if ($_.issuer.display_value) {
+									$_.issuer.display_value
+								} else {
+									$_.issuer.value
+								}
+								</ScriptBlock>
+							</TableColumnItem>
+							<TableColumnItem>
+								<PropertyName>sys_id</PropertyName>
+							</TableColumnItem>
+						</TableColumnItems>
+					</TableRowEntry>
+				</TableRowEntries>
+			</TableControl>
+		</View>
 	</ViewDefinitions>
 </Configuration>
