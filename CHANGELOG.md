@@ -1,3 +1,9 @@
+## 3.1.9
+- Fix #172, `Get-ServiceNowRecord -IncludeCustomVariable` not returning values
+- `Get-ServiceNowRecord -IncludeCustomVariable` 'variable.' prefix has been removed from custom variable property name.
+- Add pipeline functionality to `-Id` parameter of `Get-ServiceNowRecord`
+- Fix `Get-ServiceNowRecord -AsValue` causing error with some values
+
 ## 3.1.7
 - Add `AsValue` parameter to `Get-ServiceNowRecord` to return the underlying value for a property instead of a pscustomobject.  Get your sys_id directly!
 - Add formatting for Unique Certificate (cmdb_ci_certificate) table
@@ -121,6 +127,7 @@ Be able to reference types from this config per table, removing the need to have
 - Add Get-ServiceNowAttachment
 - Add Get-ServiceNowAttachmentDetail
 - Add Remove-ServiceNowAttachment
+
 
 
 
