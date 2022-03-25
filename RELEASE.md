@@ -1,2 +1,3 @@
-- Add `AsValue` parameter to `Get-ServiceNowRecord` to return the underlying value for a property instead of a pscustomobject.  Get your sys_id directly!
-- Add formatting for Unique Certificate (cmdb_ci_certificate) table
+- Fix #172.  Unnecessary 'variable.' prefix has been removed from custom variable property name.
+- Add pipeline functionality to `-Id` parameter of `Get-ServiceNowRecord`
+- Fix `Get-ServiceNowRecord -AsValue` causing error with some values
