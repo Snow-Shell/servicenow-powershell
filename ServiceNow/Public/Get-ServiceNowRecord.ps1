@@ -319,29 +319,30 @@ function Get-ServiceNowRecord {
                 $customVarParams = @{
                     Table             = 'sc_item_option_mtom'
                     Filter            = @('request_item', '-eq', $record.sys_id), 'and', @('sc_item_option.item_option_new.type', '-in', '1,2,3,4,5,6,7,8,9,10,16,18,21,22,26')
-                    Property          = 'sc_item_option.item_option_new.sys_id', 'sc_item_option.value'
+                    Property          = 'sc_item_option.item_option_new.name', 'sc_item_option.value', 'sc_item_option.item_option_new.type', 'sc_item_option.item_option_new.question_text'
                     IncludeTotalCount = $true
                 }
 
-                $customVarsOut = Get-ServiceNowRecord @customVarParams | ForEach-Object {
-                    $itemOptionNewParams = @{
-                        Table    = 'item_option_new'
-                        Id       = $_.'sc_item_option.item_option_new.sys_id'
-                        Property = 'name', 'type', 'question_text'
-                    }
-
-                    $itemOptionNew = Get-ServiceNowRecord @itemOptionNewParams
-
-                    [pscustomobject] @{
-                        'Name'        = $itemOptionNew.name
-                        'Value'       = $_.'sc_item_option.value'
-                        'DisplayName' = $itemOptionNew.question_text
-                        'Type'        = $itemOptionNew.type
-                    }
-                }
+                $customVarsOut = Get-ServiceNowRecord @customVarParams
 
                 $record | Add-Member @{
-                    'CustomVariable' = $customVarsOut
+                    'CustomVariable' = $customVarsOut | Select-Object -Property `
+                    @{
+                        'n' = 'Name'
+                        'e' = { $_.'sc_item_option.item_option_new.name' }
+                    },
+                    @{
+                        'n' = 'Value'
+                        'e' = { $_.'sc_item_option.value' }
+                    },
+                    @{
+                        'n' = 'DisplayName'
+                        'e' = { $_.'sc_item_option.item_option_new.question_text' }
+                    },
+                    @{
+                        'n' = 'Type'
+                        'e' = { $_.'sc_item_option.item_option_new.type' }
+                    }
                 }
 
                 if ( $addedSysIdProp ) {
