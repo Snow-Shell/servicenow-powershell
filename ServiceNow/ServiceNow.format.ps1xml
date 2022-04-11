@@ -51,7 +51,11 @@
 							</TableColumnItem>
 							<TableColumnItem>
 								<ScriptBlock>
-									$_.assigned_to.display_value
+									if ($_.assigned_to.display_value) {
+										$_.assigned_to.display_value
+									} else {
+										$_.assigned_to.value
+									}
 								</ScriptBlock>
 							</TableColumnItem>
 							<TableColumnItem>
@@ -59,7 +63,11 @@
 							</TableColumnItem>
 							<TableColumnItem>
 								<ScriptBlock>
-									$_.cmdb_ci.display_value
+									if ($_.cmdb_ci.display_value) {
+										$_.cmdb_ci.display_value
+									} else {
+										$_.cmdb_ci.value
+									}
 								</ScriptBlock>
 							</TableColumnItem>
 							<TableColumnItem>
@@ -116,7 +124,11 @@
 							</TableColumnItem>
 							<TableColumnItem>
 								<ScriptBlock>
-									$_.assigned_to.display_value
+									if ($_.assigned_to.display_value) {
+										$_.assigned_to.display_value
+									} else {
+										$_.assigned_to.value
+									}
 								</ScriptBlock>
 							</TableColumnItem>
 							<TableColumnItem>
@@ -176,7 +188,11 @@
 							</TableColumnItem>
 							<TableColumnItem>
 								<ScriptBlock>
-									$_.assigned_to.display_value
+									if ($_.assigned_to.display_value) {
+										$_.assigned_to.display_value
+									} else {
+										$_.assigned_to.value
+									}
 								</ScriptBlock>
 							</TableColumnItem>
 							<TableColumnItem>
@@ -367,7 +383,11 @@
 							</TableColumnItem>
 							<TableColumnItem>
 								<ScriptBlock>
-									$_.request_item.display_value
+									if ($_.request_item.display_value) {
+										$_.request_item.display_value
+									} else {
+										$_.request_item.value
+									}
 								</ScriptBlock>
 							</TableColumnItem>
 						</TableColumnItems>
@@ -420,7 +440,11 @@
 							</TableColumnItem>
 							<TableColumnItem>
 								<ScriptBlock>
-									$_.change_request.display_value
+									if ($_.change_request.display_value) {
+										$_.change_request.display_value
+									} else {
+										$_.change_request.value
+									}
 								</ScriptBlock>
 							</TableColumnItem>
 						</TableColumnItems>
