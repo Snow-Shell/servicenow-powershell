@@ -1,3 +1,8 @@
+## 3.1.10
+- Fix [#183](https://github.com/Snow-Shell/servicenow-powershell/issues/183), `Get-ServiceNowRecord -Filter` parameter not applying in some circumstances
+- Update display formats to correctly show values when `-DisplayValue` is false
+- Update `Get-ServiceNowRecord` help
+
 ## 3.1.9
 - Fix #172, `Get-ServiceNowRecord -IncludeCustomVariable` not returning values
 - `Get-ServiceNowRecord -IncludeCustomVariable` 'variable.' prefix has been removed from custom variable property name.
@@ -127,6 +132,7 @@ Be able to reference types from this config per table, removing the need to have
 - Add Get-ServiceNowAttachment
 - Add Get-ServiceNowAttachmentDetail
 - Add Remove-ServiceNowAttachment
+
 
 
 
