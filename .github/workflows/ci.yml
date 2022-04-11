@@ -5,7 +5,7 @@ on:
   pull_request:
 
 jobs:
-  Testing:
+  test-pssa:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -17,7 +17,7 @@ jobs:
       - name: Lint with PSScriptAnalyzer
         shell: pwsh
         run: |
-          Invoke-ScriptAnalyzer -Path . -Recurse -Outvariable issues
+          Invoke-ScriptAnalyzer -Path ./ServiceNow -Recurse -Outvariable issues
           $issues | ConvertTo-Json -Depth 2 | Set-Content -Path '${{ github.workspace }}/pssa.json'
           $errors   = $issues.Where({$_.Severity -eq 'Error'})
           $warnings = $issues.Where({$_.Severity -eq 'Warning'})
@@ -31,6 +31,53 @@ jobs:
         with:
           name: pssa-results
           path: ${{ github.workspace }}/pssa.json
-      # - name: Test with Pester
-      #   shell: pwsh
-      #   run: Invoke-Pester Unit.Tests.ps1 -Passthru | Export-CliXml -Path Unit.Tests.xml
+
+  test-pwsh:
+      strategy:
+        matrix:
+          platform: [ubuntu-latest, macos-latest, windows-latest]
+      runs-on: ${{ matrix.platform }}
+      steps:
+      - uses: actions/checkout@v2
+      - name: Run Pester tests (pwsh)
+        run: |
+          Write-host $PSVersionTable.PSVersion.Major $PSVersionTable.PSRemotingProtocolVersion.Minor
+          Set-PSRepository psgallery -InstallationPolicy trusted
+          Install-Module -Name Pester -RequiredVersion 5.0.4 -confirm:$false -Force
+          import-module Pester
+          $config = [PesterConfiguration]::Default
+          $config.Run.Path = '${{ github.workspace }}/Tests'
+          $config.TestResult.Enabled = $true
+          $config.TestResult.OutputPath = 'test_result.xml'
+          Invoke-Pester -Configuration $config
+        shell: pwsh
+      - name: Upload test results
+        uses: actions/upload-artifact@v2
+        if: always()
+        with:
+          name: Powershell (v7) Pester Test Results ${{ matrix.platform }}
+          path: test_result.xml
+
+  test-posh:
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Run Pester tests (PowerShell)
+      run: |
+        Write-host $PSVersionTable.PSVersion.Major $PSVersionTable.PSRemotingProtocolVersion.Minor
+        Set-PSRepository psgallery -InstallationPolicy trusted
+        Install-Module -Name Pester -RequiredVersion 5.0.4 -Confirm:$false -Force
+        import-module Pester
+        $config = [PesterConfiguration]::Default
+        $config.Run.Path = '${{ github.workspace }}/Tests'
+        $config.TestResult.Enabled = $true
+        $config.TestResult.OutputPath = 'test_result.xml'
+        Invoke-Pester -Configuration $config
+        if ($Error[0].Fullyqualifiederrorid -eq 'PesterAssertionFailed') {exit 1}
+      shell: powershell
+    - name: Upload test results
+      uses: actions/upload-artifact@v2
+      if: always()
+      with:
+        name: Windows Powershell (v5) Pester Test Results
+        path: test_result.xml
