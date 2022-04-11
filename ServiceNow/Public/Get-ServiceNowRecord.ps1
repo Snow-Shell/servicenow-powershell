@@ -16,7 +16,7 @@
 
 .PARAMETER ParentId
     The sys_id or number of the parent record.
-    For example, to get catalog tasks for a requested item, provide the RITM number as ParentId.
+    For example, to get catalog tasks for a requested item, provide the RITM number as ParentId and catalog task as the Table.
 
 .PARAMETER Description
     Filter results based on the 'description' field.  The field will be different for each table.
@@ -25,7 +25,7 @@
     The comparison performed is a 'like'.
 
 .PARAMETER Property
-    Return one or more specific fields
+    Return one or more specific fields otherwise all fields will be returned
 
 .PARAMETER Filter
     Array or multidimensional array of fields and values to filter on.
@@ -119,13 +119,16 @@
     Get a specific record by number using the function alias
 
 .INPUTS
-    None
+    Id
 
 .OUTPUTS
-    System.Management.Automation.PSCustomObject
+    PSCustomObject.  If -AsValue is used, the type will be the selected field.
 
 .LINK
     https://docs.servicenow.com/bundle/quebec-platform-user-interface/page/use/common-ui-elements/reference/r_OpAvailableFiltersQueries.html
+
+.LINK
+    https://developer.servicenow.com/dev.do#!/reference/api/sandiego/rest/c_TableAPI#table-GET
 #>
 function Get-ServiceNowRecord {
 
@@ -197,6 +200,7 @@ function Get-ServiceNowRecord {
     begin {
 
         $invokeParams = @{
+            Filter            = $Filter
             Property          = $Property
             Sort              = $Sort
             DisplayValue      = $DisplayValue
@@ -245,8 +249,8 @@ function Get-ServiceNowRecord {
                 $idFilter = @('number', '-eq', $Id)
             }
 
-            if ( $Filter ) {
-                $invokeParams.Filter = $Filter, 'and', $idFilter
+            if ( $invokeParams.Filter ) {
+                $invokeParams.Filter = $invokeParams.Filter, 'and', $idFilter
             }
             else {
                 $invokeParams.Filter = $idFilter
@@ -291,7 +295,7 @@ function Get-ServiceNowRecord {
         $addedSysIdProp = $false
         # we need the sys_id value in order to get custom var data
         # add it in if specific properties were requested and not part of the list
-        if ( $IncludeCustomVariable.IsPresent ) {
+        if ( $IncludeCustomVariable ) {
             if ( $Property -and 'sys_id' -notin $Property ) {
                 $invokeParams.Property += 'sys_id'
                 $addedSysIdProp = $true
