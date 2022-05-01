@@ -1,51 +1,51 @@
-<#
-.SYNOPSIS
-    Retrieves records for the specified table
-.DESCRIPTION
-    The Get-ServiceNowTable function retrieves records for the specified table
-.INPUTS
-    None
-.OUTPUTS
-    System.Management.Automation.PSCustomObject
-.LINK
-    Service-Now Kingston REST Table API: https://docs.servicenow.com/bundle/kingston-application-development/page/integrate/inbound-rest/concept/c_TableAPI.html
-    Service-Now Table API FAQ: https://hi.service-now.com/kb_view.do?sysparm_article=KB0534905
-#>
 function Invoke-ServiceNowRestMethod {
+    <#
+    .SYNOPSIS
+        Retrieves records for the specified table
+    .DESCRIPTION
+        The Get-ServiceNowTable function retrieves records for the specified table
+    .INPUTS
+        None
+    .OUTPUTS
+        System.Management.Automation.PSCustomObject
+    .LINK
+        Service-Now Kingston REST Table API: https://docs.servicenow.com/bundle/kingston-application-development/page/integrate/inbound-rest/concept/c_TableAPI.html
+        Service-Now Table API FAQ: https://hi.service-now.com/kb_view.do?sysparm_article=KB0534905
+    #>
 
     [OutputType([System.Management.Automation.PSCustomObject])]
     [CmdletBinding(SupportsPaging)]
     [System.Diagnostics.CodeAnalysis.SuppressMessage('PSUseBOMForUnicodeEncodedFile', '', Justification = 'issuees with *nix machines and no benefit')]
 
-    Param (
-        [parameter()]
+    param (
+        [Parameter()]
         [ValidateSet('Get', 'Post', 'Patch', 'Delete')]
         [string] $Method = 'Get',
 
         # Name of the table we're querying (e.g. incidents)
-        [parameter(Mandatory, ParameterSetName = 'Table')]
+        [Parameter(Mandatory, ParameterSetName = 'Table')]
         [ValidateNotNullOrEmpty()]
         [Alias('sys_class_name')]
         [string] $Table,
 
-        [parameter(ParameterSetName = 'Table')]
+        [Parameter(ParameterSetName = 'Table')]
         [ValidateNotNullOrEmpty()]
         [string] $SysId,
 
-        [parameter(ParameterSetName = 'Uri')]
+        [Parameter(ParameterSetName = 'Uri')]
         [ValidateNotNullOrEmpty()]
         [string] $UriLeaf,
 
         # [parameter()]
-        # [hashtable] $Header,
+        # [Hashtable] $Header,
 
-        [parameter()]
-        [hashtable] $Values,
+        [Parameter()]
+        [Hashtable] $Values,
 
-        [parameter()]
+        [Parameter()]
         [System.Collections.ArrayList] $Filter,
 
-        [parameter()]
+        [Parameter()]
         [System.Collections.ArrayList] $Sort = @('opened_at', 'desc'),
 
         # sysparm_query param in the format of a ServiceNow encoded query string (see http://wiki.servicenow.com/index.php?title=Encoded_Query_Strings)
@@ -64,35 +64,34 @@ function Invoke-ServiceNowRestMethod {
         [string] $DisplayValue = 'true',
 
         [Parameter()]
-        [hashtable] $Connection,
+        [Hashtable] $Connection,
 
         [Parameter()]
-        [hashtable] $ServiceNowSession = $script:ServiceNowSession
+        [Hashtable] $ServiceNowSession = $script:ServiceNowSession
     )
 
     # get header/body auth values
-    $params = Get-ServiceNowAuth -C $Connection -S $ServiceNowSession
+    $Params = Get-ServiceNowAuth -C $Connection -S $ServiceNowSession
 
-    $params.Method = $Method
-    $params.ContentType = 'application/json'
-    $params.UseBasicParsing = $true
+    $Params.Method = $Method
+    $Params.ContentType = 'application/json'
+    $Params.UseBasicParsing = $true
 
     if ( $Table ) {
         # table can either be the actual table name or class name
         # look up the actual table name
-        $tableName = $script:ServiceNowTable | Where-Object { $_.Name.ToLower() -eq $Table.ToLower() -or $_.ClassName.ToLower() -eq $Table.ToLower() } | Select-Object -ExpandProperty Name
+        $TableName = $script:ServiceNowTable | Where-Object { $_.Name.ToLower() -eq $Table.ToLower() -or $_.ClassName.ToLower() -eq $Table.ToLower() } | Select-Object -ExpandProperty Name
         # if not in our lookup, just use the table name as provided
-        if ( -not $tableName ) {
-            $tableName = $Table
+        if ( -not $TableName ) {
+            $TableName = $Table
         }
 
-        $params.Uri += "/table/$tableName"
+        $Params.Uri += "/table/$TableName"
         if ( $SysId ) {
-            $params.Uri += "/$SysId"
+            $Params.Uri += "/$SysId"
         }
-    }
-    else {
-        $params.Uri += $UriLeaf
+    } else {
+        $Params.Uri += $UriLeaf
     }
 
     if ( $Method -eq 'Get') {
@@ -128,7 +127,7 @@ function Invoke-ServiceNowRestMethod {
 
     # Populate the query
     # else {
-    #     $body['sysparm_query'] = (New-ServiceNowQuery -Filter $Filter -Sort $Sort)
+    #     $Body['sysparm_query'] = (New-ServiceNowQuery -Filter $Filter -Sort $Sort)
     # }
 
 
@@ -136,136 +135,127 @@ function Invoke-ServiceNowRestMethod {
         $Body = $Values | ConvertTo-Json
 
         #Convert to UTF8 array to support special chars such as the danish "ï¿½","ï¿½","ï¿½"
-        $body = [System.Text.Encoding]::UTf8.GetBytes($Body)
+        $Body = [System.Text.Encoding]::UTf8.GetBytes($Body)
     }
 
     if ( $Body ) {
-        $params.Body = $Body
+        $Params.Body = $Body
     }
 
-    Write-Verbose ($params | ConvertTo-Json)
+    Write-Verbose ($Params | ConvertTo-Json)
 
     # hide invoke-webrequest progress
-    $oldProgressPreference = $ProgressPreference
+    $OldProgressPreference = $ProgressPreference
     $ProgressPreference = 'SilentlyContinue'
 
     try {
-        $response = Invoke-WebRequest @params
-        Write-Debug $response
-    }
-    catch {
-        $ProgressPreference = $oldProgressPreference
+        $Response = Invoke-WebRequest @Params
+        Write-Debug $Response
+    } catch {
+        $ProgressPreference = $OldProgressPreference
         throw $_
     }
 
-    # validate response
+    # validate Response
     switch ($Method) {
         'Delete' {
-            if ( $response.StatusCode -ne 204 ) {
-                throw ('"{0} : {1}' -f $response.StatusCode, $response | Out-String )
+            if ( $Response.StatusCode -ne 204 ) {
+                throw ('"{0} : {1}' -f $Response.StatusCode, $Response | Out-String )
             }
         }
         Default {
             # TODO: this could use some work
             # checking for content is good, but at times we'll get content that's not valid
             # eg. html content when a dev instance is hibernating
-            if ( $response.Content ) {
-                $content = $response.content | ConvertFrom-Json
-                if ( $content.PSobject.Properties.Name -contains "result" ) {
-                    $records = @($content | Select-Object -ExpandProperty result)
+            if ( $Response.Content ) {
+                $Content = $Response.content | ConvertFrom-Json
+                if ( $Content.PSobject.Properties.Name -contains 'result' ) {
+                    $Records = @($Content | Select-Object -ExpandProperty result)
+                } else {
+                    $Records = @($Content)
                 }
-                else {
-                    $records = @($content)
-                }
-            }
-            else {
+            } else {
                 # invoke-webrequest didn't throw an error per se, but we didn't get content back either
-                throw ('"{0} : {1}' -f $response.StatusCode, $response | Out-String )
+                throw ('"{0} : {1}' -f $Response.StatusCode, $Response | Out-String )
             }
         }
     }
 
-    $totalRecordCount = 0
-    if ( $response.Headers.'X-Total-Count' ) {
+    $TotalRecordCount = 0
+    if ( $Response.Headers.'X-Total-Count' ) {
         if ($PSVersionTable.PSVersion.Major -lt 6) {
-            $totalRecordCount = [int]$response.Headers.'X-Total-Count'
+            $TotalRecordCount = [int]$Response.Headers.'X-Total-Count'
+        } else {
+            $TotalRecordCount = [int]($Response.Headers.'X-Total-Count'[0])
         }
-        else {
-            $totalRecordCount = [int]($response.Headers.'X-Total-Count'[0])
-        }
-        Write-Verbose "Total number of records for this query: $totalRecordCount"
+        Write-Verbose "Total number of records for this query: $TotalRecordCount"
     }
 
     # if option to get all records was provided, loop and get them all
     if ( $PSCmdlet.PagingParameters.IncludeTotalCount.IsPresent ) {
 
-        $retrieveRecordCount = $totalRecordCount - $PSCmdlet.PagingParameters.Skip
+        $retrieveRecordCount = $TotalRecordCount - $PSCmdlet.PagingParameters.Skip
         if ( $retrieveRecordCount -ne 0 ) {
             Write-Warning "Getting $retrieveRecordCount records..."
         }
 
-        $setPoint = $params.body.sysparm_offset + $params.body.sysparm_limit
+        $setPoint = $Params.body.sysparm_offset + $Params.body.sysparm_limit
 
-        while ($totalRecordCount -gt $setPoint) {
+        while ($TotalRecordCount -gt $setPoint) {
 
             # up the offset so we get the next set of records
-            $params.body.sysparm_offset += $params.body.sysparm_limit
-            $setPoint = $params.body.sysparm_offset + $params.body.sysparm_limit
+            $Params.body.sysparm_offset += $Params.body.sysparm_limit
+            $setPoint = $Params.body.sysparm_offset + $Params.body.sysparm_limit
 
-            $end = if ( $totalRecordCount -lt $setPoint ) {
-                $totalRecordCount
-            }
-            else {
+            $end = if ( $TotalRecordCount -lt $setPoint ) {
+                $TotalRecordCount
+            } else {
                 $setPoint
             }
 
-            Write-Verbose ('getting {0}-{1} of {2}' -f ($params.body.sysparm_offset + 1), $end, $totalRecordCount)
+            Write-Verbose ('getting {0}-{1} of {2}' -f ($Params.body.sysparm_offset + 1), $end, $TotalRecordCount)
             try {
-                $response = Invoke-WebRequest @params -Verbose:$false
-            }
-            catch {
-                $ProgressPreference = $oldProgressPreference
+                $Response = Invoke-WebRequest @Params -Verbose:$false
+            } catch {
+                $ProgressPreference = $OldProgressPreference
                 throw $_
             }
 
-            $content = $response.content | ConvertFrom-Json
-            if ( $content.PSobject.Properties.Name -contains "result" ) {
-                $records += $content | Select-Object -ExpandProperty result
-            }
-            else {
-                $records += $content
+            $Content = $Response.content | ConvertFrom-Json
+            if ( $Content.PSobject.Properties.Name -contains 'result' ) {
+                $Records += $Content | Select-Object -ExpandProperty result
+            } else {
+                $Records += $Content
             }
         }
 
-        if ( $totalRecordCount -ne ($records.count + $PSCmdlet.PagingParameters.Skip) ) {
-            Write-Error ('The expected number of records was not received.  This can occur if your -First value, how many records retrieved at once, is too large.  Lower this value and try again.  Received: {0}, expected: {1}' -f $records.count, ($totalRecordCount - $PSCmdlet.PagingParameters.Skip))
+        if ( $TotalRecordCount -ne ($Records.count + $PSCmdlet.PagingParameters.Skip) ) {
+            Write-Error ('The expected number of records was not received.  This can occur if your -First value, how many records retrieved at once, is too large.  Lower this value and try again.  Received: {0}, expected: {1}' -f $Records.count, ($TotalRecordCount - $PSCmdlet.PagingParameters.Skip))
         }
     }
 
     # set the progress pref back now that done with invoke-webrequest
-    $ProgressPreference = $oldProgressPreference
+    $ProgressPreference = $OldProgressPreference
 
     switch ($Method) {
         'Get' {
             $ConvertToDateField = @('closed_at', 'expected_start', 'follow_up', 'opened_at', 'sys_created_on', 'sys_updated_on', 'work_end', 'work_start')
-            ForEach ($SNResult in $records) {
-                ForEach ($Property in $ConvertToDateField) {
-                    If (-not [string]::IsNullOrEmpty($SNResult.$Property)) {
-                        Try {
+            foreach ($SNResult in $Records) {
+                foreach ($Property in $ConvertToDateField) {
+                    if (-not [string]::IsNullOrEmpty($SNResult.$Property)) {
+                        try {
                             # Extract the default Date/Time formatting from the local computer's "Culture" settings, and then create the format to use when parsing the date/time from Service-Now
                             $CultureDateTimeFormat = (Get-Culture).DateTimeFormat
                             $DateFormat = $CultureDateTimeFormat.ShortDatePattern
                             $TimeFormat = $CultureDateTimeFormat.LongTimePattern
                             $DateTimeFormat = "$DateFormat $TimeFormat"
                             $SNResult.$Property = [DateTime]::ParseExact($($SNResult.$Property), $DateTimeFormat, [System.Globalization.DateTimeFormatInfo]::InvariantInfo, [System.Globalization.DateTimeStyles]::None)
-                        }
-                        Catch {
-                            Try {
+                        } catch {
+                            try {
                                 # Universal Format
                                 $DateTimeFormat = 'yyyy-MM-dd HH:mm:ss'
                                 $SNResult.$Property = [DateTime]::ParseExact($($SNResult.$Property), $DateTimeFormat, [System.Globalization.DateTimeFormatInfo]::InvariantInfo, [System.Globalization.DateTimeStyles]::None)
-                            }
-                            Catch {
+                            } catch {
                                 # If the local culture and universal formats both fail keep the property as a string (Do nothing)
                                 $null = 'Silencing a PSSA alert with this line'
                             }
@@ -276,7 +266,7 @@ function Invoke-ServiceNowRestMethod {
         }
 
         { $_ -in 'Post', 'Patch' } {
-            $records = $content | Select-Object -ExpandProperty result
+            $Records = $Content | Select-Object -ExpandProperty result
         }
 
         'Delete' {
@@ -288,5 +278,5 @@ function Invoke-ServiceNowRestMethod {
         }
     }
 
-    $records
+    $Records
 }

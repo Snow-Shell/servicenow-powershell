@@ -1,15 +1,15 @@
-[cmdletbinding()]
+[CmdletBinding()]
 param()
 
 Write-Verbose $PSScriptRoot
 
-$config = ConvertFrom-Json (Get-Content "$PSScriptRoot\config\main.json" -Raw)
-$Script:ServiceNowOperator = $config.FilterOperators
-[System.Collections.ArrayList] $script:ServiceNowTable = $config.Tables
+$Config = ConvertFrom-Json (Get-Content "$PSScriptRoot\config\main.json" -Raw)
+$Script:ServiceNowOperator = $Config.FilterOperators
+[System.Collections.ArrayList] $script:ServiceNowTable = $Config.Tables
 
 Export-ModuleMember -Variable ServiceNowOperator, ServiceNowTable
 
-$tableArgCompleterSb = {
+$TableArgCompleterSb = {
     $ServiceNowTable | ForEach-Object {
         if ( $_.ClassName ) {
             '''{0}''' -f $_.ClassName
@@ -25,7 +25,7 @@ $tableArgCompleterSb = {
     'Get-ServiceNowAttachment'
     'Add-ServiceNowAttachment'
 ) | ForEach-Object {
-    Register-ArgumentCompleter -CommandName $_ -ParameterName 'Table' -ScriptBlock $tableArgCompleterSb
+    Register-ArgumentCompleter -CommandName $_ -ParameterName 'Table' -ScriptBlock $TableArgCompleterSb
 }
 
 Write-Verbose 'Import everything in sub folders folder'
@@ -46,7 +46,7 @@ Export-ModuleMember -Function (Get-ChildItem -Path "$PSScriptRoot\Public\*.ps1")
 $Script:ServiceNowSession = @{}
 Export-ModuleMember -Variable ServiceNowSession
 
-$aliases = @{
+$Aliases = @{
     'Get-ServiceNowRequestItem'       = 'Get-ServiceNowRequestedItem'
     'Get-ServiceNowIncident'          = 'Get-ServiceNowRecordInterim'
     'Get-ServiceNowChangeRequest'     = 'Get-ServiceNowRecordInterim'
@@ -62,7 +62,7 @@ $aliases = @{
     'Update-ServiceNowNumber'         = 'Update-ServiceNowRecord'
     'gsnr'                            = 'Get-ServiceNowRecord'
 }
-$aliases.GetEnumerator() | ForEach-Object {
+$Aliases.GetEnumerator() | ForEach-Object {
     Set-Alias -Name $_.Key -Value $_.Value
 }
 Export-ModuleMember -Alias *

@@ -2,7 +2,7 @@ function Update-ServiceNowIncident {
 
     [CmdletBinding(SupportsShouldProcess)]
 
-    Param
+    param
     (   # sys_id of the caller of the incident (use Get-ServiceNowUser to retrieve this)
         [parameter(Mandatory, ValueFromPipelineByPropertyName)]
         [Alias('sys_id')]
@@ -10,13 +10,13 @@ function Update-ServiceNowIncident {
 
         # Hashtable of values to use as the record's properties
         [parameter(Mandatory)]
-        [hashtable] $Values,
+        [Hashtable] $Values,
 
         [Parameter()]
         [Hashtable] $Connection,
 
         [Parameter()]
-        [hashtable] $ServiceNowSession = $script:ServiceNowSession,
+        [Hashtable] $ServiceNowSession = $script:ServiceNowSession,
 
         [Parameter()]
         [switch] $PassThru
@@ -25,7 +25,7 @@ function Update-ServiceNowIncident {
     begin {}
 
     process {
-        $params = @{
+        $Params = @{
             Method            = 'Patch'
             Table             = 'incident'
             SysId             = $SysId
@@ -34,10 +34,10 @@ function Update-ServiceNowIncident {
             ServiceNowSession = $ServiceNowSession
         }
 
-        If ($PSCmdlet.ShouldProcess("Incident $SysID", 'Update values')) {
-            $response = Invoke-ServiceNowRestMethod @params
+        if ($PSCmdlet.ShouldProcess("Incident $SysID", 'Update values')) {
+            $Response = Invoke-ServiceNowRestMethod @Params
             if ( $PassThru.IsPresent ) {
-                $response
+                $Response
             }
         }
     }

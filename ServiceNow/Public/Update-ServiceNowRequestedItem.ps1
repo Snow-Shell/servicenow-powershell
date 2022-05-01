@@ -1,20 +1,18 @@
 function Update-ServiceNowRequestItem {
     <#
     .SYNOPSIS
-    Update an existing request item (RITM)
+        Update an existing request item (RITM)
 
     .DESCRIPTION
-    Update an existing request item (RITM)
+        Update an existing request item (RITM)
 
     .EXAMPLE
-    Update-ServiceNowRequestItem -SysId $SysId -Values @{property='value'}
-
-    Updates a ticket number with a value providing no return output.
+        Update-ServiceNowRequestItem -SysId $SysId -Values @{property='value'}
+        Updates a ticket number with a value providing no return output.
 
     .EXAMPLE
-    Update-ServiceNowRequestItem -SysId $SysId -Values @{property='value'} -PassThru
-
-    Updates a ticket number with a value providing return output.
+        Update-ServiceNowRequestItem -SysId $SysId -Values @{property='value'} -PassThru
+        Updates a ticket number with a value providing return output.
 
     .NOTES
 
@@ -23,21 +21,21 @@ function Update-ServiceNowRequestItem {
     [OutputType([void], [System.Management.Automation.PSCustomObject])]
     [CmdletBinding(SupportsShouldProcess)]
 
-    Param (
+    param (
         # sys_id of the ticket to update
-        [parameter(Mandatory, ValueFromPipelineByPropertyName)]
+        [Parameter(Mandatory, ValueFromPipelineByPropertyName)]
         [Alias('sys_id')]
-        [string] $SysId,
+        [string] $SysID,
 
         # Hashtable of values to use as the record's properties
         [Parameter(Mandatory)]
-        [hashtable] $Values,
+        [Hashtable] $Values,
 
         [Parameter()]
         [Hashtable] $Connection,
 
         [Parameter()]
-        [hashtable] $ServiceNowSession = $script:ServiceNowSession,
+        [Hashtable] $ServiceNowSession = $script:ServiceNowSession,
 
         [Parameter()]
         [switch] $PassThru
@@ -47,19 +45,19 @@ function Update-ServiceNowRequestItem {
 
     process {
 
-        $params = @{
+        $Params = @{
             Method            = 'Patch'
             Table             = 'sc_req_item'
-            SysId             = $SysId
+            SysId             = $SysID
             Values            = $Values
             Connection        = $Connection
             ServiceNowSession = $ServiceNowSession
         }
 
-        If ($PSCmdlet.ShouldProcess("Requested Item $SysID", 'Update values')) {
-            $response = Invoke-ServiceNowRestMethod @params
+        if ($PSCmdlet.ShouldProcess("Requested Item $SysID", 'Update values')) {
+            $Response = Invoke-ServiceNowRestMethod @Params
             if ( $PassThru.IsPresent ) {
-                $response
+                $Response
             }
         }
 

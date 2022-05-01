@@ -1,16 +1,16 @@
-Function Test-ServiceNowURL {
+function Test-ServiceNowURL {
     <#
     .SYNOPSIS
-    For use in testing ServiceNow Urls.
+        For use in testing ServiceNow Urls.
 
     .DESCRIPTION
-    For use in testing ServiceNow Urls.  The test is a simple regex match in an attempt to validate that users use a 'tenant.domain.com' pattern.
+        For use in testing ServiceNow Urls.  The test is a simple regex match in an attempt to validate that users use a 'tenant.domain.com' pattern.
 
     .EXAMPLE
-    Test-ServiceNowURL -Url tenant.domain.com
+        Test-ServiceNowURL -Url tenant.domain.com
 
     .OUTPUTS
-    System.Boolean
+        System.Boolean
     #>
 
     [OutputType([System.Boolean])]
@@ -23,13 +23,15 @@ Function Test-ServiceNowURL {
     )
 
     begin {}
+
     process	{
         Write-Verbose "Testing url:  $Url"
         if ($Url -match '^\w+\..*\.\w+') {
             $true
         } else {
-            Throw "The expected URL format is tenant.domain.com"
+            Throw 'The expected URL format is tenant.domain.com'
         }
     }
+    
     end {}
 }

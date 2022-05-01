@@ -1,71 +1,72 @@
-<#
-.SYNOPSIS
-Create a new ServiceNow session
-
-.DESCRIPTION
-Create a new ServiceNow session via credentials, OAuth, or access token.
-This session will be used by default for all future calls.
-Optionally, you can specify the api version you'd like to use; the default is the latest.
-To use OAuth, ensure you've set it up, https://docs.servicenow.com/bundle/quebec-platform-administration/page/administer/security/task/t_SettingUpOAuth.html.
-
-.PARAMETER Url
-Base domain for your ServiceNow instance, eg. tenant.domain.com
-
-.PARAMETER Credential
-Username and password to connect.  This can be used standalone to use basic authentication or in conjunction with ClientCredential for OAuth.
-
-.PARAMETER ClientCredential
-Required for OAuth.  Credential where the username is the Client ID and the password is the Secret.
-
-.PARAMETER AccessToken
-Provide the access token directly if obtained outside of this module.
-
-.PARAMETER Proxy
-Use a proxy server for the request, rather than connecting directly.  Provide the full url.
-
-.PARAMETER ProxyCredential
-Credential of user who can access Proxy.  If not provided, the current user will be used.
-
-.PARAMETER ApiVersion
-Specific API version to use.  The default is the latest.
-
-.PARAMETER GetAllTable
-Populate $ServiceNowTable with data from all tables the user has access to
-
-.PARAMETER PassThru
-Provide the resulting session object to the pipeline as opposed to setting as a script scoped variable to be used by default for other calls.
-This is useful if you want to have multiple sessions with different api versions, credentials, etc.
-
-.EXAMPLE
-New-ServiceNowSession -Url tenant.domain.com -Credential $mycred
-Create a session using basic authentication and save it to a script-scoped variable
-
-.EXAMPLE
-New-ServiceNowSession -Url tenant.domain.com -Credential $mycred -ClientCredential $myClientCred
-Create a session using OAuth and save it to a script-scoped variable
-
-.EXAMPLE
-New-ServiceNowSession -Url tenant.domain.com -AccessToken 'asdfasd9f87adsfkksk3nsnd87g6s'
-Create a session with an existing access token and save it to a script-scoped variable
-
-.EXAMPLE
-$session = New-ServiceNowSession -Url tenant.domain.com -Credential $mycred -ClientCredential $myClientCred -PassThru
-Create a session using OAuth and save it as a local variable to be provided to functions directly
-
-.EXAMPLE
-New-ServiceNowSession -Url tenant.domain.com -Credential $mycred -Proxy http://1.2.3.4
-Create a session utilizing a proxy to connect
-
-.INPUTS
-None
-
-.OUTPUTS
-Hashtable if -PassThru provided
-
-.LINK
-https://docs.servicenow.com/bundle/quebec-platform-administration/page/administer/security/reference/r_OAuthAPIRequestParameters.html
-#>
 function New-ServiceNowSession {
+    <#
+    .SYNOPSIS
+        Create a new ServiceNow session
+
+    .DESCRIPTION
+        Create a new ServiceNow session via credentials, OAuth, or access token.
+        This session will be used by default for all future calls.
+        Optionally, you can specify the api version you'd like to use; the default is the latest.
+        To use OAuth, ensure you've set it up, https://docs.servicenow.com/bundle/quebec-platform-administration/page/administer/security/task/t_SettingUpOAuth.html.
+
+    .PARAMETER Url
+        Base domain for your ServiceNow instance, eg. tenant.domain.com
+
+    .PARAMETER Credential
+        Username and password to connect.  This can be used standalone to use basic authentication or in conjunction with ClientCredential for OAuth.
+
+    .PARAMETER ClientCredential
+        Required for OAuth.  Credential where the username is the Client ID and the password is the Secret.
+
+    .PARAMETER AccessToken
+        Provide the access token directly if obtained outside of this module.
+
+    .PARAMETER Proxy
+        Use a proxy server for the request, rather than connecting directly.  Provide the full url.
+
+    .PARAMETER ProxyCredential
+        Credential of user who can access Proxy.  If not provided, the current user will be used.
+
+    .PARAMETER ApiVersion
+        Specific API version to use.  The default is the latest.
+
+    .PARAMETER GetAllTable
+        Populate $ServiceNowTable with data from all tables the user has access to
+
+    .PARAMETER PassThru
+        Provide the resulting session object to the pipeline as opposed to setting as a script scoped variable to be used by default for other calls.
+        This is useful if you want to have multiple sessions with different api versions, credentials, etc.
+
+    .EXAMPLE
+        New-ServiceNowSession -Url tenant.domain.com -Credential $mycred
+        Create a session using basic authentication and save it to a script-scoped variable
+
+    .EXAMPLE
+        New-ServiceNowSession -Url tenant.domain.com -Credential $mycred -ClientCredential $myClientCred
+        Create a session using OAuth and save it to a script-scoped variable
+
+    .EXAMPLE
+        New-ServiceNowSession -Url tenant.domain.com -AccessToken 'asdfasd9f87adsfkksk3nsnd87g6s'
+        Create a session with an existing access token and save it to a script-scoped variable
+
+    .EXAMPLE
+        $session = New-ServiceNowSession -Url tenant.domain.com -Credential $mycred -ClientCredential $myClientCred -PassThru
+        Create a session using OAuth and save it as a local variable to be provided to functions directly
+
+    .EXAMPLE
+        New-ServiceNowSession -Url tenant.domain.com -Credential $mycred -Proxy http://1.2.3.4
+        Create a session utilizing a proxy to connect
+
+    .INPUTS
+        None
+
+    .OUTPUTS
+        Hashtable if -PassThru provided
+
+    .LINK
+        https://docs.servicenow.com/bundle/quebec-platform-administration/page/administer/security/reference/r_OAuthAPIRequestParameters.html
+    #>
+
 
     [CmdletBinding(DefaultParameterSetName = 'BasicAuth')]
     [System.Diagnostics.CodeAnalysis.SuppressMessage('PSAvoidUsingConvertToSecureStringWithPlainText', '', Justification = 'api call provides in plain text')]
@@ -114,27 +115,26 @@ function New-ServiceNowSession {
     Write-Verbose $PSCmdLet.ParameterSetName
 
     if ( $ApiVersion -le 0 ) {
-        $version = ''
-    }
-    else {
-        $version = ('/v{0}' -f $ApiVersion)
+        $Version = ''
+    } else {
+        $Version = ('/v{0}' -f $ApiVersion)
     }
 
-    $newSession = @{
+    $NewSession = @{
         Domain  = $Url
-        BaseUri = ('https://{0}/api/now{1}' -f $Url, $version)
+        BaseUri = ('https://{0}/api/now{1}' -f $Url, $Version)
     }
 
     if ( $PSBoundParameters.ContainsKey('Proxy') ) {
-        $newSession.Add('Proxy', $Proxy)
+        $NewSession.Add('Proxy', $Proxy)
         if ( $PSBoundParameters.ContainsKey('ProxyCredential') ) {
-            $newSession.Add('ProxyCredential', $ProxyCredential)
+            $NewSession.Add('ProxyCredential', $ProxyCredential)
         }
     }
 
     switch -Wildcard ($PSCmdLet.ParameterSetName) {
         'OAuth*' {
-            $params = @{
+            $Params = @{
                 Uri             = 'https://{0}/oauth_token.do' -f $Url
                 Body            = @{
                     'grant_type'    = 'password'
@@ -149,43 +149,41 @@ function New-ServiceNowSession {
 
             # need to add this manually here, in addition to above, since we're making a rest call before our session is created
             if ( $PSBoundParameters.ContainsKey('Proxy') ) {
-                $params.Add('Proxy', $Proxy)
+                $Params.Add('Proxy', $Proxy)
                 if ( $PSBoundParameters.ContainsKey('ProxyCredential') ) {
-                    $params.Add('ProxyCredential', $ProxyCredential)
-                }
-                else {
-                    $params.Add('ProxyUseDefaultCredentials', $true)
+                    $Params.Add('ProxyCredential', $ProxyCredential)
+                } else {
+                    $Params.Add('ProxyUseDefaultCredentials', $true)
                 }
             }
 
-            $oldProgressPreference = $ProgressPreference
+            $OldProgressPreference = $ProgressPreference
             $ProgressPreference = 'SilentlyContinue'
 
-            $response = Invoke-WebRequest @params
+            $Response = Invoke-WebRequest @Params
 
             # set the progress pref back now that done with invoke-webrequest
-            $ProgressPreference = $oldProgressPreference
+            $ProgressPreference = $OldProgressPreference
 
-            if ( $response.Content ) {
-                $token = $response.Content | ConvertFrom-Json
-                $newSession.Add('AccessToken', (New-Object System.Management.Automation.PSCredential('AccessToken', ($token.access_token | ConvertTo-SecureString -AsPlainText -Force))))
-                $newSession.Add('RefreshToken', (New-Object System.Management.Automation.PSCredential('RefreshToken', ($token.refresh_token | ConvertTo-SecureString -AsPlainText -Force))))
-            }
-            else {
+            if ( $Response.Content ) {
+                $Token = $Response.Content | ConvertFrom-Json
+                $NewSession.Add('AccessToken', (New-Object System.Management.Automation.PSCredential('AccessToken', ($Token.access_token | ConvertTo-SecureString -AsPlainText -Force))))
+                $NewSession.Add('RefreshToken', (New-Object System.Management.Automation.PSCredential('RefreshToken', ($Token.refresh_token | ConvertTo-SecureString -AsPlainText -Force))))
+            } else {
                 # invoke-webrequest didn't throw an error, but we didn't get a token back either
-                throw ('"{0} : {1}' -f $response.StatusCode, $response | Out-String )
+                throw ('"{0} : {1}' -f $Response.StatusCode, $Response | Out-String )
             }
         }
 
         'AccessToken*' {
-            $newSession.Add('AccessToken', (New-Object System.Management.Automation.PSCredential('AccessToken', ($AccessToken | ConvertTo-SecureString -AsPlainText -Force))))
+            $NewSession.Add('AccessToken', (New-Object System.Management.Automation.PSCredential('AccessToken', ($AccessToken | ConvertTo-SecureString -AsPlainText -Force))))
         }
 
         'BasicAuth*' {
-            $newSession.Add('Credential', $Credential)
+            $NewSession.Add('Credential', $Credential)
         }
 
-        Default {
+        default {
 
         }
     }
@@ -196,7 +194,7 @@ function New-ServiceNowSession {
     #     # Query             = 'nameSTARTSWITHcmdb_ci'
     #     Properties        = 'name', 'sys_id', 'label'
     #     First             = 100000
-    #     ServiceNowSession = $newSession
+    #     ServiceNowSession = $NewSession
     # }
 
     # $class = Get-ServiceNowTable @cmdbParams -ErrorAction SilentlyContinue |
@@ -213,38 +211,36 @@ function New-ServiceNowSession {
     #     'e' = { $_.label }
     # }
     # if ( $class ) {
-    #     $newSession.Add('Classes', $class)
+    #     $NewSession.Add('Classes', $class)
     # }
 
-    Write-Verbose ($newSession | ConvertTo-Json)
+    Write-Verbose ($NewSession | ConvertTo-Json)
 
     if ( $PassThru ) {
-        $newSession
-    }
-    else {
-        $Script:ServiceNowSession = $newSession
+        $NewSession
+    } else {
+        $Script:ServiceNowSession = $NewSession
     }
 
     if ( $GetAllTable.IsPresent ) {
         Write-Verbose 'Getting table number prefixes'
-        $defaultTable = $ServiceNowTable
+        $DefaultTable = $ServiceNowTable
         try {
-            $numbers = Get-ServiceNowRecord -Table 'sys_number' -Property prefix, category -First 10000 -IncludeTotalCount
-            foreach ($number in $numbers) {
-                if ( $number.prefix.ToLower() -notin $defaultTable.NumberPrefix ) {
+            $Numbers = Get-ServiceNowRecord -Table 'sys_number' -Property prefix, category -First 10000 -IncludeTotalCount
+            foreach ($Number in $Numbers) {
+                if ( $Number.prefix.ToLower() -notin $DefaultTable.NumberPrefix ) {
                     $ServiceNowTable.Add(
-                        [pscustomobject] @{
-                            "Name"             = ($number.category.link | Select-String -Pattern '^.*\?name=(.*)$').matches.groups[1].Value
-                            "ClassName"        = $number.category.display_value
-                            "Type"             = $null
-                            "NumberPrefix"     = $number.prefix.ToLower()
-                            "DescriptionField" = "short_description"
+                        [PSCustomObject] @{
+                            'Name'             = ($Number.category.link | Select-String -Pattern '^.*\?name=(.*)$').matches.groups[1].Value
+                            'ClassName'        = $Number.category.display_value
+                            'Type'             = $null
+                            'NumberPrefix'     = $Number.prefix.ToLower()
+                            'DescriptionField' = 'short_description'
                         }
                     ) | Out-Null
                 }
             }
-        }
-        catch {
+        } catch {
             Write-Verbose "Session created, but failed to populate ServiceNowTable.  Prefixes beyond the default won't be available.  $_"
         }
     }

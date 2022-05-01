@@ -1,23 +1,23 @@
-$projectRoot = Resolve-Path "$PSScriptRoot\.."
-$moduleRoot = Split-Path (Resolve-Path "$projectRoot\*\*.psd1")
-$moduleName = Split-Path $moduleRoot -Leaf
-$modulePath = (Join-Path $moduleRoot "$moduleName.psd1")
+$ProjectRoot = Resolve-Path "$PSScriptRoot\.."
+$ModuleRoot = Split-Path (Resolve-Path "$ProjectRoot\*\*.psd1")
+$ModuleName = Split-Path $ModuleRoot -Leaf
+$ModulePath = (Join-Path $ModuleRoot "$ModuleName.psd1")
 
-Write-Host "projectRoot:  $projectRoot" -f cyan
-Write-Host "moduleRoot:  $moduleRoot" -f cyan
-Write-Host "moduleName:  $moduleName" -f cyan
+Write-Host "ProjectRoot:  $ProjectRoot" -f cyan
+Write-Host "ModuleRoot:  $ModuleRoot" -f cyan
+Write-Host "ModuleName:  $ModuleName" -f cyan
 Write-Host "ModulePath:  $ModulePath" -f cyan
 
-$ModuleManifestContent = Get-Content $modulePath
+$ModuleManifestContent = Get-Content $ModulePath
 
-Describe "Generic Module Tests" -Tag UnitTest,Build {
+Describe 'Generic Module Tests' -Tag UnitTest, Build {
     # Unload the module so it's loaded fresh for testing
     Remove-Module $ModuleName -ErrorAction SilentlyContinue
 
     # Import Module
-    $ModuleInformation = Import-Module $modulePath -Force -PassThru
-    It "Module imported successfully" {
-        $ModuleInformation.Name | Should -Be $moduleName
+    $ModuleInformation = Import-Module $ModulePath -Force -PassThru
+    It 'Module imported successfully' {
+        $ModuleInformation.Name | Should -Be $ModuleName
     }
 
     # Evaluate AliasesToExport
@@ -40,16 +40,16 @@ Describe "Generic Module Tests" -Tag UnitTest,Build {
 
     # Evaluate FunctionsToExport
     Context FunctionsToExport {
-        $FunctionsToExportString = $ModuleManifestContent | Where-Object {$_ -match 'FunctionsToExport'}
+        $FunctionsToExportString = $ModuleManifestContent | Where-Object { $_ -match 'FunctionsToExport' }
         $DeclaredFunctions = $FunctionsToExportString.Split(',') |
-            ForEach-Object{If ($_ -match '\w+-\w+'){$Matches[0]}}
+        ForEach-Object { if ($_ -match '\w+-\w+') { $Matches[0] } }
 
-        It "FunctionsToExport should not be a wildcard" {
+        It 'FunctionsToExport should not be a wildcard' {
             $FunctionsToExportString | Should -Not -Match "\'\*\'"
         }
 
         $PublishedFunctions = $ModuleInformation.ExportedFunctions.Values.name
-        ForEach ($PublicFunction in $DeclaredFunctions) {
+        foreach ($PublicFunction in $DeclaredFunctions) {
             It "Function  Available: $PublicFunction " {
                 $PublishedFunctions -contains $PublicFunction | Should -Be $True
             }
@@ -58,32 +58,32 @@ Describe "Generic Module Tests" -Tag UnitTest,Build {
 
     # Other Manifest Properties
     Context 'Other Manifest Properties' {
-        It "RootModule property has value"{
+        It 'RootModule property has value' {
             $ModuleInformation.RootModule | Should -Not -BeNullOrEmpty
         }
-        It "Author property has value"{
+        It 'Author property has value' {
             $ModuleInformation.Author | Should -Not -BeNullOrEmpty
         }
-        It "Company Name property has value"{
+        It 'Company Name property has value' {
             $ModuleInformation.CompanyName | Should -Not -BeNullOrEmpty
         }
-        It "Description property has value"{
+        It 'Description property has value' {
             $ModuleInformation.Description | Should -Not -BeNullOrEmpty
         }
-        It "Copyright property has value"{
+        It 'Copyright property has value' {
             $ModuleInformation.Copyright | Should -Not -BeNullOrEmpty
         }
-        It "License property has value"{
+        It 'License property has value' {
             $ModuleInformation.LicenseURI | Should -Not -BeNullOrEmpty
         }
-        It "Project Link property has value"{
+        It 'Project Link property has value' {
             $ModuleInformation.ProjectURI | Should -Not -BeNullOrEmpty
         }
-        It "Tags (For the PSGallery) property has value"{
+        It 'Tags (For the PSGallery) property has value' {
             $ModuleInformation.Tags.count | Should -Not -BeNullOrEmpty
         }
-        It "PSGallery Tags Should Not Contain Spaces" {
-            ForEach ($Tag in $ModuleInformation.PrivateData.Values.Tags) {
+        It 'PSGallery Tags Should Not Contain Spaces' {
+            foreach ($Tag in $ModuleInformation.PrivateData.Values.Tags) {
                 $Tag | Should -Not -Match '\s'
             }
         }

@@ -1,7 +1,7 @@
 function Get-ServiceNowRecordInterim {
     [OutputType([System.Management.Automation.PSCustomObject])]
     [CmdletBinding(SupportsPaging)]
-    Param(
+    param(
         # Machine name of the field to order by
         [Parameter()]
         [string] $OrderBy = 'opened_at',
@@ -18,11 +18,11 @@ function Get-ServiceNowRecordInterim {
 
         # Hashtable containing machine field names and values returned must match exactly (will be combined with AND)
         [Parameter()]
-        [hashtable] $MatchExact = @{},
+        [Hashtable] $MatchExact = @{},
 
         # Hashtable containing machine field names and values returned rows must contain (will be combined with AND)
         [Parameter()]
-        [hashtable] $MatchContains = @{},
+        [Hashtable] $MatchContains = @{},
 
         # Whether or not to show human readable display values instead of machine values
         [Parameter()]
@@ -31,26 +31,26 @@ function Get-ServiceNowRecordInterim {
         [string] $DisplayValue = 'true',
 
         [Parameter()]
-        [hashtable] $Connection,
+        [Hashtable] $Connection,
 
         [Parameter()]
-        [hashtable] $ServiceNowSession = $script:ServiceNowSession
+        [Hashtable] $ServiceNowSession = $script:ServiceNowSession
     )
 
     Write-Warning ('{0} will be deprecated in the near future.  Please use Get-ServiceNowRecord instead.' -f $PSCmdlet.MyInvocation.InvocationName)
 
-    $table = $ServiceNowTable | Where-Object { $PSCmdlet.MyInvocation.InvocationName.ToLower().Replace('get-servicenow', '') -eq $_.ClassName.Replace(' ', '').ToLower() }
+    $Table = $ServiceNowTable | Where-Object { $PSCmdlet.MyInvocation.InvocationName.ToLower().Replace('get-servicenow', '') -eq $_.ClassName.Replace(' ', '').ToLower() }
 
-    $newServiceNowQuerySplat = @{
+    $NewServiceNowQuerySplat = @{
         OrderBy        = $OrderBy
         MatchExact     = $MatchExact
         OrderDirection = $OrderDirection
         MatchContains  = $MatchContains
     }
 
-    $params = @{
-        Table             = $table.Name
-        Query             = (New-ServiceNowQuery @newServiceNowQuerySplat)
+    $Params = @{
+        Table             = $Table.Name
+        Query             = (New-ServiceNowQuery @NewServiceNowQuerySplat)
         DisplayValue      = $DisplayValue
         First             = $PSCmdlet.PagingParameters.First
         Skip              = $PSCmdlet.PagingParameters.Skip
@@ -58,10 +58,10 @@ function Get-ServiceNowRecordInterim {
         Connection        = $Connection
         ServiceNowSession = $ServiceNowSession
     }
-    $result = Invoke-ServiceNowRestMethod @params
+    $Result = Invoke-ServiceNowRestMethod @Params
 
-    If ( $result -and -not $Properties) {
-        $result | ForEach-Object { $_.PSObject.TypeNames.Insert(0, $table.Type) }
+    if ( $Result -and -not $Properties) {
+        $Result | ForEach-Object { $_.PSObject.TypeNames.Insert(0, $Table.Type) }
     }
-    $result
+    $Result
 }

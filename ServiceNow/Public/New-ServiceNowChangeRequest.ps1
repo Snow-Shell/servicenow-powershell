@@ -69,39 +69,39 @@ function New-ServiceNowChangeRequest {
 
     [CmdletBinding(SupportsShouldProcess)]
 
-    Param(
+    param(
         [parameter(Mandatory)]
-        [string]$Caller,
+        [string] $Caller,
 
         [parameter(Mandatory)]
-        [string]$ShortDescription,
+        [string] $ShortDescription,
 
         [parameter()]
-        [string]$Description,
+        [string] $Description,
 
         [parameter()]
-        [string]$AssignmentGroup,
+        [string] $AssignmentGroup,
 
         [parameter()]
-        [string]$Comment,
+        [string] $Comment,
 
         [parameter()]
-        [string]$Category,
+        [string] $Category,
 
         [parameter()]
-        [string]$Subcategory,
+        [string] $Subcategory,
 
         [parameter()]
-        [string]$ConfigurationItem,
+        [string] $ConfigurationItem,
 
         [parameter()]
-        [hashtable]$CustomFields,
+        [Hashtable] $CustomFields,
 
         [Parameter()]
         [Hashtable] $Connection,
 
         [Parameter()]
-        [hashtable] $ServiceNowSession = $script:ServiceNowSession,
+        [Hashtable] $ServiceNowSession = $script:ServiceNowSession,
 
         [Parameter()]
         [switch] $PassThru
@@ -113,10 +113,10 @@ function New-ServiceNowChangeRequest {
         # Create a hash table of any defined parameters (not CustomFields) that have values
         $DefinedChangeRequestParameters = @('AssignmentGroup', 'Caller', 'Category', 'Comment', 'ConfigurationItem', 'Description', 'ShortDescription', 'Subcategory')
         $TableEntryValues = @{ }
-        ForEach ($Parameter in $DefinedChangeRequestParameters) {
-            If ($null -ne $PSBoundParameters.$Parameter) {
+        foreach ($Parameter in $DefinedChangeRequestParameters) {
+            if ($null -ne $PSBoundParameters.$Parameter) {
                 # Turn the defined parameter name into the ServiceNow attribute name
-                $KeyToAdd = Switch ($Parameter) {
+                $KeyToAdd = switch ($Parameter) {
                     AssignmentGroup { 'assignment_group'; break }
                     Caller { 'caller_id'; break }
                     Category { 'category'; break }
@@ -131,13 +131,12 @@ function New-ServiceNowChangeRequest {
         }
 
         # Add CustomFields hash pairs to the Table Entry Values hash table
-        If ($null -ne $PSBoundParameters.CustomFields) {
-            $DuplicateTableEntryValues = ForEach ($Key in $CustomFields.Keys) {
-                If (($TableEntryValues.ContainsKey($Key) -eq $False)) {
+        if ($null -ne $PSBoundParameters.CustomFields) {
+            $DuplicateTableEntryValues = foreach ($Key in $CustomFields.Keys) {
+                if (($TableEntryValues.ContainsKey($Key) -eq $false)) {
                     # Add the unique entry to the table entry values hash table
                     $TableEntryValues.Add($Key, $CustomFields[$Key])
-                }
-                Else {
+                } else {
                     # Capture the duplicate key name
                     $Key
                 }
@@ -145,13 +144,13 @@ function New-ServiceNowChangeRequest {
         }
 
         # Throw an error if duplicate fields were provided
-        If ($null -ne $DuplicateTableEntryValues) {
-            $DuplicateKeyList = $DuplicateTableEntryValues -join ","
-            Throw "Ticket fields may only be used once:  $DuplicateKeyList"
+        if ($null -ne $DuplicateTableEntryValues) {
+            $DuplicateKeyList = $DuplicateTableEntryValues -join ','
+            throw "Ticket fields may only be used once: $DuplicateKeyList"
         }
 
         # Table Entry Splat
-        $params = @{
+        $Params = @{
             Method            = 'Post'
             Table             = 'change_request'
             Values            = $TableEntryValues
@@ -159,11 +158,11 @@ function New-ServiceNowChangeRequest {
             ServiceNowSession = $ServiceNowSession
         }
 
-        If ( $PSCmdlet.ShouldProcess($ShortDescription, 'Create new change request') ) {
-            $response = Invoke-ServiceNowRestMethod @params
-            If ($PassThru.IsPresent) {
-                $response.PSObject.TypeNames.Insert(0, "ServiceNow.ChangeRequest")
-                $response
+        if ( $PSCmdlet.ShouldProcess($ShortDescription, 'Create new change request') ) {
+            $Response = Invoke-ServiceNowRestMethod @Params
+            if ($PassThru.IsPresent) {
+                $Response.PSObject.TypeNames.Insert(0, 'ServiceNow.ChangeRequest')
+                $Response
             }
         }
     }
