@@ -155,10 +155,10 @@ function Export-ServiceNowRecord {
 
         $params.OutFile = $Path
 
-        # need to tell SN the format
+        # need to tell SN the format, get it from file extension
         $format = [System.IO.Path]::GetExtension($Path).Replace('.', '').ToUpper()
 
-        # only exception to extension is the format rule
+        # only exception to 'extension is the format' rule
         if ( $format -eq 'XLS' ) { $format = 'EXCEL' }
 
         $params.Uri = 'https://{0}/{1}_list.do?{2}' -f $ServiceNowSession.Domain, $thisTable, $format
