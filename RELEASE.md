@@ -1,3 +1,1 @@
-- Fix [#183](https://github.com/Snow-Shell/servicenow-powershell/issues/183), `Get-ServiceNowRecord -Filter` parameter not applying in some circumstances
-- Update display formats to correctly show values when `-DisplayValue` is false
-- Update `Get-ServiceNowRecord` help
+- Add `Export-ServiceNowRecord` to write records to csv, xls, xlsx, xml, or pdf.  Supports filtering, sorting, and specific properties just like `Get-ServiceNowRecord`.  [#186](https://github.com/Snow-Shell/servicenow-powershell/issues/186)
