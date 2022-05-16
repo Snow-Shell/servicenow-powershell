@@ -110,7 +110,7 @@ Function Add-ServiceNowAttachment {
     process	{
 
         if ( $Table ) {
-            $thisTableName = $ServiceNowTable.Where{ $_.Name -eq $Table -or $_.ClassName -eq $Table } | Select-Object -ExpandProperty Name
+            $thisTableName = $ServiceNowTable.Where{ $_.ClassName -eq $Table } | Select-Object -ExpandProperty Name
             if ( -not $thisTableName ) {
                 $thisTableName = $Table
             }
