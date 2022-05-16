@@ -11,6 +11,8 @@ Function Get-ServiceNowAttachment {
     .PARAMETER Table
     Name of the table to be queried, by either table name or class name.  Use tab completion for list of known tables.
     You can also provide any table name ad hoc.
+    If using pipeline and not getting the expected response, most likely the table name and class do not match.
+    In this case, provide this value directly.
 
     .PARAMETER Id
     Either the record sys_id or number.
@@ -53,24 +55,30 @@ Function Get-ServiceNowAttachment {
     Get attachment details where size is greater than 1M.
 
     .INPUTS
-    Table, Id
+    Table, ID
 
     .OUTPUTS
     System.Management.Automation.PSCustomObject
     #>
 
     [OutputType([System.Management.Automation.PSCustomObject[]])]
-    [CmdletBinding(DefaultParameterSetName = 'Filter', SupportsPaging)]
+    [CmdletBinding(SupportsPaging)]
 
     Param(
-        [Parameter(ParameterSetName = 'Table', Mandatory, ValueFromPipelineByPropertyName)]
+        [Parameter(ValueFromPipelineByPropertyName)]
         [Alias('sys_class_name')]
         [string] $Table,
 
-        [Parameter(ParameterSetName = 'Id', Mandatory, ValueFromPipelineByPropertyName)]
-        [Parameter(ParameterSetName = 'Table', Mandatory, ValueFromPipelineByPropertyName)]
+        [Parameter(Mandatory, ValueFromPipeline, ValueFromPipelineByPropertyName)]
+        [ValidateScript( {
+                if ($_ -match '^[a-zA-Z0-9]{32}$' -or $_ -match '^([a-zA-Z]+)[0-9]+$') {
+                    $true
+                } else {
+                    throw 'Id must be either a 32 character alphanumeric, ServiceNow sysid, or prefix/id, ServiceNow number.'
+                }
+            })]
         [Alias('sys_id', 'SysId', 'number')]
-        [string] $Id,
+        [string] $ID,
 
         [parameter()]
         [string] $FileName,
@@ -89,9 +97,7 @@ Function Get-ServiceNowAttachment {
         [hashtable] $ServiceNowSession = $script:ServiceNowSession
     )
 
-    begin {}
-
-    process	{
+    begin {
         $params = @{
             UriLeaf           = '/attachment'
             First             = $PSCmdlet.PagingParameters.First
@@ -101,38 +107,60 @@ Function Get-ServiceNowAttachment {
             ServiceNowSession = $ServiceNowSession
         }
 
-        if ( $PSCmdlet.ParameterSetName -in 'Table', 'Id' ) {
+    }
+
+    process	{
+
+        if ( $Table ) {
+            $thisTableName = $ServiceNowTable.Where{ $_.Name -eq $Table -or $_.ClassName -eq $Table } | Select-Object -ExpandProperty Name
+            if ( -not $thisTableName ) {
+                $thisTableName = $Table
+            }
+        }
+
+        if ( $ID -match '^[a-zA-Z0-9]{32}$' ) {
+            if ( -not $thisTableName ) {
+                Write-Error 'Providing sys_id for -Id requires a value for -Table.  Alternatively, provide an -Id with a prefix, eg. INC1234567, and the table will be automatically determined.'
+                Continue
+            }
+
+            $thisSysId = $ID
+
+        } else {
+            if ( -not $thisTableName ) {
+                $thisTable = $ServiceNowTable.Where{ $_.NumberPrefix -and $ID.ToLower().StartsWith($_.NumberPrefix) }
+                if ( $thisTable ) {
+                    $thisTableName = $thisTable.Name
+                } else {
+                    Write-Error ('The prefix for Id ''{0}'' was not found and the appropriate table cannot be determined.  Known prefixes are {1}.  Please provide a value for -Table.' -f $ID, ($ServiceNowTable.NumberPrefix.Where( { $_ }) -join ', '))
+                    Continue
+                }
+            }
+
             $getParams = @{
-                Id                = $Id
-                Property          = 'sys_class_name', 'sys_id'
+                Table             = $thisTableName
+                Id                = $ID
+                Property          = 'sys_id'
                 Connection        = $Connection
                 ServiceNowSession = $ServiceNowSession
             }
-            if ( $Table ) {
-                $getParams.Table = $Table
-            }
+
             $tableRecord = Get-ServiceNowRecord @getParams
 
             if ( -not $tableRecord ) {
-                Write-Error "Record not found for Id '$Id'"
+                Write-Error "Record not found for ID '$ID'"
                 continue
             }
 
-            # perform lookup for known table names which might be different than sys_class_name
-            $tableName = $script:ServiceNowTable | Where-Object { $_.Name.ToLower() -eq $tableRecord.sys_class_name.ToLower() -or $_.ClassName.ToLower() -eq $tableRecord.sys_class_name.ToLower() } | Select-Object -ExpandProperty Name
-            if ( $tableName ) {
-                $params.Filter = @(@('table_name', '-eq', $tableName), 'and', @('table_sys_id', '-eq', $tableRecord.sys_id))
-            }
-            else {
-                $params.Filter = @(@('table_name', '-eq', $tableRecord.sys_class_name), 'and', @('table_sys_id', '-eq', $tableRecord.sys_id))
-            }
+            $thisSysId = $tableRecord.sys_id
         }
+
+        $params.Filter = @(@('table_name', '-eq', $thisTableName), 'and', @('table_sys_id', '-eq', $thisSysId))
 
         if ( $FileName ) {
             if ( $params.Filter ) {
                 $params.Filter += 'and', @('file_name', '-like', $FileName)
-            }
-            else {
+            } else {
                 $params.Filter = @('file_name', '-like', $FileName)
             }
         }
@@ -140,8 +168,7 @@ Function Get-ServiceNowAttachment {
         if ( $Filter ) {
             if ( $params.Filter ) {
                 $params.Filter += 'and', $Filter
-            }
-            else {
+            } else {
                 $params.Filter = $Filter
             }
         }
@@ -154,6 +181,4 @@ Function Get-ServiceNowAttachment {
         }
 
     }
-
-    end {}
 }
