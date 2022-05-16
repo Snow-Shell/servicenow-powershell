@@ -68,6 +68,13 @@
             "Type": "ServiceNow.UniqueCertificate",
             "NumberPrefix": "",
             "DescriptionField": "name"
+        },
+        {
+            "Name": "kb_knowledge",
+            "ClassName": "Knowledge",
+            "Type": "ServiceNow.Knowledge",
+            "NumberPrefix": "kb",
+            "DescriptionField": "short_description"
         }
     ],
     "FilterOperators": [
