@@ -1,39 +1,65 @@
 Function Add-ServiceNowAttachment {
     <#
     .SYNOPSIS
-    Attaches a file to an existing ticket.
+    Attaches a file to an existing record.
 
     .DESCRIPTION
-    Attaches a file to an existing ticket.
-
-    .PARAMETER Number
-    ServiceNow ticket number
+    Attaches a file to an existing record.
 
     .PARAMETER Table
-    ServiceNow ticket table name
+    Name of the table to be queried, by either table name or class name.  Use tab completion for list of known tables.
+    You can also provide any table name ad hoc.
+    If using pipeline and this is failing, most likely the table name and class do not match.
+    In this case, provide this value directly.
+
+    .PARAMETER Id
+    Either the record sys_id or number.
+    If providing just an Id, not with Table, the Id prefix will be looked up to find the table name.
 
     .PARAMETER File
-    A valid path to the file to attach
+    Path to one or more files to attach
+
+    .PARAMETER ContentType
+    Content (MIME) type for the file being uploaded.
+    This value will be automatically determined by default, but can be overridden with this parameter.
+
+    .PARAMETER PassThru
+    Return the newly created attachment details
+
+    .PARAMETER Connection
+    Azure Automation Connection object containing username, password, and URL for the ServiceNow instance
+
+    .PARAMETER ServiceNowSession
+    ServiceNow session created by New-ServiceNowSession.  Will default to script-level variable $ServiceNowSession.
 
     .EXAMPLE
-    Add-ServiceNowAttachment -Number $Number -Table $Table -File .\File01.txt, .\File02.txt
-    
-    Upload one or more files to a ServiceNow ticket by specifing the number and table
+    Add-ServiceNowAttachment -Id INC0000010 -File @('.\File01.txt', '.\File02.txt')
+
+    Upload one or more files by record number
 
     .EXAMPLE
-    New-ServiceNowIncident @params -PassThru | Add-ServiceNowAttachment -File File01.txt
-    
+    Add-ServiceNowAttachment -Table incident -Id 2306c37c1bafc9100774ebd1b24bcb6d -File @('.\File01.txt', '.\File02.txt')
+
+    Upload one or more files by record sys_id
+
+    .EXAMPLE
+    New-ServiceNowIncident @params -PassThru | Add-ServiceNowAttachment -File file01.txt
+
     Create a new incident and add an attachment
 
     .EXAMPLE
-    Add-ServiceNowAttachment -Number $Number -Table $Table -File .\File01.txt -ContentType 'text/plain'
-    
-    Upload a file and specify the MIME type (content type).  Should only be required if the function cannot automatically determine the type.
+    Add-ServiceNowAttachment -Id INC0000010 -File file01.txt -ContentType 'text/plain'
+
+    Upload a file and specify the MIME type (content type).
+    Only required if the function cannot automatically determine the type.
 
     .EXAMPLE
-    Add-ServiceNowAttachment -Number $Number -Table $Table -File .\File01.txt -PassThru
+    Add-ServiceNowAttachment -Id INC0000010 -File file01.txt -PassThru
 
-    Upload a file and receive back the file details.
+    Upload a file and receive back the file details
+
+    .INPUTS
+    Table, ID
 
     .OUTPUTS
     System.Management.Automation.PSCustomObject if -PassThru provided
@@ -41,15 +67,22 @@ Function Add-ServiceNowAttachment {
 
     [OutputType([PSCustomObject[]])]
     [CmdletBinding(SupportsShouldProcess)]
+
     Param(
-        # Table containing the entry
         [Parameter(ValueFromPipelineByPropertyName)]
         [Alias('sys_class_name')]
         [string] $Table,
 
-        [Parameter(Mandatory, ValueFromPipelineByPropertyName)]
+        [Parameter(Mandatory, ValueFromPipeline, ValueFromPipelineByPropertyName)]
+        [ValidateScript( {
+                if ($_ -match '^[a-zA-Z0-9]{32}$' -or $_ -match '^([a-zA-Z]+)[0-9]+$') {
+                    $true
+                } else {
+                    throw 'Id must be either a 32 character alphanumeric, ServiceNow sysid, or prefix/id, ServiceNow number.'
+                }
+            })]
         [Alias('sys_id', 'SysId', 'number')]
-        [string] $Id,
+        [string] $ID,
 
         [Parameter(Mandatory)]
         [ValidateScript( {
@@ -65,13 +98,10 @@ Function Add-ServiceNowAttachment {
         [Parameter()]
         [switch] $PassThru,
 
-        # Azure Automation Connection object containing username, password, and URL for the ServiceNow instance
         [Parameter()]
-        # [ValidateNotNullOrEmpty()]
         [Hashtable] $Connection,
 
         [Parameter()]
-        # [ValidateNotNullOrEmpty()]
         [hashtable] $ServiceNowSession = $script:ServiceNowSession
     )
 
@@ -79,27 +109,48 @@ Function Add-ServiceNowAttachment {
 
     process	{
 
-        $getParams = @{
-            Id                = $Id
-            Property          = 'sys_class_name', 'sys_id', 'number'
-            Connection        = $Connection
-            ServiceNowSession = $ServiceNowSession
-        }
         if ( $Table ) {
-            $getParams.Table = $Table
-        }
-        $tableRecord = Get-ServiceNowRecord @getParams
-
-        if ( -not $tableRecord ) {
-            Write-Error "Record not found for Id '$Id'"
-            continue
+            $thisTableName = $ServiceNowTable.Where{ $_.Name -eq $Table -or $_.ClassName -eq $Table } | Select-Object -ExpandProperty Name
+            if ( -not $thisTableName ) {
+                $thisTableName = $Table
+            }
         }
 
-        If (-not $Table) {
-            $tableName = $tableRecord.sys_class_name
-        }
-        else {
-            $tableName = $Table
+        if ( $ID -match '^[a-zA-Z0-9]{32}$' ) {
+            if ( -not $thisTableName ) {
+                Write-Error 'Providing sys_id for -Id requires a value for -Table.  Alternatively, provide an -Id with a prefix, eg. INC1234567, and the table will be automatically determined.'
+                Continue
+            }
+
+            $thisSysId = $ID
+
+        } else {
+            if ( -not $thisTableName ) {
+                $thisTable = $ServiceNowTable.Where{ $_.NumberPrefix -and $ID.ToLower().StartsWith($_.NumberPrefix) }
+                if ( $thisTable ) {
+                    $thisTableName = $thisTable.Name
+                } else {
+                    Write-Error ('The prefix for Id ''{0}'' was not found and the appropriate table cannot be determined.  Known prefixes are {1}.  Please provide a value for -Table.' -f $ID, ($ServiceNowTable.NumberPrefix.Where( { $_ }) -join ', '))
+                    Continue
+                }
+            }
+
+            $getParams = @{
+                Table             = $thisTableName
+                Id                = $ID
+                Property          = 'sys_id'
+                Connection        = $Connection
+                ServiceNowSession = $ServiceNowSession
+            }
+
+            $tableRecord = Get-ServiceNowRecord @getParams
+
+            if ( -not $tableRecord ) {
+                Write-Error "Record not found for Id '$ID'"
+                continue
+            }
+
+            $thisSysId = $tableRecord.sys_id
         }
 
         $auth = Get-ServiceNowAuth -C $Connection -S $ServiceNowSession
@@ -118,7 +169,7 @@ Function Add-ServiceNowAttachment {
             # POST: https://instance.service-now.com/api/now/attachment/file?table_name=incident&table_sys_id=d71f7935c0a8016700802b64c67c11c6&file_name=Issue_screenshot
             # $Uri = "{0}/file?table_name={1}&table_sys_id={2}&file_name={3}" -f $ApiUrl, $Table, $TableSysID, $FileData.Name
             $invokeRestMethodSplat = $auth
-            $invokeRestMethodSplat.Uri += '/attachment/file?table_name={0}&table_sys_id={1}&file_name={2}' -f $tableName, $tableRecord.sys_id, $FileData.Name
+            $invokeRestMethodSplat.Uri += '/attachment/file?table_name={0}&table_sys_id={1}&file_name={2}' -f $thisTableName, $thisSysId, $FileData.Name
             $invokeRestMethodSplat.Headers += @{'Content-Type' = $ContentType }
             $invokeRestMethodSplat.UseBasicParsing = $true
             $invokeRestMethodSplat += @{
@@ -126,23 +177,20 @@ Function Add-ServiceNowAttachment {
                 InFile = $FileData.FullName
             }
 
-            If ($PSCmdlet.ShouldProcess(('{0} {1}' -f $tableName, $tableRecord.number), ('Add attachment {0}' -f $FileData.FullName))) {
+            If ($PSCmdlet.ShouldProcess(('{0} {1}' -f $thisTableName, $thisSysId), ('Add attachment {0}' -f $FileData.FullName))) {
                 Write-Verbose ($invokeRestMethodSplat | ConvertTo-Json)
                 $response = Invoke-WebRequest @invokeRestMethodSplat
 
                 if ( $response.Content ) {
-                    if ( $PassThru.IsPresent ) {
+                    if ( $PassThru ) {
                         $content = $response.content | ConvertFrom-Json
                         $content.result
                     }
-                }
-                else {
+                } else {
                     # invoke-webrequest didn't throw an error, but we didn't get content back either
                     throw ('"{0} : {1}' -f $response.StatusCode, $response | Out-String )
                 }
             }
         }
     }
-
-    end {}
 }
