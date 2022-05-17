@@ -87,7 +87,7 @@ function Export-ServiceNowRecord {
                 }
             })]
         [Alias('sys_id', 'number')]
-        [string] $Id,
+        [string] $ID,
 
         [Parameter()]
         [Alias('Fields', 'Properties')]
@@ -123,24 +123,24 @@ function Export-ServiceNowRecord {
             $thisTable = $Table
         }
 
-        if ( $Id ) {
-            if ( $Id -match '^[a-zA-Z0-9]{32}$' ) {
+        if ( $ID ) {
+            if ( $ID -match '^[a-zA-Z0-9]{32}$' ) {
                 if ( -not $thisTable ) {
                     throw 'Providing sys_id for -Id requires a value for -Table.  Alternatively, provide an Id with a prefix, eg. INC1234567, and the table will be automatically determined.'
                 }
 
-                $newFilter = @('sys_id', '-eq', $Id)
+                $newFilter = @('sys_id', '-eq', $ID)
             } else {
                 if ( -not $thisTable ) {
                     # get table name from prefix if only Id was provided
-                    $idPrefix = ($Id | Select-String -Pattern '^([a-zA-Z]+)([0-9]+$)').Matches.Groups[1].Value.ToLower()
+                    $idPrefix = ($ID | Select-String -Pattern '^([a-zA-Z]+)([0-9]+$)').Matches.Groups[1].Value.ToLower()
                     Write-Debug "Id prefix is $idPrefix"
                     $thisTable = $script:ServiceNowTable | Where-Object { $_.NumberPrefix -and $idPrefix -eq $_.NumberPrefix } | Select-Object -ExpandProperty Name
                     if ( -not $thisTable ) {
-                        throw ('The prefix for Id ''{0}'' was not found and the appropriate table cannot be determined.  Known prefixes are {1}.  Please provide a value for -Table.' -f $Id, ($ServiceNowTable.NumberPrefix.Where( { $_ }) -join ', '))
+                        throw ('The prefix for Id ''{0}'' was not found and the appropriate table cannot be determined.  Known prefixes are {1}.  Please provide a value for -Table.' -f $ID, ($ServiceNowTable.NumberPrefix.Where( { $_ }) -join ', '))
                     }
                 }
-                $newFilter = @('number', '-eq', $Id)
+                $newFilter = @('number', '-eq', $ID)
             }
         }
 

@@ -18,13 +18,13 @@
 
 .PARAMETER PassThru
     If provided, the updated record will be returned
-        
+
 .PARAMETER Connection
     Azure Automation Connection object containing username, password, and URL for the ServiceNow instance
 
 .PARAMETER ServiceNowSession
     ServiceNow session created by New-ServiceNowSession.  Will default to script-level variable $ServiceNowSession.
-    
+
 .EXAMPLE
     Update-ServiceNowRecord -Table incident -Id 'INC0010001' -Values @{State = 'Closed'}
     Close an incident record
@@ -47,7 +47,7 @@ function Update-ServiceNowRecord {
 
         [Parameter(Mandatory, ValueFromPipelineByPropertyName)]
         [Alias('sys_id', 'SysId', 'number')]
-        [string] $Id,
+        [string] $ID,
 
         [parameter(Mandatory)]
         [hashtable] $Values,
@@ -66,15 +66,15 @@ function Update-ServiceNowRecord {
 
     process {
 
-        if ( $Table -and ($Id -match '[a-zA-Z0-9]{32}') ) {
+        if ( $Table -and ($ID -match '[a-zA-Z0-9]{32}') ) {
             # we already have table name and sys_id, no more to do before update
             $tableName = $Table
-            $sysId = $Id
+            $sysId = $ID
         }
         else {
             # get needed details, table name and sys_id, for update
             $getParams = @{
-                Id                = $Id
+                Id                = $ID
                 Property          = 'sys_class_name', 'sys_id', 'number'
                 Connection        = $Connection
                 ServiceNowSession = $ServiceNowSession
@@ -91,7 +91,7 @@ function Update-ServiceNowRecord {
                 $sysId = $thisRecord.sys_id
             }
             else {
-                Write-Error ('Record not found for Id ''{0}''' -f $Id)
+                Write-Error ('Record not found for Id ''{0}''' -f $ID)
                 continue
             }
         }
