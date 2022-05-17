@@ -12,7 +12,7 @@
 RootModule = 'ServiceNow.psm1'
 
 # Version number of this module.
-ModuleVersion = '3.1.11'
+ModuleVersion = '3.2'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
