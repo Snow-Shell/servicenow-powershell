@@ -1,1 +1,2 @@
-- Add `Export-ServiceNowRecord` to write records to csv, xls, xlsx, xml, or pdf.  Supports filtering, sorting, and specific properties just like `Get-ServiceNowRecord`.  [#186](https://github.com/Snow-Shell/servicenow-powershell/issues/186)
+- Fix `Get-ServiceNowAttachment` returning 0 records when the table name didn't match the table class name, [#188](https://github.com/Snow-Shell/servicenow-powershell/issues/188)
+- Update `Add-ServiceNowAttachment` `-Table` and `-ID` parameters with the same 'smarts' as other functions with table name lookup
