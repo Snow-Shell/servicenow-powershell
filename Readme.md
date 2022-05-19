@@ -75,7 +75,7 @@ $IncidentParams = @{Caller = "UserName"
             CustomFields = @{u_service = "MyService"
                             u_incident_type = "Request"}
             }
-New-ServiceNowIncident @Params
+New-ServiceNowRecord -Table 'incident' @IncidentParams
 ```
 
 ### Azure Connection Object (Automation Integration Module Support)
