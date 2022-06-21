@@ -1,2 +1,5 @@
-- Fix `Get-ServiceNowAttachment` returning 0 records when the table name didn't match the table class name, [#188](https://github.com/Snow-Shell/servicenow-powershell/issues/188)
-- Update `Add-ServiceNowAttachment` `-Table` and `-ID` parameters with the same 'smarts' as other functions with table name lookup
+- Add docker image with each new build and [publish to dockerhub](https://hub.docker.com/repository/docker/gdbarron/servicenow-module).  Add the below environment variables to `Get-ServiceNowAuth` for use with docker image, but could be used outside of it as well.
+  - SNOW_SERVER: the ServiceNow instance, eg. instance.service-now.com
+  - SNOW_TOKEN: pre-generated oauth token.  Provide this or SNOW_USER/SNOW_PASS.
+  - SNOW_USER: username to connect to SNOW_SERVER
+  - SNOW_PASS: password for SNOW_USER
