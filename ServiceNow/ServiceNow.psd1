@@ -82,7 +82,7 @@ FunctionsToExport = 'Get-ServiceNowRecordInterim', 'New-ServiceNowConfigurationI
                'Remove-ServiceNowAttachment', 'Remove-ServiceNowRecord',
                'Update-ServiceNowChangeRequest', 'Update-ServiceNowIncident',
                'Update-ServiceNowRequestedItem', 'Update-ServiceNowRecord',
-               'Export-ServiceNowRecord'
+               'Export-ServiceNowRecord', 'Invoke-ServiceNowGraphQL', 'New-ServiceNowChangeTask'
 
 # Cmdlets to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no cmdlets to export.
 CmdletsToExport = @()
