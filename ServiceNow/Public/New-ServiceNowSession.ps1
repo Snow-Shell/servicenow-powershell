@@ -29,6 +29,9 @@ Credential of user who can access Proxy.  If not provided, the current user will
 .PARAMETER ApiVersion
 Specific API version to use.  The default is the latest.
 
+.PARAMETER GraphQL
+Use GraphQL instead of REST calls
+
 .PARAMETER GetAllTable
 Populate $ServiceNowTable with data from all tables the user has access to
 
@@ -38,15 +41,21 @@ This is useful if you want to have multiple sessions with different api versions
 
 .EXAMPLE
 New-ServiceNowSession -Url tenant.domain.com -Credential $mycred
-Create a session using basic authentication and save it to a script-scoped variable
+Create a new session using basic authentication and save it as the default.
+
+.EXAMPLE
+New-ServiceNowSession -Url tenant.domain.com -Credential $mycred -GraphQL
+
+Create a new session using basic authentication and save it as the default.
+Use GraphQL instead of REST.
 
 .EXAMPLE
 New-ServiceNowSession -Url tenant.domain.com -Credential $mycred -ClientCredential $myClientCred
-Create a session using OAuth and save it to a script-scoped variable
+Create a session using OAuth and save it as the default
 
 .EXAMPLE
 New-ServiceNowSession -Url tenant.domain.com -AccessToken 'asdfasd9f87adsfkksk3nsnd87g6s'
-Create a session with an existing access token and save it to a script-scoped variable
+Create a session with an existing access token and save it as the default
 
 .EXAMPLE
 $session = New-ServiceNowSession -Url tenant.domain.com -Credential $mycred -ClientCredential $myClientCred -PassThru
@@ -108,6 +117,9 @@ function New-ServiceNowSession {
         [switch] $GetAllTable,
 
         [Parameter()]
+        [switch] $GraphQL,
+
+        [Parameter()]
         [switch] $PassThru
     )
 
@@ -123,6 +135,10 @@ function New-ServiceNowSession {
     $newSession = @{
         Domain  = $Url
         BaseUri = ('https://{0}/api/now{1}' -f $Url, $version)
+    }
+
+    if ( $GraphQL ) {
+        $newSession.BaseUri = ('https://{0}/api/now/graphql' -f $Url)
     }
 
     if ( $PSBoundParameters.ContainsKey('Proxy') ) {
