@@ -1,3 +1,8 @@
+## 3.4.0
+- Add `New-ServiceNowChangeTask`, [#103](https://github.com/Snow-Shell/servicenow-powershell/issues/103)
+- Add GraphQL support including `New-ServiceNowSession -GraphQL` and `Invoke-ServiceNowGraphQL`, the latter is a WIP
+- Update custom variable format with `Get-ServiceNowRecord -IncludeCustomVariable`.  The new format adds each custom variable as an object property as opposed to an array of hashtables.  Old: `$response.CustomVariable.where{$_.name -eq 'mycustvar'}.value`, New: `$response.CustomVariable.mycustvar.value`.  Access the new format with `-IncludeCustomVariable -New`
+
 ## 3.3.0
 - Add docker image with each new build and [publish to dockerhub](https://hub.docker.com/repository/docker/gdbarron/servicenow-module).  Add the below environment variables to `Get-ServiceNowAuth` for use with docker image, but could be used outside of it as well.
   - SNOW_SERVER: the ServiceNow instance, eg. instance.service-now.com
@@ -149,6 +154,7 @@ Be able to reference types from this config per table, removing the need to have
 - Add Get-ServiceNowAttachment
 - Add Get-ServiceNowAttachmentDetail
 - Add Remove-ServiceNowAttachment
+
 
 
 
