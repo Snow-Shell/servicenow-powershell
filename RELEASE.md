@@ -1,5 +1,3 @@
-- Add docker image with each new build and [publish to dockerhub](https://hub.docker.com/repository/docker/gdbarron/servicenow-module).  Add the below environment variables to `Get-ServiceNowAuth` for use with docker image, but could be used outside of it as well.
-  - SNOW_SERVER: the ServiceNow instance, eg. instance.service-now.com
-  - SNOW_TOKEN: pre-generated oauth token.  Provide this or SNOW_USER/SNOW_PASS.
-  - SNOW_USER: username to connect to SNOW_SERVER
-  - SNOW_PASS: password for SNOW_USER
+- Add `New-ServiceNowChangeTask`, [#103](https://github.com/Snow-Shell/servicenow-powershell/issues/103)
+- Add GraphQL support including `New-ServiceNowSession -GraphQL` and `Invoke-ServiceNowGraphQL`, the latter is a WIP
+- Update custom variable format with `Get-ServiceNowRecord -IncludeCustomVariable`.  The new format adds each custom variable as an object property as opposed to an array of hashtables.  Old: `$response.CustomVariable.where{$_.name -eq 'mycustvar'}.value`, New: `$response.CustomVariable.mycustvar.value`.  Access the new format with `-IncludeCustomVariable -New`
