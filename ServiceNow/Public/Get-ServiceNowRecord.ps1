@@ -48,6 +48,11 @@
     Some records may have associated custom variables, some may not.
     For instance, an RITM may have custom variables, but the associated tasks may not.
     A property named 'CustomVariable' will be added to the return object.
+    When used with -New, you can now get the value with $return.CustomVariable.CustomVarName.Value.
+
+.PARAMETER New
+    Used with -IncludeCustomVariable for the new format.
+    Each property is now added by name with a value of .value.
 
 .PARAMETER AsValue
     Return the underlying value instead of pscustomobject.
@@ -107,7 +112,7 @@
     Get all change requests, paging 100 at a time.
 
 .EXAMPLE
-    Get-ServiceNowRecord -Table 'change request' -IncludeCustomVariable -First 5
+    Get-ServiceNowRecord -Table 'change request' -IncludeCustomVariable -New -First 5
     Get the first 5 change requests and retrieve custom variable info
 
 .EXAMPLE
@@ -146,8 +151,7 @@ function Get-ServiceNowRecord {
         [ValidateScript( {
                 if ($_ -match '^[a-zA-Z0-9]{32}$' -or $_ -match '^([a-zA-Z]+)[0-9]+$') {
                     $true
-                }
-                else {
+                } else {
                     throw 'Id must be either a 32 character alphanumeric, ServiceNow sysid, or prefix/id, ServiceNow number.'
                 }
             })]
@@ -158,8 +162,7 @@ function Get-ServiceNowRecord {
         [ValidateScript( {
                 if ($_ -match '^[a-zA-Z0-9]{32}$' -or $_ -match '^([a-zA-Z]+)[0-9]+$') {
                     $true
-                }
-                else {
+                } else {
                     throw 'ParentId must be either a 32 character alphanumeric, ServiceNow sysid, or prefix/id, ServiceNow number.'
                 }
             })]
@@ -186,6 +189,9 @@ function Get-ServiceNowRecord {
 
         [Parameter()]
         [switch] $IncludeCustomVariable,
+
+        [Parameter()]
+        [switch] $New,
 
         [Parameter()]
         [switch] $AsValue,
@@ -235,8 +241,7 @@ function Get-ServiceNowRecord {
                 }
 
                 $idFilter = @('sys_id', '-eq', $ID)
-            }
-            else {
+            } else {
                 if ( -not $thisTable ) {
                     # get table name from prefix if only Id was provided
                     $idPrefix = ($ID | Select-String -Pattern '^([a-zA-Z]+)([0-9]+$)').Matches.Groups[1].Value.ToLower()
@@ -251,8 +256,7 @@ function Get-ServiceNowRecord {
 
             if ( $invokeParams.Filter ) {
                 $invokeParams.Filter = $invokeParams.Filter, 'and', $idFilter
-            }
-            else {
+            } else {
                 $invokeParams.Filter = $idFilter
             }
 
@@ -264,15 +268,13 @@ function Get-ServiceNowRecord {
         if ( $ParentID ) {
             if ( $ParentID -match '^[a-zA-Z0-9]{32}$' ) {
                 $parentIdFilter = @('parent.sys_id', '-eq', $ParentID)
-            }
-            else {
+            } else {
                 $parentIdFilter = @('parent.number', '-eq', $ParentID)
             }
 
             if ( $invokeParams.Filter ) {
                 $invokeParams.Filter = $invokeParams.Filter, 'and', $parentIdFilter
-            }
-            else {
+            } else {
                 $invokeParams.Filter = $parentIdFilter
             }
         }
@@ -286,8 +288,7 @@ function Get-ServiceNowRecord {
 
             if ( $invokeParams.Filter ) {
                 $invokeParams.Filter = $invokeParams.Filter, 'and', @($thisTable.DescriptionField, '-like', $Description)
-            }
-            else {
+            } else {
                 $invokeParams.Filter = @($thisTable.DescriptionField, '-like', $Description)
             }
         }
@@ -313,10 +314,6 @@ function Get-ServiceNowRecord {
 
         if ( $IncludeCustomVariable ) {
 
-            # suppress warning when getting total count
-            $existingWarning = $WarningPreference
-            $WarningPreference = 'SilentlyContinue'
-
             # for each record, get the variable names and then get the variable values
             foreach ($record in $result) {
 
@@ -325,54 +322,70 @@ function Get-ServiceNowRecord {
                     Filter            = @('request_item', '-eq', $record.sys_id), 'and', @('sc_item_option.item_option_new.type', '-in', '1,2,3,4,5,6,7,8,9,10,16,18,21,22,26')
                     Property          = 'sc_item_option.item_option_new.name', 'sc_item_option.value', 'sc_item_option.item_option_new.type', 'sc_item_option.item_option_new.question_text'
                     IncludeTotalCount = $true
+                    ServiceNowSession = $ServiceNowSession
                 }
 
-                $customVarsOut = Get-ServiceNowRecord @customVarParams
+                # suppress warning when getting total count
+                $customVarsOut = Get-ServiceNowRecord @customVarParams -WarningAction SilentlyContinue
 
-                $record | Add-Member @{
-                    'CustomVariable' = $customVarsOut | Select-Object -Property `
-                    @{
-                        'n' = 'Name'
-                        'e' = { $_.'sc_item_option.item_option_new.name' }
-                    },
-                    @{
-                        'n' = 'Value'
-                        'e' = { $_.'sc_item_option.value' }
-                    },
-                    @{
-                        'n' = 'DisplayName'
-                        'e' = { $_.'sc_item_option.item_option_new.question_text' }
-                    },
-                    @{
-                        'n' = 'Type'
-                        'e' = { $_.'sc_item_option.item_option_new.type' }
+                if ( $New ) {
+
+                    $record | Add-Member @{
+                        'CustomVariable' = [pscustomobject]@{}
+                    }
+                    foreach ($var in $customVarsOut) {
+                        $record.CustomVariable | Add-Member @{
+                            $var.'sc_item_option.item_option_new.name' = @{
+                                Value       = $var.'sc_item_option.value'
+                                DisplayName = $var.'sc_item_option.item_option_new.question_text'
+                                Type        = $var.'sc_item_option.item_option_new.type'
+                            }
+                        }
+                    }
+                } else {
+
+                    Write-Warning 'The format for custom variables will soon change.  Start using -New with -IncludeCustomVariable to preview.'
+
+                    $record | Add-Member @{
+                        'CustomVariable' = $customVarsOut | Select-Object -Property `
+                        @{
+                            'n' = 'Name'
+                            'e' = { $_.'sc_item_option.item_option_new.name' }
+                        },
+                        @{
+                            'n' = 'Value'
+                            'e' = { $_.'sc_item_option.value' }
+                        },
+                        @{
+                            'n' = 'DisplayName'
+                            'e' = { $_.'sc_item_option.item_option_new.question_text' }
+                        },
+                        @{
+                            'n' = 'Type'
+                            'e' = { $_.'sc_item_option.item_option_new.type' }
+                        }
                     }
                 }
 
+
                 if ( $addedSysIdProp ) {
                     $record | Select-Object -Property * -ExcludeProperty sys_id
-                }
-                else {
+                } else {
                     $record
                 }
             }
 
-            $WarningPreference = $existingWarning
-
-        }
-        else {
+        } else {
 
             # format the results
             if ( $Property ) {
                 if ( $Property.Count -eq 1 -and $AsValue ) {
                     $propName = $result | Get-Member | Where-Object { $_.MemberType -eq 'NoteProperty' } | Select-Object -exp Name
                     $result | Select-Object -ExpandProperty $propName
-                }
-                else {
+                } else {
                     $result
                 }
-            }
-            else {
+            } else {
                 if ($thisTable.Type) {
                     $result | ForEach-Object { $_.PSObject.TypeNames.Insert(0, $thisTable.Type) }
                 }

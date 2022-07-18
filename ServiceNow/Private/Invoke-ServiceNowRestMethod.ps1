@@ -109,9 +109,6 @@ function Invoke-ServiceNowRestMethod {
         if ($PSCmdlet.PagingParameters.First -ne [uint64]::MaxValue) {
             $Body['sysparm_limit'] = $PSCmdlet.PagingParameters.First
         }
-        # else {
-        #     $Body['sysparm_limit'] = 10
-        # }
 
         if ($PSCmdlet.PagingParameters.Skip) {
             $Body['sysparm_offset'] = $PSCmdlet.PagingParameters.Skip
@@ -125,12 +122,6 @@ function Invoke-ServiceNowRestMethod {
             $Body.sysparm_fields = ($Property -join ',').ToLower()
         }
     }
-
-    # Populate the query
-    # else {
-    #     $body['sysparm_query'] = (New-ServiceNowQuery -Filter $Filter -Sort $Sort)
-    # }
-
 
     if ( $Values ) {
         $Body = $Values | ConvertTo-Json
@@ -197,7 +188,7 @@ function Invoke-ServiceNowRestMethod {
     }
 
     # if option to get all records was provided, loop and get them all
-    if ( $PSCmdlet.PagingParameters.IncludeTotalCount.IsPresent ) {
+    if ( $PSCmdlet.PagingParameters.IncludeTotalCount ) {
 
         $retrieveRecordCount = $totalRecordCount - $PSCmdlet.PagingParameters.Skip
         if ( $retrieveRecordCount -ne 0 ) {
