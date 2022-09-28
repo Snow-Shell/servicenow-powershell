@@ -1,3 +1,7 @@
+## 3.4.1
+- Update `Get-ServiceNowRecord` to ensure new custom variable format is pscustomobject, [#205](https://github.com/Snow-Shell/servicenow-powershell/issues/205)
+
+
 ## 3.4.0
 - Add `New-ServiceNowChangeTask`, [#103](https://github.com/Snow-Shell/servicenow-powershell/issues/103)
 - Add GraphQL support including `New-ServiceNowSession -GraphQL` and `Invoke-ServiceNowGraphQL`, the latter is a WIP
@@ -154,6 +158,7 @@ Be able to reference types from this config per table, removing the need to have
 - Add Get-ServiceNowAttachment
 - Add Get-ServiceNowAttachmentDetail
 - Add Remove-ServiceNowAttachment
+
 
 
 
