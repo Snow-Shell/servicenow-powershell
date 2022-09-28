@@ -335,7 +335,7 @@ function Get-ServiceNowRecord {
                     }
                     foreach ($var in $customVarsOut) {
                         $record.CustomVariable | Add-Member @{
-                            $var.'sc_item_option.item_option_new.name' = @{
+                            $var.'sc_item_option.item_option_new.name' = [pscustomobject] @{
                                 Value       = $var.'sc_item_option.value'
                                 DisplayName = $var.'sc_item_option.item_option_new.question_text'
                                 Type        = $var.'sc_item_option.item_option_new.type'
