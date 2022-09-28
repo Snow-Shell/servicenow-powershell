@@ -1,3 +1,1 @@
-- Add `New-ServiceNowChangeTask`, [#103](https://github.com/Snow-Shell/servicenow-powershell/issues/103)
-- Add GraphQL support including `New-ServiceNowSession -GraphQL` and `Invoke-ServiceNowGraphQL`, the latter is a WIP
-- Update custom variable format with `Get-ServiceNowRecord -IncludeCustomVariable`.  The new format adds each custom variable as an object property as opposed to an array of hashtables.  Old: `$response.CustomVariable.where{$_.name -eq 'mycustvar'}.value`, New: `$response.CustomVariable.mycustvar.value`.  Access the new format with `-IncludeCustomVariable -New`
+- Update `Get-ServiceNowRecord` to ensure new custom variable format is pscustomobject, [#205](https://github.com/Snow-Shell/servicenow-powershell/issues/205)
