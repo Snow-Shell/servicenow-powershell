@@ -86,7 +86,11 @@ Function Add-ServiceNowAttachment {
 
         [Parameter(Mandatory)]
         [ValidateScript( {
-                Test-Path $_
+                if ( Test-Path $_ ) {
+                    $true
+                } else {
+                    throw 'One or more files do not exist'
+                }
             })]
         [string[]] $File,
 
@@ -161,7 +165,7 @@ Function Add-ServiceNowAttachment {
 
         foreach ($thisFile in $File) {
 
-            $thisFileObject = Get-ChildItem $thisFile -ErrorAction Stop
+            $thisFileObject = Get-ChildItem $thisFile
 
             If ( -not $PSBoundParameters.ContainsKey('ContentType') ) {
                 # Thanks to https://github.com/samuelneff/MimeTypeMap/blob/master/MimeTypeMap.cs from which
@@ -170,6 +174,11 @@ Function Add-ServiceNowAttachment {
 
                 $Extension = [IO.Path]::GetExtension($thisFileObject.FullName)
                 $ContentType = $contentTypes.$Extension
+
+                if ( -not $ContentType ) {
+                    Write-Error ('Content type not found for {0}, the file will not be uploaded' -f $thisFileObject.FullName)
+                    Continue
+                }
             }
 
             # POST: https://instance.service-now.com/api/now/attachment/file?table_name=incident&table_sys_id=d71f7935c0a8016700802b64c67c11c6&file_name=Issue_screenshot
