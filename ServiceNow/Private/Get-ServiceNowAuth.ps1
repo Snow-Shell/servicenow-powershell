@@ -70,6 +70,6 @@ function Get-ServiceNowAuth {
     }
 
     end {
-        $hashOut
+        $hashOut.Clone()
     }
 }
