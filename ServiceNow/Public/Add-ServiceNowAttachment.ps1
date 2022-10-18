@@ -86,7 +86,11 @@ Function Add-ServiceNowAttachment {
 
         [Parameter(Mandatory)]
         [ValidateScript( {
-                Test-Path $_
+                if ( Test-Path $_ ) {
+                    $true
+                } else {
+                    throw 'One or more files do not exist'
+                }
             })]
         [string[]] $File,
 
@@ -105,7 +109,12 @@ Function Add-ServiceNowAttachment {
         [hashtable] $ServiceNowSession = $script:ServiceNowSession
     )
 
-    begin {}
+    begin {
+        $auth = Get-ServiceNowAuth -C $Connection -S $ServiceNowSession
+        $invokeRestMethodSplat = $auth
+        $invokeRestMethodSplat.UseBasicParsing = $true
+        $invokeRestMethodSplat.Method = 'POST'
+    }
 
     process	{
 
@@ -153,32 +162,34 @@ Function Add-ServiceNowAttachment {
             $thisSysId = $tableRecord.sys_id
         }
 
-        $auth = Get-ServiceNowAuth -C $Connection -S $ServiceNowSession
 
-        ForEach ($Object in $File) {
-            $FileData = Get-ChildItem $Object -ErrorAction Stop
-            If (-not $ContentType) {
+        foreach ($thisFile in $File) {
+
+            $thisFileObject = Get-ChildItem $thisFile
+
+            If ( -not $PSBoundParameters.ContainsKey('ContentType') ) {
                 # Thanks to https://github.com/samuelneff/MimeTypeMap/blob/master/MimeTypeMap.cs from which
                 # MimeTypeMap.json was adapted
-                $ContentTypeHash = ConvertFrom-Json (Get-Content "$PSScriptRoot\..\config\MimeTypeMap.json" -Raw)
+                $contentTypes = ConvertFrom-Json (Get-Content "$PSScriptRoot\..\config\MimeTypeMap.json" -Raw)
 
-                $Extension = [IO.Path]::GetExtension($FileData.FullName)
-                $ContentType = $ContentTypeHash.$Extension
+                $Extension = [IO.Path]::GetExtension($thisFileObject.FullName)
+                $ContentType = $contentTypes.$Extension
+
+                if ( -not $ContentType ) {
+                    Write-Error ('Content type not found for {0}, the file will not be uploaded' -f $thisFileObject.FullName)
+                    Continue
+                }
             }
 
             # POST: https://instance.service-now.com/api/now/attachment/file?table_name=incident&table_sys_id=d71f7935c0a8016700802b64c67c11c6&file_name=Issue_screenshot
-            # $Uri = "{0}/file?table_name={1}&table_sys_id={2}&file_name={3}" -f $ApiUrl, $Table, $TableSysID, $FileData.Name
-            $invokeRestMethodSplat = $auth
-            $invokeRestMethodSplat.Uri += '/attachment/file?table_name={0}&table_sys_id={1}&file_name={2}' -f $thisTableName, $thisSysId, $FileData.Name
-            $invokeRestMethodSplat.Headers += @{'Content-Type' = $ContentType }
-            $invokeRestMethodSplat.UseBasicParsing = $true
-            $invokeRestMethodSplat += @{
-                Method = 'POST'
-                InFile = $FileData.FullName
-            }
+            $invokeRestMethodSplat.Uri = '{0}/attachment/file?table_name={1}&table_sys_id={2}&file_name={3}' -f $auth.Uri, $thisTableName, $thisSysId, $thisFileObject.Name
+            $invokeRestMethodSplat.ContentType = $ContentType
+            $invokeRestMethodSplat.InFile = $thisFileObject.FullName
 
-            If ($PSCmdlet.ShouldProcess(('{0} {1}' -f $thisTableName, $thisSysId), ('Add attachment {0}' -f $FileData.FullName))) {
+            If ($PSCmdlet.ShouldProcess(('{0} {1}' -f $thisTableName, $thisSysId), ('Add attachment {0}' -f $thisFileObject.FullName))) {
+
                 Write-Verbose ($invokeRestMethodSplat | ConvertTo-Json)
+
                 $response = Invoke-WebRequest @invokeRestMethodSplat
 
                 if ( $response.Content ) {
