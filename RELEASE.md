@@ -1,1 +1,1 @@
-- Update `Get-ServiceNowRecord` to ensure new custom variable format is pscustomobject, [#205](https://github.com/Snow-Shell/servicenow-powershell/issues/205)
+- Fix `Add-ServiceNowAttachment` content type error when attempting to add multiple files, [#207](https://github.com/Snow-Shell/servicenow-powershell/issues/207)
