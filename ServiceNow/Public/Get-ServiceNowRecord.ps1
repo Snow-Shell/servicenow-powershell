@@ -324,14 +324,15 @@ function Get-ServiceNowRecord {
             # for each record, get the variable names and then get the variable values
             foreach ($record in $result) {
 
+                $recordSysId = if ($DisplayValue -eq 'all') { $record.sys_id.value } else { $record.sys_id }
+
                 # YES_NO = 1; MULTI_LINE_TEXT = 2; MULTIPLE_CHOICE = 3; NUMERIC_SCALE = 4; SELECT_BOX = 5; SINGLE_LINE_TEXT = 6; CHECKBOX = 7; REFERENCE = 8; DATE = 9; DATE_TIME = 10; LABEL = 11; BREAK = 12; MACRO = 14; UI_PAGE = 15; WIDE_SINGLE_LINE_TEXT = 16; MACRO_WITH_LABEL = 17; LOOKUP_SELECT_BOX = 18; CONTAINER_START = 19; CONTAINER_END = 20; LIST_COLLECTOR = 21; LOOKUP_MULTIPLE_CHOICE = 22; HTML = 23; SPLIT = 24; MASKED = 25;
 
                 $customVarParams = @{
                     Table             = 'sc_item_option_mtom'
-                    Filter            = @('request_item', '-eq', $record.sys_id), 'and', @('sc_item_option.item_option_new.type', '-in', '1,2,3,4,5,6,7,8,9,10,16,18,21,22,26')
+                    Filter            = @('request_item', '-eq', $recordSysId), 'and', @('sc_item_option.item_option_new.type', '-in', '1,2,3,4,5,6,7,8,9,10,16,18,21,22,26')
                     Property          = 'sc_item_option.item_option_new.name', 'sc_item_option.value', 'sc_item_option.item_option_new.type', 'sc_item_option.item_option_new.question_text', 'sc_item_option.item_option_new.reference'
                     IncludeTotalCount = $true
-                    DisplayValue      = $DisplayValue
                     ServiceNowSession = $ServiceNowSession
                 }
 
@@ -351,17 +352,9 @@ function Get-ServiceNowRecord {
                             Type        = $var.'sc_item_option.item_option_new.type'
                         }
 
-                        # show the underlying value if the option is a reference type and display value is true
-                        # if the type is 'Reference', this means it is a reference type and display value is true
-                        # if display value is false the type will be '8' the value will be the reference sysid
-                        if ( $newVar.Type -eq 'Reference' -or $newVar.Type -eq 8 ) {
-                            if ($newVar.Type -eq 'Reference' ) {
-                                $newVar.Value = (Get-ServiceNowRecord -Table $var.'sc_item_option.item_option_new.reference' -ID $var.'sc_item_option.value' -Property name -AsValue -ServiceNowSession $ServiceNowSession)
-                            }
-                            else {
-                                # add table being referenced by sysid value
-                                $newVar | Add-Member @{'TableReference' = $var.'sc_item_option.item_option_new.reference' }
-                            }
+                        # show the underlying value if the option is a reference type
+                        if ($newVar.Type -eq 'Reference' ) {
+                            $newVar.Value = (Get-ServiceNowRecord -Table $var.'sc_item_option.item_option_new.reference' -ID $var.'sc_item_option.value' -Property name -AsValue -ServiceNowSession $ServiceNowSession)
                         }
     
                         $record.CustomVariable | Add-Member @{ $var.'sc_item_option.item_option_new.name' = $newVar }
