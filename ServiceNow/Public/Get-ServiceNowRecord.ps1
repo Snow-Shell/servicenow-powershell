@@ -151,7 +151,8 @@ function Get-ServiceNowRecord {
         [ValidateScript( {
                 if ($_ -match '^[a-zA-Z0-9]{32}$' -or $_ -match '^([a-zA-Z]+)[0-9]+$') {
                     $true
-                } else {
+                }
+                else {
                     throw 'Id must be either a 32 character alphanumeric, ServiceNow sysid, or prefix/id, ServiceNow number.'
                 }
             })]
@@ -162,7 +163,8 @@ function Get-ServiceNowRecord {
         [ValidateScript( {
                 if ($_ -match '^[a-zA-Z0-9]{32}$' -or $_ -match '^([a-zA-Z]+)[0-9]+$') {
                     $true
-                } else {
+                }
+                else {
                     throw 'ParentId must be either a 32 character alphanumeric, ServiceNow sysid, or prefix/id, ServiceNow number.'
                 }
             })]
@@ -241,7 +243,8 @@ function Get-ServiceNowRecord {
                 }
 
                 $idFilter = @('sys_id', '-eq', $ID)
-            } else {
+            }
+            else {
                 if ( -not $thisTable ) {
                     # get table name from prefix if only Id was provided
                     $idPrefix = ($ID | Select-String -Pattern '^([a-zA-Z]+)([0-9]+$)').Matches.Groups[1].Value.ToLower()
@@ -256,7 +259,8 @@ function Get-ServiceNowRecord {
 
             if ( $invokeParams.Filter ) {
                 $invokeParams.Filter = $invokeParams.Filter, 'and', $idFilter
-            } else {
+            }
+            else {
                 $invokeParams.Filter = $idFilter
             }
 
@@ -268,13 +272,15 @@ function Get-ServiceNowRecord {
         if ( $ParentID ) {
             if ( $ParentID -match '^[a-zA-Z0-9]{32}$' ) {
                 $parentIdFilter = @('parent.sys_id', '-eq', $ParentID)
-            } else {
+            }
+            else {
                 $parentIdFilter = @('parent.number', '-eq', $ParentID)
             }
 
             if ( $invokeParams.Filter ) {
                 $invokeParams.Filter = $invokeParams.Filter, 'and', $parentIdFilter
-            } else {
+            }
+            else {
                 $invokeParams.Filter = $parentIdFilter
             }
         }
@@ -288,7 +294,8 @@ function Get-ServiceNowRecord {
 
             if ( $invokeParams.Filter ) {
                 $invokeParams.Filter = $invokeParams.Filter, 'and', @($thisTable.DescriptionField, '-like', $Description)
-            } else {
+            }
+            else {
                 $invokeParams.Filter = @($thisTable.DescriptionField, '-like', $Description)
             }
         }
@@ -317,10 +324,14 @@ function Get-ServiceNowRecord {
             # for each record, get the variable names and then get the variable values
             foreach ($record in $result) {
 
+                $recordSysId = if ($DisplayValue -eq 'all') { $record.sys_id.value } else { $record.sys_id }
+
+                # YES_NO = 1; MULTI_LINE_TEXT = 2; MULTIPLE_CHOICE = 3; NUMERIC_SCALE = 4; SELECT_BOX = 5; SINGLE_LINE_TEXT = 6; CHECKBOX = 7; REFERENCE = 8; DATE = 9; DATE_TIME = 10; LABEL = 11; BREAK = 12; MACRO = 14; UI_PAGE = 15; WIDE_SINGLE_LINE_TEXT = 16; MACRO_WITH_LABEL = 17; LOOKUP_SELECT_BOX = 18; CONTAINER_START = 19; CONTAINER_END = 20; LIST_COLLECTOR = 21; LOOKUP_MULTIPLE_CHOICE = 22; HTML = 23; SPLIT = 24; MASKED = 25;
+
                 $customVarParams = @{
                     Table             = 'sc_item_option_mtom'
-                    Filter            = @('request_item', '-eq', $record.sys_id), 'and', @('sc_item_option.item_option_new.type', '-in', '1,2,3,4,5,6,7,8,9,10,16,18,21,22,26')
-                    Property          = 'sc_item_option.item_option_new.name', 'sc_item_option.value', 'sc_item_option.item_option_new.type', 'sc_item_option.item_option_new.question_text'
+                    Filter            = @('request_item', '-eq', $recordSysId), 'and', @('sc_item_option.item_option_new.type', '-in', '1,2,3,4,5,6,7,8,9,10,16,18,21,22,26')
+                    Property          = 'sc_item_option.item_option_new.name', 'sc_item_option.value', 'sc_item_option.item_option_new.type', 'sc_item_option.item_option_new.question_text', 'sc_item_option.item_option_new.reference'
                     IncludeTotalCount = $true
                     ServiceNowSession = $ServiceNowSession
                 }
@@ -333,16 +344,23 @@ function Get-ServiceNowRecord {
                     $record | Add-Member @{
                         'CustomVariable' = [pscustomobject]@{}
                     }
+
                     foreach ($var in $customVarsOut) {
-                        $record.CustomVariable | Add-Member @{
-                            $var.'sc_item_option.item_option_new.name' = [pscustomobject] @{
-                                Value       = $var.'sc_item_option.value'
-                                DisplayName = $var.'sc_item_option.item_option_new.question_text'
-                                Type        = $var.'sc_item_option.item_option_new.type'
-                            }
+                        $newVar = [pscustomobject] @{
+                            Value       = $var.'sc_item_option.value'
+                            DisplayName = $var.'sc_item_option.item_option_new.question_text'
+                            Type        = $var.'sc_item_option.item_option_new.type'
                         }
+
+                        # show the underlying value if the option is a reference type
+                        if ($newVar.Type -eq 'Reference' ) {
+                            $newVar.Value = (Get-ServiceNowRecord -Table $var.'sc_item_option.item_option_new.reference' -ID $var.'sc_item_option.value' -Property name -AsValue -ServiceNowSession $ServiceNowSession)
+                        }
+    
+                        $record.CustomVariable | Add-Member @{ $var.'sc_item_option.item_option_new.name' = $newVar }
                     }
-                } else {
+                }
+                else {
 
                     Write-Warning 'The format for custom variables will soon change.  Start using -New with -IncludeCustomVariable to preview.'
 
@@ -370,22 +388,26 @@ function Get-ServiceNowRecord {
 
                 if ( $addedSysIdProp ) {
                     $record | Select-Object -Property * -ExcludeProperty sys_id
-                } else {
+                }
+                else {
                     $record
                 }
             }
 
-        } else {
+        }
+        else {
 
             # format the results
             if ( $Property ) {
                 if ( $Property.Count -eq 1 -and $AsValue ) {
                     $propName = $result | Get-Member | Where-Object { $_.MemberType -eq 'NoteProperty' } | Select-Object -exp Name
                     $result | Select-Object -ExpandProperty $propName
-                } else {
+                }
+                else {
                     $result
                 }
-            } else {
+            }
+            else {
                 if ($thisTable.Type) {
                     $result | ForEach-Object { $_.PSObject.TypeNames.Insert(0, $thisTable.Type) }
                 }
