@@ -1,3 +1,7 @@
+## 3.4.3
+- `Get-ServiceNowRecord`, custom variables of type Reference providing sysid instead of actual value, [#218](https://github.com/Snow-Shell/servicenow-powershell/issues/218)
+
+
 ## 3.4.2
 - Fix `Add-ServiceNowAttachment` content type error when attempting to add multiple files, [#207](https://github.com/Snow-Shell/servicenow-powershell/issues/207)
 
@@ -162,6 +166,7 @@ Be able to reference types from this config per table, removing the need to have
 - Add Get-ServiceNowAttachment
 - Add Get-ServiceNowAttachmentDetail
 - Add Remove-ServiceNowAttachment
+
 
 
 
