@@ -1,1 +1,1 @@
-- Fix `Add-ServiceNowAttachment` content type error when attempting to add multiple files, [#207](https://github.com/Snow-Shell/servicenow-powershell/issues/207)
+- `Get-ServiceNowRecord`, custom variables of type Reference providing sysid instead of actual value, [#218](https://github.com/Snow-Shell/servicenow-powershell/issues/218)
