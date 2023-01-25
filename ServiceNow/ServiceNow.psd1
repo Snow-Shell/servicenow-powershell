@@ -27,7 +27,7 @@ Author = 'Sam Martin Rick Arroues Greg Brownstein'
 CompanyName = 'None'
 
 # Copyright statement for this module
-Copyright = '(c) 2015-2021 Snow-Shell. All rights reserved.'
+Copyright = '(c) 2015-2023 Snow-Shell. All rights reserved.'
 
 # Description of the functionality provided by this module
 Description = 'Automate against ServiceNow service and asset management.  This module can be used standalone or with Azure Automation.'

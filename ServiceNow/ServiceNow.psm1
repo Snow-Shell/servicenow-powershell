@@ -22,8 +22,10 @@ $tableArgCompleterSb = {
 # assign the table arg completer to functions
 @(
     'Get-ServiceNowRecord',
-    'Get-ServiceNowAttachment'
-    'Add-ServiceNowAttachment'
+    'Get-ServiceNowAttachment',
+    'Add-ServiceNowAttachment',
+    'New-ServiceNowRecord',
+    'Update-ServiceNowRecord'
 ) | ForEach-Object {
     Register-ArgumentCompleter -CommandName $_ -ParameterName 'Table' -ScriptBlock $tableArgCompleterSb
 }
