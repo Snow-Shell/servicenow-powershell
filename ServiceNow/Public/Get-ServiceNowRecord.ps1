@@ -317,10 +317,14 @@ function Get-ServiceNowRecord {
             $invokeParams.UriLeaf = '/attachment'
         }
 
-        $result = Invoke-ServiceNowRestMethod @invokeParams
+        [array]$result = Invoke-ServiceNowRestMethod @invokeParams
+
+        if ( -not $result ) {
+            return
+        }
 
         # custom tables do not have a sys_class_name property, add it
-        if ( -not $Property -and $result.PSObject.Properties.name -notcontains 'sys_class_name' ) {
+        if ( -not $Property -and $result[0].PSObject.Properties.name -notcontains 'sys_class_name' ) {
             $result | Add-Member @{'sys_class_name' = $Table }
         }
 
