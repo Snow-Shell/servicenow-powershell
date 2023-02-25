@@ -50,10 +50,6 @@
     A property named 'CustomVariable' will be added to the return object.
     When used with -New, you can now get the value with $return.CustomVariable.CustomVarName.Value.
 
-.PARAMETER New
-    Used with -IncludeCustomVariable for the new format.
-    Each property is now added by name with a value of .value.
-
 .PARAMETER AsValue
     Return the underlying value instead of pscustomobject.
     Only valid when the Property parameter is set to 1 item.
@@ -112,7 +108,7 @@
     Get all change requests, paging 100 at a time.
 
 .EXAMPLE
-    Get-ServiceNowRecord -Table 'change request' -IncludeCustomVariable -New -First 5
+    Get-ServiceNowRecord -Table 'change request' -IncludeCustomVariable -First 5
     Get the first 5 change requests and retrieve custom variable info
 
 .EXAMPLE
@@ -206,6 +202,10 @@ function Get-ServiceNowRecord {
     )
 
     begin {
+
+        if ( $New ) {
+            Write-Warning '-New is now deprecated and the new format is the default'
+        }
 
         $invokeParams = @{
             Filter            = $Filter
@@ -313,11 +313,16 @@ function Get-ServiceNowRecord {
         # should use Get-ServiceNowAttachment, but put this here for ease of access
         if ( $thisTable.Name -eq 'attachment' ) {
             Write-Warning 'For attachments, use Get-ServiceNowAttachment'
-            $invokeParams.Remove('Table') | Out-Null
+            $null = $invokeParams.Remove('Table')
             $invokeParams.UriLeaf = '/attachment'
         }
 
         $result = Invoke-ServiceNowRestMethod @invokeParams
+
+        # custom tables do not have a sys_class_name property, add it
+        if ( -not $Property -and $result.PSObject.Properties.name -notcontains 'sys_class_name' ) {
+            $result | Add-Member @{'sys_class_name' = $Table }
+        }
 
         if ( $IncludeCustomVariable ) {
 
@@ -339,52 +344,24 @@ function Get-ServiceNowRecord {
                 # suppress warning when getting total count
                 $customVarsOut = Get-ServiceNowRecord @customVarParams -WarningAction SilentlyContinue
 
-                if ( $New ) {
-
-                    $record | Add-Member @{
-                        'CustomVariable' = [pscustomobject]@{}
-                    }
-
-                    foreach ($var in $customVarsOut) {
-                        $newVar = [pscustomobject] @{
-                            Value       = $var.'sc_item_option.value'
-                            DisplayName = $var.'sc_item_option.item_option_new.question_text'
-                            Type        = $var.'sc_item_option.item_option_new.type'
-                        }
-
-                        # show the underlying value if the option is a reference type
-                        if ($newVar.Type -eq 'Reference' ) {
-                            $newVar.Value = (Get-ServiceNowRecord -Table $var.'sc_item_option.item_option_new.reference' -ID $var.'sc_item_option.value' -Property name -AsValue -ServiceNowSession $ServiceNowSession)
-                        }
-    
-                        $record.CustomVariable | Add-Member @{ $var.'sc_item_option.item_option_new.name' = $newVar }
-                    }
-                }
-                else {
-
-                    Write-Warning 'The format for custom variables will soon change.  Start using -New with -IncludeCustomVariable to preview.'
-
-                    $record | Add-Member @{
-                        'CustomVariable' = $customVarsOut | Select-Object -Property `
-                        @{
-                            'n' = 'Name'
-                            'e' = { $_.'sc_item_option.item_option_new.name' }
-                        },
-                        @{
-                            'n' = 'Value'
-                            'e' = { $_.'sc_item_option.value' }
-                        },
-                        @{
-                            'n' = 'DisplayName'
-                            'e' = { $_.'sc_item_option.item_option_new.question_text' }
-                        },
-                        @{
-                            'n' = 'Type'
-                            'e' = { $_.'sc_item_option.item_option_new.type' }
-                        }
-                    }
+                $record | Add-Member @{
+                    'CustomVariable' = [pscustomobject]@{}
                 }
 
+                foreach ($var in $customVarsOut) {
+                    $newVar = [pscustomobject] @{
+                        Value       = $var.'sc_item_option.value'
+                        DisplayName = $var.'sc_item_option.item_option_new.question_text'
+                        Type        = $var.'sc_item_option.item_option_new.type'
+                    }
+
+                    # show the underlying value if the option is a reference type
+                    if ($newVar.Type -eq 'Reference' ) {
+                        $newVar.Value = (Get-ServiceNowRecord -Table $var.'sc_item_option.item_option_new.reference' -ID $var.'sc_item_option.value' -Property name -AsValue -ServiceNowSession $ServiceNowSession)
+                    }
+
+                    $record.CustomVariable | Add-Member @{ $var.'sc_item_option.item_option_new.name' = $newVar }
+                }
 
                 if ( $addedSysIdProp ) {
                     $record | Select-Object -Property * -ExcludeProperty sys_id
@@ -400,8 +377,8 @@ function Get-ServiceNowRecord {
             # format the results
             if ( $Property ) {
                 if ( $Property.Count -eq 1 -and $AsValue ) {
-                    $propName = $result | Get-Member | Where-Object { $_.MemberType -eq 'NoteProperty' } | Select-Object -exp Name
-                    $result | Select-Object -ExpandProperty $propName
+                    $propName = $result | Get-Member | Where-Object { $_.MemberType -eq 'NoteProperty' } | Select-Object -ExpandProperty Name
+                    $result.$propName
                 }
                 else {
                     $result
