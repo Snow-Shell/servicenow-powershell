@@ -37,6 +37,10 @@
     Update-ServiceNowRecord -Table incident -ID '13378afb-97a6-451a-b1ec-2c9e85313188' -Values @{State = 'Closed'}
     Update a record by table name and sys_id.
 
+.EXAMPLE
+    Get-ServiceNowRecord INC0000001 | Update-ServiceNowRecord -Values @{work_notes = "Updated by PowerShell"}
+    Update details piping an existing object.  You do not need to specify the table or ID for the update.
+
 .INPUTS
     Table, ID
 
@@ -119,7 +123,7 @@ function Update-ServiceNowRecord {
             # we aren't aware of this table in our config so use as is
             $newTableName = $tableName
         }
-        
+
         $params = @{
             Method            = 'Patch'
             Table             = $newTableName
