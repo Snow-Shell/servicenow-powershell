@@ -360,11 +360,21 @@ function Get-ServiceNowRecord {
                     }
 
                     # show the underlying value if the option is a reference type
-                    if ($newVar.Type -eq 'Reference' ) {
-                        $newVar.Value = (Get-ServiceNowRecord -Table $var.'sc_item_option.item_option_new.reference' -ID $var.'sc_item_option.value' -Property name -AsValue -ServiceNowSession $ServiceNowSession)
+                    if ( $newVar.Type -eq 'Reference' ) {
+                        $newVar | Add-Member @{'ReferenceTable' = $var.'sc_item_option.item_option_new.reference' }
+                        # issue 234.  ID might not be sysid or number for reference...odd
+                        $refValue = Get-ServiceNowRecord -Table $var.'sc_item_option.item_option_new.reference' -ID $var.'sc_item_option.value' -Property name -AsValue -ServiceNowSession $ServiceNowSession -ErrorAction SilentlyContinue
+                        if ( $refValue ) {
+                            $newVar.Value = $refValue
+                        }
                     }
 
-                    $record.CustomVariable | Add-Member @{ $var.'sc_item_option.item_option_new.name' = $newVar }
+                    if ( $var.'sc_item_option.item_option_new.name' ) {
+                        $record.CustomVariable | Add-Member @{ $var.'sc_item_option.item_option_new.name' = $newVar }
+                    }
+                    else {
+                        $record.CustomVariable | Add-Member @{ $var.'sc_item_option.item_option_new.question_text' = $newVar }
+                    }
                 }
 
                 if ( $addedSysIdProp ) {
@@ -374,7 +384,6 @@ function Get-ServiceNowRecord {
                     $record
                 }
             }
-
         }
         else {
 
