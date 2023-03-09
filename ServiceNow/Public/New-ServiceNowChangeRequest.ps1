@@ -4,98 +4,110 @@ function New-ServiceNowChangeRequest {
         Generates a new ServiceNow change request
 
     .DESCRIPTION
-        Generates a new ServiceNow change request using predefined or custom fields by invoking the ServiceNow API
+        Generates a new ServiceNow change request directly with values or via a change model or template.
+
+    .PARAMETER ModelID
+        Name or sys_id of the change model to use
+
+    .PARAMETER TemplateID
+        Name of sys_id of the standard change template to use
 
     .PARAMETER Caller
-        sys_id of the caller of the change request (user Get-ServiceNowUser to retrieve this)
+        Full name or sys_id of the caller
 
     .PARAMETER ShortDescription
-        Short description of the change request
+        Short description
 
     .PARAMETER Description
-       Long description of the change request
+       Long description
 
     .PARAMETER AssignmentGroup
-        sys_id of the assignment group (use Get-ServiceNowUserGroup to retrieve this)
+        Full name or sys_id of the assignment group
 
     .PARAMETER Comment
-        Comment to include in the ticket
+        Comment to include
 
     .PARAMETER Category
-        Category of the change request (e.g. 'Network')
+        Category name
 
     .PARAMETER Subcategory
-        Subcategory of the change request (e.g. 'Network')
+        Subcategory name
 
     .PARAMETER ConfigurationItem
-        sys_id of the configuration item of the change request
+        Full name or sys_id of the configuration item to be associated with the change
 
-    .PARAMETER CustomFields
-        Custom fields as hashtable
+    .PARAMETER CustomField
+        Custom field values which aren't one of the built in function properties
 
     .PARAMETER Connection
         Azure Automation Connection object containing username, password, and URL for the ServiceNow instance
 
     .PARAMETER PassThru
-        Returns the ticket values after creation
-
-    .LINK
-        https://github.com/Snow-Shell/servicenow-powershell
+        If provided, the new record will be returned
 
     .EXAMPLE
-        Generate a basic change request attributed to the caller "UserName" with descriptions, categories, assignment groups and CMDB items set.
+        New-ServiceNowChangeRequest -Caller 'Greg Brownstein' -ShortDescription 'New change request'
 
-        New-ServiceNowchange request -Caller UserName -ShortDescription 'New PS change request' -Description 'This change request was created from Powershell' -AssignmentGroup ServiceDesk -Comment 'Inline Comment' -Category Office -Subcategory Outlook -ConfigurationItem UserPC1
+        Create a basic change request
 
     .EXAMPLE
-        Generate an Change Request by 'splatting' all fields used in the 1st example plus some additional custom ServiceNow fields (These must exist in your ServiceNow instance),  This example uses the caller's sys_id value for identification.
+        New-ServiceNowChangeRequest -Caller 'Greg Brownstein' -ShortDescription 'New change request' -CustomField @{'urgency'='1'}
 
-        $newServiceNowChangeRequestSplat = @{
-            Caller            = '55ccf91161924edc979d8e7e5627a47d'
-            ShortDescription  = 'New PS Change Request'
-            Description       = 'This change request was created from Powershell'
-            AssignmentGroup   = 'ServiceDesk'
-            Comment           = 'Inline Comment'
-            Category          = 'Office'
-            Subcategory       = 'Outlook'
-            ConfigurationItem = 'UserPC1'
-            CustomFields      = @{
-                u_custom1        = 'Custom Field Entry'
-                u_another_custom = 'Related Test'
-            }
-        }
-        New-ServiceNowChangeRequest @newServiceNowChangeRequestSplat
+        Create a basic change request with custom fields
+
+    .EXAMPLE
+        New-ServiceNowChangeRequest -TemplateID 'Change VLAN on a Cisco switchport - 1'
+
+        Create a change request from a standard change template
+
+    .EXAMPLE
+        New-ServiceNowChangeRequest -ModelID 'Normal' -ShortDescription 'make this change' -ConfigurationItem dbserver1
+
+        Create a change request from a change model
+
+    .EXAMPLE
+        New-ServiceNowChangeRequest -Caller 'Greg Brownstein' -ShortDescription 'New change request' -PassThru
+
+        Create a change request and return the newly created record
+
      #>
 
-    [CmdletBinding(SupportsShouldProcess)]
+    [CmdletBinding(SupportsShouldProcess, DefaultParameterSetName = 'direct')]
 
     Param(
-        [parameter(Mandatory)]
-        [string]$Caller,
+        [parameter(Mandatory, ParameterSetName = 'model')]
+        [string] $ModelID,
 
-        [parameter(Mandatory)]
-        [string]$ShortDescription,
-
-        [parameter()]
-        [string]$Description,
+        [parameter(Mandatory, ParameterSetName = 'template')]
+        [string] $TemplateID,
 
         [parameter()]
-        [string]$AssignmentGroup,
+        [string] $Caller,
 
         [parameter()]
-        [string]$Comment,
+        [string] $ShortDescription,
 
         [parameter()]
-        [string]$Category,
+        [string] $Description,
 
         [parameter()]
-        [string]$Subcategory,
+        [string] $AssignmentGroup,
 
         [parameter()]
-        [string]$ConfigurationItem,
+        [string] $Comment,
 
         [parameter()]
-        [hashtable]$CustomFields,
+        [string] $Category,
+
+        [parameter()]
+        [string] $Subcategory,
+
+        [parameter()]
+        [string] $ConfigurationItem,
+
+        [parameter()]
+        [Alias('CustomFields')]
+        [hashtable] $CustomField,
 
         [Parameter()]
         [Hashtable] $Connection,
@@ -110,58 +122,48 @@ function New-ServiceNowChangeRequest {
     begin {}
 
     process {
-        # Create a hash table of any defined parameters (not CustomFields) that have values
-        $DefinedChangeRequestParameters = @('AssignmentGroup', 'Caller', 'Category', 'Comment', 'ConfigurationItem', 'Description', 'ShortDescription', 'Subcategory')
-        $TableEntryValues = @{ }
-        ForEach ($Parameter in $DefinedChangeRequestParameters) {
-            If ($null -ne $PSBoundParameters.$Parameter) {
-                # Turn the defined parameter name into the ServiceNow attribute name
-                $KeyToAdd = Switch ($Parameter) {
-                    AssignmentGroup { 'assignment_group'; break }
-                    Caller { 'caller_id'; break }
-                    Category { 'category'; break }
-                    Comment { 'comments'; break }
-                    ConfigurationItem { 'cmdb_ci'; break }
-                    Description { 'description'; break }
-                    ShortDescription { 'short_description'; break }
-                    Subcategory { 'subcategory'; break }
-                }
-                $TableEntryValues.Add($KeyToAdd, $PSBoundParameters.$Parameter)
-            }
+
+        $values = @{}
+        Switch ($PSBoundParameters.Keys) {
+            AssignmentGroup { $values['assignment_group'] = $PSBoundParameters.AssignmentGroup }
+            Caller { $values['caller_id'] = $PSBoundParameters.Caller }
+            Category { $values['category'] = $PSBoundParameters.Category }
+            Comment { $values['comments'] = $PSBoundParameters.Comment }
+            ConfigurationItem { $values['cmdb_ci'] = $PSBoundParameters.ConfigurationItem }
+            Description { $values['description'] = $PSBoundParameters.Description }
+            ShortDescription { $values['short_description'] = $PSBoundParameters.ShortDescription }
+            Subcategory { $values['subcategory'] = $PSBoundParameters.Subcategory }
+            ModelID { $values['chg_model'] = $PSBoundParameters.ModelID }
+            TemplateID { $values['std_change_producer_version'] = $PSBoundParameters.TemplateID; $values['type'] = 'Standard' }
         }
 
-        # Add CustomFields hash pairs to the Table Entry Values hash table
-        If ($null -ne $PSBoundParameters.CustomFields) {
-            $DuplicateTableEntryValues = ForEach ($Key in $CustomFields.Keys) {
-                If (($TableEntryValues.ContainsKey($Key) -eq $False)) {
-                    # Add the unique entry to the table entry values hash table
-                    $TableEntryValues.Add($Key, $CustomFields[$Key])
-                }
-                Else {
-                    # Capture the duplicate key name
-                    $Key
-                }
+        # add custom fields
+        $duplicateValues = ForEach ($Key in $CustomField.Keys) {
+            If ( $values.ContainsKey($Key) ) {
+                $Key
+            }
+            Else {
+                $values.Add($Key, $CustomField[$Key])
             }
         }
 
         # Throw an error if duplicate fields were provided
-        If ($null -ne $DuplicateTableEntryValues) {
-            $DuplicateKeyList = $DuplicateTableEntryValues -join ","
-            Throw "Ticket fields may only be used once:  $DuplicateKeyList"
+        If ( $duplicateValues ) {
+            Throw ('Fields may only be used once and the following were duplicated: {0}' -f $duplicateValues -join ",")
         }
 
         # Table Entry Splat
         $params = @{
-            Method            = 'Post'
             Table             = 'change_request'
-            Values            = $TableEntryValues
+            Values            = $values
             Connection        = $Connection
             ServiceNowSession = $ServiceNowSession
+            PassThru          = $true
         }
 
-        If ( $PSCmdlet.ShouldProcess($ShortDescription, 'Create new change request') ) {
-            $response = Invoke-ServiceNowRestMethod @params
-            If ($PassThru.IsPresent) {
+        If ( $PSCmdlet.ShouldProcess('', 'Create new change request') ) {
+            $response = New-ServiceNowRecord @params
+            If ( $PassThru ) {
                 $response.PSObject.TypeNames.Insert(0, "ServiceNow.ChangeRequest")
                 $response
             }
