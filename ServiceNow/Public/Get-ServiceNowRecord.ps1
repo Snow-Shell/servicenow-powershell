@@ -207,18 +207,6 @@ function Get-ServiceNowRecord {
             Write-Warning '-New is now deprecated and the new format is the default'
         }
 
-        $invokeParams = @{
-            Filter            = $Filter
-            Property          = $Property
-            Sort              = $Sort
-            DisplayValue      = $DisplayValue
-            First             = $PSCmdlet.PagingParameters.First
-            Skip              = $PSCmdlet.PagingParameters.Skip
-            IncludeTotalCount = $PSCmdlet.PagingParameters.IncludeTotalCount
-            Connection        = $Connection
-            ServiceNowSession = $ServiceNowSession
-        }
-
         if ( $Table ) {
             $thisTable = $script:ServiceNowTable | Where-Object { $_.Name.ToLower() -eq $Table.ToLower() -or $_.ClassName.ToLower() -eq $Table.ToLower() }
             if ( -not $thisTable ) {
@@ -235,6 +223,18 @@ function Get-ServiceNowRecord {
     }
 
     process {
+
+        $invokeParams = @{
+            Filter            = $Filter
+            Property          = $Property
+            Sort              = $Sort
+            DisplayValue      = $DisplayValue
+            First             = $PSCmdlet.PagingParameters.First
+            Skip              = $PSCmdlet.PagingParameters.Skip
+            IncludeTotalCount = $PSCmdlet.PagingParameters.IncludeTotalCount
+            Connection        = $Connection
+            ServiceNowSession = $ServiceNowSession
+        }
 
         if ( $ID ) {
             if ( $ID -match '^[a-zA-Z0-9]{32}$' ) {
