@@ -56,6 +56,13 @@
             "DescriptionField": "short_description"
         },
         {
+            "Name": "task",
+            "ClassName": "Task",
+            "Type": "ServiceNow.Task",
+            "NumberPrefix": "task",
+            "DescriptionField": "short_description"
+        },
+        {
             "Name": "change_task",
             "ClassName": "Change Task",
             "Type": "ServiceNow.ChangeTask",

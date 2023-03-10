@@ -98,6 +98,8 @@ Contributions are gratefully received, so please feel free to submit a pull requ
 
 ## Authors
 
-- [Sam Martin](https://github.com/Sam-Martin)
-- [Rick Arroues](https://github.com/Rick-2CA)
-- [Greg Brownstein](https://github.com/gdbarron)
+- Current: [Greg Brownstein](https://github.com/gdbarron)
+
+- Previous
+  - [Sam Martin](https://github.com/Sam-Martin)
+  - [Rick Arroues](https://github.com/Rick-2CA)

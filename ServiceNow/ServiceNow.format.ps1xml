@@ -396,6 +396,59 @@
 			</TableControl>
 		</View>
 		<View>
+			<Name>ServiceNow.Task</Name>
+			<ViewSelectedBy>
+				<TypeName>ServiceNow.Task</TypeName>
+			</ViewSelectedBy>
+			<TableControl>
+				<TableHeaders>
+					<TableColumnHeader>
+						<Label>number</Label>
+						<Width>12</Width>
+					</TableColumnHeader>
+					<TableColumnHeader>
+						<Label>state</Label>
+						<Width>10</Width>
+					</TableColumnHeader>
+					<TableColumnHeader>
+						<Label>sys_class_name</Label>
+						<Width>20</Width>
+					</TableColumnHeader>
+					<TableColumnHeader>
+						<Label>parent</Label>
+						<Width>12</Width>
+					</TableColumnHeader>
+					<TableColumnHeader>
+						<Label>sys_id</Label>
+						<Width>32</Width>
+					</TableColumnHeader>
+				</TableHeaders>
+				<TableRowEntries>
+					<TableRowEntry>
+						<TableColumnItems>
+							<TableColumnItem>
+								<PropertyName>number</PropertyName>
+							</TableColumnItem>
+							<TableColumnItem>
+								<PropertyName>state</PropertyName>
+							</TableColumnItem>
+							<TableColumnItem>
+								<PropertyName>sys_class_name</PropertyName>
+							</TableColumnItem>
+							<TableColumnItem>
+								<ScriptBlock>
+								$_.parent.display_value
+								</ScriptBlock>
+							</TableColumnItem>
+							<TableColumnItem>
+								<PropertyName>sys_id</PropertyName>
+							</TableColumnItem>
+						</TableColumnItems>
+					</TableRowEntry>
+				</TableRowEntries>
+			</TableControl>
+		</View>
+		<View>
 			<Name>ServiceNow.ChangeTask</Name>
 			<ViewSelectedBy>
 				<TypeName>ServiceNow.ChangeTask</TypeName>
