@@ -49,14 +49,6 @@ $Script:ServiceNowSession = @{}
 Export-ModuleMember -Variable ServiceNowSession
 
 $aliases = @{
-    'Get-ServiceNowRequestItem'       = 'Get-ServiceNowRequestedItem'
-    'Get-ServiceNowIncident'          = 'Get-ServiceNowRecordInterim'
-    'Get-ServiceNowChangeRequest'     = 'Get-ServiceNowRecordInterim'
-    'Get-ServiceNowConfigurationItem' = 'Get-ServiceNowRecordInterim'
-    'Get-ServiceNowRequest'           = 'Get-ServiceNowRecordInterim'
-    'Get-ServiceNowRequestedItem'     = 'Get-ServiceNowRecordInterim'
-    'Get-ServiceNowUser'              = 'Get-ServiceNowRecordInterim'
-    'Get-ServiceNowUserGroup'         = 'Get-ServiceNowRecordInterim'
     'Update-ServiceNowRequestItem'    = 'Update-ServiceNowRequestedItem'
     'Remove-ServiceNowTableEntry'     = 'Remove-ServiceNowRecord'
     'New-ServiceNowTableEntry'        = 'New-ServiceNowRecord'

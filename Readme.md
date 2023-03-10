@@ -20,7 +20,7 @@ Requires authorization in your ServiceNow tenant.  Due to the custom nature of S
 
 ## Usage
 
-The ServiceNow module should be installed from the [PowerShell Gallery](https://www.powershellgallery.com/packages/ServiceNow) with `install-module ServiceNow`.
+The ServiceNow module should be installed from the [PowerShell Gallery](https://www.powershellgallery.com/packages/ServiceNow) with `Install-Module ServiceNow`.
 
 A [docker image](https://hub.docker.com/repository/docker/gdbarron/servicenow-module) is also available with [Microsoft's PowerShell base image](https://hub.docker.com/_/microsoft-powershell) and the ServiceNow module preinstalled.  The following environment variables should be used:
 - SNOW_SERVER: the ServiceNow instance, eg. instance.service-now.com
@@ -98,6 +98,8 @@ Contributions are gratefully received, so please feel free to submit a pull requ
 
 ## Authors
 
-- [Sam Martin](https://github.com/Sam-Martin)
-- [Rick Arroues](https://github.com/Rick-2CA)
-- [Greg Brownstein](https://github.com/gdbarron)
+- Current: [Greg Brownstein](https://github.com/gdbarron)
+
+- Previous
+  - [Sam Martin](https://github.com/Sam-Martin)
+  - [Rick Arroues](https://github.com/Rick-2CA)

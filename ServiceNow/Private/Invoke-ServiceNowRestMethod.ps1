@@ -121,20 +121,28 @@ function Invoke-ServiceNowRestMethod {
         if ($Property) {
             $Body.sysparm_fields = ($Property -join ',').ToLower()
         }
+
+        if ( $Body ) {
+            $params.Body = $Body
+        }
+
+        Write-Verbose ($params | ConvertTo-Json)
     }
 
     if ( $Values ) {
         $Body = $Values | ConvertTo-Json
+        $params.Body = $Body
+        Write-Verbose ($params | ConvertTo-Json)
 
         #Convert to UTF8 array to support special chars such as the danish "ï¿½","ï¿½","ï¿½"
-        $body = [System.Text.Encoding]::UTf8.GetBytes($Body)
+        $params.Body = [System.Text.Encoding]::UTf8.GetBytes($Body)
     }
 
-    if ( $Body ) {
-        $params.Body = $Body
-    }
+    # if ( $Body ) {
+    #     $params.Body = $Body
+    # }
 
-    Write-Verbose ($params | ConvertTo-Json)
+    # Write-Verbose ($params | ConvertTo-Json)
 
     # hide invoke-webrequest progress
     $oldProgressPreference = $ProgressPreference

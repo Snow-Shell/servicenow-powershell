@@ -12,8 +12,8 @@
     Hashtable with all the key/value pairs for the new record
 
 .PARAMETER PassThru
-        If provided, the new record will be returned
-        
+    If provided, the new record will be returned
+
 .PARAMETER Connection
     Azure Automation Connection object containing username, password, and URL for the ServiceNow instance
 
@@ -22,6 +22,7 @@
 
 .EXAMPLE
     New-ServiceNowRecord -Table incident -Values @{'Caller'='me';'short_description'='my issue'}
+
     Create a new record in the incident table
 
 .INPUTS
@@ -36,11 +37,9 @@ function New-ServiceNowRecord {
 
     Param
     (
-        # Name of the table we're inserting into (e.g. incidents)
         [parameter(Mandatory)]
         [string] $Table,
 
-        # Hashtable of values to use as the record's properties
         [parameter(Mandatory)]
         [hashtable] $Values,
 
@@ -55,12 +54,14 @@ function New-ServiceNowRecord {
     )
 
     $invokeParams = $PSBoundParameters
-    $invokeParams.Remove('PassThru') | Out-Null
+    $null = $invokeParams.Remove('PassThru')
 
-    If ( $PSCmdlet.ShouldProcess($Table, 'Create new entry') ) {
+    If ( $PSCmdlet.ShouldProcess($Table, 'Create new record') ) {
+
         $response = Invoke-ServiceNowRestMethod @invokeParams -Method 'Post'
-        If ($PassThru.IsPresent) {
-            $type = $script:ServiceNowTable | Where-Object {$_.Name -eq $Table -or $_.ClassName -eq $Table} | Select-Object -ExpandProperty Type
+
+        If ( $PassThru ) {
+            $type = $script:ServiceNowTable | Where-Object { $_.Name -eq $Table -or $_.ClassName -eq $Table } | Select-Object -ExpandProperty Type
             if ($type) {
                 $response | ForEach-Object { $_.PSObject.TypeNames.Insert(0, $type) }
             }
