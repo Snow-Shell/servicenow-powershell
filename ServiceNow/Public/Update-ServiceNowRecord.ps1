@@ -11,10 +11,14 @@
 
 .PARAMETER ID
     Either the record sys_id or number.
-    If providing just an Id, not with Table, the Id prefix will be looked up to find the table name.
+    If providing just an ID, not with Table, the ID prefix will be looked up to find the table name.
 
-.PARAMETER Values
-    Hashtable with all the field/value pairs for the updated record
+.PARAMETER FieldValue
+    Key/value pairs of fields and their values
+
+.PARAMETER CustomVariableValue
+    Key/value pairs of custom variable names and their values.
+    Get custom variable names with Get-ServiceNowRecord -IncludeCustomVariable.
 
 .PARAMETER PassThru
     If provided, the updated record will be returned
@@ -26,19 +30,28 @@
     ServiceNow session created by New-ServiceNowSession.  Will default to script-level variable $ServiceNowSession.
 
 .EXAMPLE
-    Update-ServiceNowRecord -ID 'INC0010001' -Values @{State = 'Closed'}
+    Update-ServiceNowRecord -ID 'INC0010001' -FieldValue @{State = 'Closed'}
+
     Update a record by number.  The table name will be looked up based on the prefix.
 
 .EXAMPLE
-    Update-ServiceNowRecord -Table 'change_request' -ID 'CHG0010001' -Values @{'work_notes' = 'my notes'}
+    Update-ServiceNowRecord -Table 'change_request' -ID 'CHG0010001' -FieldValue @{'work_notes' = 'my notes'}
+
     Update a record by number.  The table name is provided directly as the table lookup is different, 'Change Request' as opposed to 'change_request'.
 
 .EXAMPLE
-    Update-ServiceNowRecord -Table incident -ID '13378afb-97a6-451a-b1ec-2c9e85313188' -Values @{State = 'Closed'}
+    Update-ServiceNowRecord -Table incident -ID '13378afb-97a6-451a-b1ec-2c9e85313188' -FieldValue @{State = 'Closed'}
+
     Update a record by table name and sys_id.
 
 .EXAMPLE
-    Get-ServiceNowRecord INC0000001 | Update-ServiceNowRecord -Values @{work_notes = "Updated by PowerShell"}
+    Get-ServiceNowRecord INC0000001 | Update-ServiceNowRecord -FieldValue @{'work_notes' = 'Updated by PowerShell'}
+
+    Update details piping an existing object.  You do not need to specify the table or ID for the update.
+
+.EXAMPLE
+    Update-ServiceNowRecord -ID RITM0000001 -CustomVariableValue @{'question' = 'Yes'}
+
     Update details piping an existing object.  You do not need to specify the table or ID for the update.
 
 .INPUTS
@@ -61,8 +74,14 @@ function Update-ServiceNowRecord {
         [Alias('sys_id', 'SysId', 'number')]
         [string] $ID,
 
-        [parameter(Mandatory)]
-        [hashtable] $Values,
+        [parameter(Mandatory, ParameterSetName = 'both')]
+        [parameter(Mandatory, ParameterSetName = 'field')]
+        [Alias('Values')]
+        [hashtable] $FieldValue,
+
+        [parameter(Mandatory, ParameterSetName = 'both')]
+        [parameter(Mandatory, ParameterSetName = 'custom')]
+        [hashtable] $CustomVariableValue,
 
         [Parameter()]
         [switch] $PassThru,
@@ -124,19 +143,55 @@ function Update-ServiceNowRecord {
             $newTableName = $tableName
         }
 
-        $params = @{
-            Method            = 'Patch'
-            Table             = $newTableName
-            SysId             = $sysId
-            Values            = $Values
-            Connection        = $Connection
-            ServiceNowSession = $ServiceNowSession
-        }
 
         If ($PSCmdlet.ShouldProcess("$newTableName $sysId", 'Update values')) {
-            $response = Invoke-ServiceNowRestMethod @params
+
+            if ( $FieldValue ) {
+
+                $params = @{
+                    Method            = 'Patch'
+                    Table             = $newTableName
+                    SysId             = $sysId
+                    Values            = $FieldValue
+                    Connection        = $Connection
+                    ServiceNowSession = $ServiceNowSession
+                }
+
+                $response = Invoke-ServiceNowRestMethod @params
+            }
+
+            if ( $CustomVariableValue ) {
+
+                $customVarsOut = Get-ServiceNowRecord -Table $newTableName -ID $sysId -IncludeCustomVariable -Property sys_id, number | Select-Object -ExpandProperty CustomVariable
+
+                foreach ($key in $CustomVariableValue.Keys) {
+
+                    $thisCustomVar = $customVarsOut.PSObject.Properties.Value | Where-Object { $key -in $_.Name, $_.DisplayName, $_.SysId }
+
+                    if ( $thisCustomVar ) {
+                        $params = @{
+                            Method            = 'Patch'
+                            Table             = 'sc_item_option'
+                            SysId             = $thisCustomVar.SysId
+                            Values            = @{'value' = $CustomVariableValue[$key] }
+                            Connection        = $Connection
+                            ServiceNowSession = $ServiceNowSession
+                        }
+                        $null = Invoke-ServiceNowRestMethod @params
+                    }
+                    else {
+                        Write-Warning ('Custom variable {0} not found' -f $key)
+                    }
+                }
+            }
+
             if ( $PassThru ) {
-                $response
+                if ( $CustomVariableValue ) {
+                    Get-ServiceNowRecord -Table $newTableName -ID $sysId -IncludeCustomVariable -Connection $Connection -ServiceNowSession $ServiceNowSession
+                }
+                else {
+                    $response
+                }
             }
         }
     }

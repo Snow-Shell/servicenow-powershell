@@ -340,7 +340,7 @@ function Get-ServiceNowRecord {
                 $customVarParams = @{
                     Table             = 'sc_item_option_mtom'
                     Filter            = @('request_item', '-eq', $recordSysId), 'and', @('sc_item_option.item_option_new.type', '-in', '1,2,3,4,5,6,7,8,9,10,16,18,21,22,26')
-                    Property          = 'sc_item_option.item_option_new.name', 'sc_item_option.value', 'sc_item_option.item_option_new.type', 'sc_item_option.item_option_new.question_text', 'sc_item_option.item_option_new.reference'
+                    Property          = 'sc_item_option.item_option_new.name', 'sc_item_option.value', 'sc_item_option.sys_id', 'sc_item_option.item_option_new.type', 'sc_item_option.item_option_new.question_text', 'sc_item_option.item_option_new.reference'
                     IncludeTotalCount = $true
                     ServiceNowSession = $ServiceNowSession
                 }
@@ -354,9 +354,11 @@ function Get-ServiceNowRecord {
 
                 foreach ($var in $customVarsOut) {
                     $newVar = [pscustomobject] @{
+                        Name        = $var.'sc_item_option.item_option_new.name'
                         Value       = $var.'sc_item_option.value'
                         DisplayName = $var.'sc_item_option.item_option_new.question_text'
                         Type        = $var.'sc_item_option.item_option_new.type'
+                        SysId       = $var.'sc_item_option.sys_id'
                     }
 
                     # show the underlying value if the option is a reference type
