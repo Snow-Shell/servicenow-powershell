@@ -32,39 +32,30 @@ function New-ServiceNowIncident {
 
     Param(
 
-        # sys_id of the caller of the incident (user Get-ServiceNowUser to retrieve this)
         [parameter(Mandatory)]
         [string] $Caller,
 
-        # Short description of the incident
         [parameter(Mandatory)]
         [string] $ShortDescription,
 
-        # Long description of the incident
         [parameter()]
         [string] $Description,
 
-        # sys_id of the assignment group (use Get-ServiceNowUserGroup to retrieve this)
         [parameter()]
         [string] $AssignmentGroup,
 
-        # Comment to include in the ticket
         [parameter()]
         [string] $Comment,
 
-        # Category of the incident (e.g. 'Network')
         [parameter()]
         [string] $Category,
 
-        # Subcategory of the incident (e.g. 'Network')
         [parameter()]
         [string] $Subcategory,
 
-        # sys_id of the configuration item of the incident
         [parameter()]
         [string] $ConfigurationItem,
 
-        # custom fields as hashtable
         [parameter()]
         [Alias('CustomFields')]
         [hashtable] $CustomField,
