@@ -8,8 +8,8 @@
 .PARAMETER Table
     Name or class name of the table to create the new record
 
-.PARAMETER Values
-    Hashtable with all the key/value pairs for the new record
+.PARAMETER FieldValue
+    Key/value pairs of fields and their values
 
 .PARAMETER PassThru
     If provided, the new record will be returned
@@ -41,7 +41,11 @@ function New-ServiceNowRecord {
         [string] $Table,
 
         [parameter(Mandatory)]
-        [hashtable] $Values,
+        [Alias('Values')]
+        [hashtable] $FieldValue,
+
+        # [parameter()]
+        # [hashtable] $CustomVariableValue,
 
         [Parameter()]
         [Hashtable] $Connection,
@@ -53,12 +57,17 @@ function New-ServiceNowRecord {
         [switch] $PassThru
     )
 
-    $invokeParams = $PSBoundParameters
-    $null = $invokeParams.Remove('PassThru')
+    $params = @{
+        Method            = 'Post'
+        Table             = $Table
+        Values            = $FieldValue
+        Connection        = $Connection
+        ServiceNowSession = $ServiceNowSession
+    }
 
     If ( $PSCmdlet.ShouldProcess($Table, 'Create new record') ) {
 
-        $response = Invoke-ServiceNowRestMethod @invokeParams -Method 'Post'
+        $response = Invoke-ServiceNowRestMethod @params
 
         If ( $PassThru ) {
             $type = $script:ServiceNowTable | Where-Object { $_.Name -eq $Table -or $_.ClassName -eq $Table } | Select-Object -ExpandProperty Type
