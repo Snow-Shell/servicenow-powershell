@@ -43,7 +43,9 @@ function Update-ServiceNowRequestItem {
         [switch] $PassThru
     )
 
-    begin {}
+    begin {
+        Write-Warning 'Update-ServiceNowRequestedItem is now deprecated.  Please use Update-ServiceNowRecord.  Your new call is Update-ServiceNowChangeRequest -Table ''sc_req_item'' -ID $SysId -InputData $Values.'
+    }
 
     process {
 

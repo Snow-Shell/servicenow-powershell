@@ -22,7 +22,9 @@ function Update-ServiceNowIncident {
         [switch] $PassThru
     )
 
-    begin {}
+    begin {
+        Write-Warning 'Update-ServiceNowIncident is now deprecated.  Please use Update-ServiceNowRecord.  Your new call is Update-ServiceNowChangeRequest -Table ''incident'' -ID $SysId -InputData $Values.'
+    }
 
     process {
         $params = @{

@@ -26,7 +26,9 @@ function Update-ServiceNowChangeRequest {
         [switch] $PassThru
     )
 
-    begin {}
+    begin {
+        Write-Warning 'Update-ServiceNowChangeRequest is now deprecated.  Please use Update-ServiceNowRecord.  Your new call is Update-ServiceNowChangeRequest -Table ''change_request'' -ID $SysId -InputData $Values.'
+    }
 
     process {
         $params = @{
