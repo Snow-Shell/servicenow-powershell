@@ -8,7 +8,7 @@
 .PARAMETER Table
     Name or class name of the table to create the new record
 
-.PARAMETER FieldValue
+.PARAMETER InputData
     Key/value pairs of fields and their values
 
 .PARAMETER PassThru
@@ -21,7 +21,7 @@
     ServiceNow session created by New-ServiceNowSession.  Will default to script-level variable $ServiceNowSession.
 
 .EXAMPLE
-    New-ServiceNowRecord -Table incident -Values @{'Caller'='me';'short_description'='my issue'}
+    New-ServiceNowRecord -Table incident -InputData @{'Caller'='me';'short_description'='my issue'}
 
     Create a new record in the incident table
 
@@ -40,9 +40,9 @@ function New-ServiceNowRecord {
         [parameter(Mandatory)]
         [string] $Table,
 
-        [parameter(Mandatory)]
+        [parameter(Mandatory, ValueFromPipeline)]
         [Alias('Values')]
-        [hashtable] $FieldValue,
+        [hashtable] $InputData,
 
         # [parameter()]
         # [hashtable] $CustomVariableValue,
@@ -57,24 +57,27 @@ function New-ServiceNowRecord {
         [switch] $PassThru
     )
 
-    $params = @{
-        Method            = 'Post'
-        Table             = $Table
-        Values            = $FieldValue
-        Connection        = $Connection
-        ServiceNowSession = $ServiceNowSession
-    }
+    process {
 
-    If ( $PSCmdlet.ShouldProcess($Table, 'Create new record') ) {
+        $params = @{
+            Method            = 'Post'
+            Table             = $Table
+            Values            = $InputData
+            Connection        = $Connection
+            ServiceNowSession = $ServiceNowSession
+        }
 
-        $response = Invoke-ServiceNowRestMethod @params
+        If ( $PSCmdlet.ShouldProcess($Table, 'Create new record') ) {
 
-        If ( $PassThru ) {
-            $type = $script:ServiceNowTable | Where-Object { $_.Name -eq $Table -or $_.ClassName -eq $Table } | Select-Object -ExpandProperty Type
-            if ($type) {
-                $response | ForEach-Object { $_.PSObject.TypeNames.Insert(0, $type) }
+            $response = Invoke-ServiceNowRestMethod @params
+
+            If ( $PassThru ) {
+                $type = $script:ServiceNowTable | Where-Object { $_.Name -eq $Table -or $_.ClassName -eq $Table } | Select-Object -ExpandProperty Type
+                if ($type) {
+                    $response | ForEach-Object { $_.PSObject.TypeNames.Insert(0, $type) }
+                }
+                $response
             }
-            $response
         }
     }
 }

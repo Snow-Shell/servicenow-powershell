@@ -25,7 +25,8 @@ $tableArgCompleterSb = {
     'Get-ServiceNowAttachment',
     'Add-ServiceNowAttachment',
     'New-ServiceNowRecord',
-    'Update-ServiceNowRecord'
+    'Update-ServiceNowRecord',
+    'Remove-ServiceNowRecord'
 ) | ForEach-Object {
     Register-ArgumentCompleter -CommandName $_ -ParameterName 'Table' -ScriptBlock $tableArgCompleterSb
 }

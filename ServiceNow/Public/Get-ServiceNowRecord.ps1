@@ -202,23 +202,8 @@ function Get-ServiceNowRecord {
     )
 
     begin {
-
         if ( $New ) {
             Write-Warning '-New is now deprecated and the new format is the default'
-        }
-
-        if ( $Table ) {
-            $thisTable = $script:ServiceNowTable | Where-Object { $_.Name.ToLower() -eq $Table.ToLower() -or $_.ClassName.ToLower() -eq $Table.ToLower() }
-            if ( -not $thisTable ) {
-                # we aren't aware of this table, create default config
-                $thisTable = @{
-                    Name             = $Table
-                    ClassName        = $null
-                    Type             = $null
-                    NumberPrefix     = $null
-                    DescriptionField = $null
-                }
-            }
         }
     }
 
@@ -236,34 +221,24 @@ function Get-ServiceNowRecord {
             ServiceNowSession = $ServiceNowSession
         }
 
-        if ( $ID ) {
-            if ( $ID -match '^[a-zA-Z0-9]{32}$' ) {
-                if ( -not $thisTable ) {
-                    throw 'Providing sys_id for -Id requires a value for -Table.  Alternatively, provide an Id with a prefix, eg. INC1234567, and the table will be automatically determined.'
-                }
+        $thisTable, $thisID = Invoke-TableIdLookup -T $Table -I $ID
 
-                $idFilter = @('sys_id', '-eq', $ID)
+        if ( $thisID ) {
+
+            if ( $thisID -match '^[a-zA-Z0-9]{32}$' ) {
+                $idFilter = @('sys_id', '-eq', $thisID)
             }
             else {
-                if ( -not $thisTable ) {
-                    # get table name from prefix if only Id was provided
-                    $idPrefix = ($ID | Select-String -Pattern '^([a-zA-Z]+)([0-9]+$)').Matches.Groups[1].Value.ToLower()
-                    Write-Debug "Id prefix is $idPrefix"
-                    $thisTable = $script:ServiceNowTable | Where-Object { $_.NumberPrefix -and $idPrefix -eq $_.NumberPrefix }
-                    if ( -not $thisTable ) {
-                        throw ('The prefix for Id ''{0}'' was not found and the appropriate table cannot be determined.  Known prefixes are {1}.  Please provide a value for -Table.' -f $ID, ($ServiceNowTable.NumberPrefix.Where( { $_ }) -join ', '))
-                    }
-                }
-                $idFilter = @('number', '-eq', $ID)
+                $idFilter = @('number', '-eq', $thisID)
             }
 
             if ( $invokeParams.Filter ) {
-                $invokeParams.Filter = $invokeParams.Filter, 'and', $idFilter
+                $null = $invokeParams.Filter.Add('and')
+                $null = $invokeParams.Filter.Add($idFilter)
             }
             else {
                 $invokeParams.Filter = $idFilter
             }
-
         }
 
         # we have the table, update the params
