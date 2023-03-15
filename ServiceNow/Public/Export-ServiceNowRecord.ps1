@@ -96,11 +96,11 @@ function Export-ServiceNowRecord {
         [string[]] $Property,
 
         [Parameter(ParameterSetName = 'Table')]
-        [System.Collections.ArrayList] $Filter,
+        [object[]] $Filter,
 
         [Parameter(ParameterSetName = 'Table')]
         [ValidateNotNullOrEmpty()]
-        [System.Collections.ArrayList] $Sort,
+        [object[]] $Sort,
 
         [Parameter(Mandatory)]
         [ValidateScript({
@@ -120,11 +120,8 @@ function Export-ServiceNowRecord {
 
     process {
 
-        # $newFilter = $Filter
-
         $thisTable, $thisID = Invoke-TableIdLookup -T $Table -I $ID
 
-        # $idFilter = $null
         if ( $thisID ) {
 
             if ( $thisID -match '^[a-zA-Z0-9]{32}$' ) {
@@ -136,7 +133,7 @@ function Export-ServiceNowRecord {
         }
 
         if ( $PSBoundParameters.ContainsKey('Filter') ) {
-            $newFilter = [System.Collections.ArrayList](, $Filter)
+            $newFilter = $Filter
         }
 
         $params = Get-ServiceNowAuth -S $ServiceNowSession

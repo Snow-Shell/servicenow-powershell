@@ -69,230 +69,219 @@ function New-ServiceNowQuery {
     [OutputType([System.String])]
 
     param(
-        [parameter(ParameterSetName = 'Basic')]
-        [string] $OrderBy = 'opened_at',
+        [parameter()]
+        [object[]] $Filter,
 
-        [parameter(ParameterSetName = 'Basic')]
-        [ValidateSet("Desc", "Asc")]
-        [string] $OrderDirection = 'Desc',
-
-        [parameter(ParameterSetName = 'Basic')]
-        [hashtable] $MatchExact,
-
-        [parameter(ParameterSetName = 'Basic')]
-        [hashtable] $MatchContains,
-
-        [parameter(ParameterSetName = 'Advanced')]
-        [System.Collections.ArrayList] $Filter,
-
-        [parameter(ParameterSetName = 'Advanced')]
-        [System.Collections.ArrayList] $Sort
+        [parameter()]
+        [object[]] $Sort
 
     )
 
     Write-Verbose ('{0} - {1}' -f $MyInvocation.MyCommand, $PSCmdlet.ParameterSetName)
 
-    if ( $PSCmdlet.ParameterSetName -eq 'Advanced' ) {
-        if ( $Filter ) {
+    if ( $Filter ) {
+
+        if ( $Filter[0].GetType().Name -eq 'Object[]' ) {
+            # already the format we want
             $filterList = $Filter
-            # see if we're working with 1 array or multidimensional array
-            # we want multidimensional so convert if not
-            if ($Filter[0].GetType().Name -eq 'String') {
-                $filterList = @(, $Filter)
-            }
-
-            $query = for ($i = 0; $i -lt $filterList.Count; $i++) {
-                $thisFilter = $filterList[$i]
-
-                # allow passing of string instead of array
-                # useful for joins
-                if ($thisFilter.GetType().Name -eq 'String') {
-                    $thisFilter = @(, $thisFilter)
-                }
-
-                switch ($thisFilter.Count) {
-                    0 {
-                        # nothing to see here
-                        Continue
-                    }
-
-                    1 {
-                        # should be a join
-
-                        switch ($thisFilter[0]) {
-                            { $_ -in 'and', '-and' } {
-                                '^'
-                            }
-
-                            { $_ -in 'or', '-or' } {
-                                '^OR'
-                            }
-
-                            { $_ -in 'group', '-group' } {
-                                '^NQ'
-                            }
-
-                            Default {
-                                throw "Unsupported join operator '$($thisFilter[0])'.  'and', 'or', and 'group' are supported."
-                            }
-                        }
-
-                        # make sure we don't end on a join
-                        if ( $i -eq $filterList.Count - 1) {
-                            throw '$Filter cannot end with a join'
-                        }
-
-                        break
-                    }
-
-                    { $_ -ne 1 } {
-                        # perform data validation on all filters other than a join operator
-                        $thisOperator = $script:ServiceNowOperator | Where-Object { $_.Name -eq $thisFilter[1] }
-                        if ( -not $thisOperator ) {
-                            throw ('Operator ''{0}'' is not valid' -f $thisFilter[1])
-                        }
-                        if ( $thisOperator.NumValues -ne $thisFilter.Count - 2 ) {
-                            throw ('Operator ''{0}'' requires 1 field name and {1} value(s)' -f $thisFilter[1], $thisOperator.NumValues)
-                        }
-                    }
-
-                    2 {
-                        # should be a non-value operator, eg. ='' / ISEMPTY
-                        '{0}{1}' -f $thisFilter[0], $thisOperator.QueryOperator
-                        break
-                    }
-
-                    3 {
-                        # should be format - field operator value
-
-                        if ( $thisFilter[2] -is [DateTime] ) {
-                            $dateGen = "'{0}','{1}'" -f $thisFilter[2].ToString('yyyy-MM-dd'), $thisFilter[2].ToString('HH:mm:ss')
-                            '{0}{1}javascript:gs.dateGenerate({2})' -f $thisFilter[0], $thisOperator.QueryOperator, $dateGen
-                        }
-                        else {
-                            '{0}{1}{2}' -f $thisFilter[0], $thisOperator.QueryOperator, $thisFilter[2]
-                        }
-
-                        break
-                    }
-
-                    4 {
-                        # should be format - field operator value1 value2, where applicable, eg. between
-
-                        if ( $thisFilter[2] -is [DateTime] ) {
-                            $dateGen1 = "'{0}','{1}'" -f $thisFilter[2].ToString('yyyy-MM-dd'), $thisFilter[2].ToString('HH:mm:ss')
-                            $dateGen2 = "'{0}','{1}'" -f $thisFilter[3].ToString('yyyy-MM-dd'), $thisFilter[3].ToString('HH:mm:ss')
-                            '{0}{1}javascript:gs.dateGenerate({2})@javascript:gs.dateGenerate({3})' -f $thisFilter[0], $thisOperator.QueryOperator, $dateGen1, $dateGen2
-                        }
-                        else {
-                            '{0}{1}{2}@{3}' -f $thisFilter[0], $thisOperator.QueryOperator, $thisFilter[2], $thisFilter[3]
-                        }
-
-                        break
-                    }
-
-                    Default {
-                        throw ('Too many filter items for {0}, see the help' -f $thisFilter[0])
-                    }
-                }
-            }
+        }
+        else {
+            #
+            $filterList = , $Filter
         }
 
-        # force query to an array in case we only got one item and its a string
-        # otherwise below add to query won't work as expected
-        $query = @($query)
+        $query = for ($i = 0; $i -lt $filterList.Count; $i++) {
+            $thisFilter = $filterList[$i]
 
-        if ($query) {
-            $query += '^'
-        }
-
-        $orderList = $Sort
-
-        if ( $Sort ) {
-            # see if we're working with 1 array or multidimensional array
-            # we want multidimensional so convert if not
-            if ($Sort[0].GetType().Name -eq 'String') {
-                $orderList = @(, $Sort)
-            }
-        }
-
-        $query += for ($i = 0; $i -lt $orderList.Count; $i++) {
-            $thisOrder = $orderList[$i]
-            if ( $orderList.Count -gt 1 -and $i -gt 0 ) {
-                '^'
+            # allow passing of string instead of array
+            # useful for joins
+            if ($thisFilter.GetType().Name -eq 'String') {
+                $thisFilter = @(, $thisFilter)
             }
 
-            switch ($thisOrder.Count) {
+            switch ($thisFilter.Count) {
                 0 {
                     # nothing to see here
                     Continue
                 }
 
                 1 {
-                    # should be field, default to ascending
-                    'ORDERBY'
-                    $thisOrder[0]
-                }
+                    # should be a join
 
-                2 {
-                    switch ($thisOrder[1]) {
-                        'asc' {
-                            'ORDERBY'
+                    switch ($thisFilter[0]) {
+                        { $_ -in 'and', '-and' } {
+                            '^'
                         }
 
-                        'desc' {
-                            'ORDERBYDESC'
+                        { $_ -in 'or', '-or' } {
+                            '^OR'
+                        }
+
+                        { $_ -in 'group', '-group' } {
+                            '^NQ'
                         }
 
                         Default {
-                            throw "Invalid order direction '$_'.  Provide either 'asc' or 'desc'."
+                            throw "Unsupported join operator '$($thisFilter[0])'.  'and', 'or', and 'group' are supported."
                         }
                     }
-                    $thisOrder[0]
+
+                    # make sure we don't end on a join
+                    if ( $i -eq $filterList.Count - 1) {
+                        throw '$Filter cannot end with a join'
+                    }
+
+                    break
+                }
+
+                { $_ -ne 1 } {
+                    # perform data validation on all filters other than a join operator
+                    $thisOperator = $script:ServiceNowOperator | Where-Object { $_.Name -eq $thisFilter[1] }
+                    if ( -not $thisOperator ) {
+                        throw ('Operator ''{0}'' is not valid' -f $thisFilter[1])
+                    }
+                    if ( $thisOperator.NumValues -ne $thisFilter.Count - 2 ) {
+                        throw ('Operator ''{0}'' requires 1 field name and {1} value(s)' -f $thisFilter[1], $thisOperator.NumValues)
+                    }
+                }
+
+                2 {
+                    # should be a non-value operator, eg. ='' / ISEMPTY
+                    '{0}{1}' -f $thisFilter[0], $thisOperator.QueryOperator
+                    break
+                }
+
+                3 {
+                    # should be format - field operator value
+
+                    if ( $thisFilter[2] -is [DateTime] ) {
+                        $dateGen = "'{0}','{1}'" -f $thisFilter[2].ToString('yyyy-MM-dd'), $thisFilter[2].ToString('HH:mm:ss')
+                        '{0}{1}javascript:gs.dateGenerate({2})' -f $thisFilter[0], $thisOperator.QueryOperator, $dateGen
+                    }
+                    else {
+                        '{0}{1}{2}' -f $thisFilter[0], $thisOperator.QueryOperator, $thisFilter[2]
+                    }
+
+                    break
+                }
+
+                4 {
+                    # should be format - field operator value1 value2, where applicable, eg. between
+
+                    if ( $thisFilter[2] -is [DateTime] ) {
+                        $dateGen1 = "'{0}','{1}'" -f $thisFilter[2].ToString('yyyy-MM-dd'), $thisFilter[2].ToString('HH:mm:ss')
+                        $dateGen2 = "'{0}','{1}'" -f $thisFilter[3].ToString('yyyy-MM-dd'), $thisFilter[3].ToString('HH:mm:ss')
+                        '{0}{1}javascript:gs.dateGenerate({2})@javascript:gs.dateGenerate({3})' -f $thisFilter[0], $thisOperator.QueryOperator, $dateGen1, $dateGen2
+                    }
+                    else {
+                        '{0}{1}{2}@{3}' -f $thisFilter[0], $thisOperator.QueryOperator, $thisFilter[2], $thisFilter[3]
+                    }
+
+                    break
                 }
 
                 Default {
-                    throw ('Too many items for {0}, see the help' -f $thisOrder[0])
+                    throw ('Too many filter items for {0}, see the help' -f $thisFilter[0])
                 }
             }
         }
-
-        ($query -join '').Trim('^')
-
     }
-    else {
-        # Basic parameter set
 
-        # Create StringBuilder
-        $Query = New-Object System.Text.StringBuilder
+    # force query to an array in case we only got one item and its a string
+    # otherwise below add to query won't work as expected
+    $query = @($query)
 
-        # Start the query off with a order direction
-        $direction = Switch ($OrderDirection) {
-            'Asc' { 'ORDERBY'; break }
-            Default { 'ORDERBYDESC' }
+    if ($query) {
+        $query += '^'
+    }
+
+    $orderList = $Sort
+
+    if ( $Sort ) {
+        # see if we're working with 1 array or multidimensional array
+        # we want multidimensional so convert if not
+        if ($Sort[0].GetType().Name -eq 'String') {
+            $orderList = @(, $Sort)
         }
-        [void]$Query.Append($direction)
+    }
 
-        # Add OrderBy
-        [void]$Query.Append($OrderBy)
+    $query += for ($i = 0; $i -lt $orderList.Count; $i++) {
+        $thisOrder = $orderList[$i]
+        if ( $orderList.Count -gt 1 -and $i -gt 0 ) {
+            '^'
+        }
 
-        # Build the exact matches into the query
-        If ($MatchExact) {
-            ForEach ($Field in $MatchExact.keys) {
-                $ExactString = "^{0}={1}" -f $Field.ToString().ToLower(), ($MatchExact.$Field)
-                [void]$Query.Append($ExactString)
+        switch ($thisOrder.Count) {
+            0 {
+                # nothing to see here
+                Continue
+            }
+
+            1 {
+                # should be field, default to ascending
+                'ORDERBY'
+                $thisOrder[0]
+            }
+
+            2 {
+                switch ($thisOrder[1]) {
+                    'asc' {
+                        'ORDERBY'
+                    }
+
+                    'desc' {
+                        'ORDERBYDESC'
+                    }
+
+                    Default {
+                        throw "Invalid order direction '$_'.  Provide either 'asc' or 'desc'."
+                    }
+                }
+                $thisOrder[0]
+            }
+
+            Default {
+                throw ('Too many items for {0}, see the help' -f $thisOrder[0])
             }
         }
-
-        # Add the values which given fields should contain
-        If ($MatchContains) {
-            ForEach ($Field in $MatchContains.keys) {
-                $ContainsString = "^{0}LIKE{1}" -f $Field.ToString().ToLower(), ($MatchContains.$Field)
-                [void]$Query.Append($ContainsString)
-            }
-        }
-
-        # Output StringBuilder to string
-        $Query.ToString()
     }
+
+    ($query -join '').Trim('^')
+
+    # }
+    # else {
+    #     # Basic parameter set
+
+    #     # Create StringBuilder
+    #     $Query = New-Object System.Text.StringBuilder
+
+    #     # Start the query off with a order direction
+    #     $direction = Switch ($OrderDirection) {
+    #         'Asc' { 'ORDERBY'; break }
+    #         Default { 'ORDERBYDESC' }
+    #     }
+    #     [void]$Query.Append($direction)
+
+    #     # Add OrderBy
+    #     [void]$Query.Append($OrderBy)
+
+    #     # Build the exact matches into the query
+    #     If ($MatchExact) {
+    #         ForEach ($Field in $MatchExact.keys) {
+    #             $ExactString = "^{0}={1}" -f $Field.ToString().ToLower(), ($MatchExact.$Field)
+    #             [void]$Query.Append($ExactString)
+    #         }
+    #     }
+
+    #     # Add the values which given fields should contain
+    #     If ($MatchContains) {
+    #         ForEach ($Field in $MatchContains.keys) {
+    #             $ContainsString = "^{0}LIKE{1}" -f $Field.ToString().ToLower(), ($MatchContains.$Field)
+    #             [void]$Query.Append($ContainsString)
+    #         }
+    #     }
+
+    #     # Output StringBuilder to string
+    #     $Query.ToString()
+    # }
 }

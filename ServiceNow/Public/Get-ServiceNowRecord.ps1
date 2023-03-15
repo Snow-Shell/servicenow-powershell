@@ -178,12 +178,12 @@ function Get-ServiceNowRecord {
 
         [Parameter(ParameterSetName = 'Table')]
         [Parameter(ParameterSetName = 'TableParentId')]
-        [System.Collections.ArrayList] $Filter,
+        [object[]] $Filter = @(),
 
         [Parameter(ParameterSetName = 'Table')]
         [Parameter(ParameterSetName = 'TableParentId')]
         [ValidateNotNullOrEmpty()]
-        [System.Collections.ArrayList] $Sort,
+        [object[]] $Sort,
 
         [Parameter()]
         [ValidateSet('true', 'false', 'all')]
@@ -210,6 +210,7 @@ function Get-ServiceNowRecord {
     process {
 
         $thisParams = @{
+            Filter            = $Filter
             Property          = $Property
             Sort              = $Sort
             DisplayValue      = $DisplayValue
@@ -220,18 +221,20 @@ function Get-ServiceNowRecord {
             ServiceNowSession = $ServiceNowSession
         }
 
+        # $thisParams.Filter = $Filter
         if ( $PSBoundParameters.ContainsKey('Filter') ) {
-            # we always want the filter to be arrays separated by joins
-            if ( $Filter[0].GetType().BaseType.ToString() -eq 'System.Array' ) {
-                # already the format we want
-                $thisParams.Filter = [System.Collections.ArrayList]($Filter)
-            } else {
+            #     # we always want the filter to be arrays separated by joins
+            if ( $Filter[0].GetType().Name -ne 'Object[]' ) {
                 #
-                $thisParams.Filter = [System.Collections.ArrayList](,$Filter)
+                $thisParams.Filter = , $Filter
             }
-        }
-        else {
-            $thisParams.Filter = [System.Collections.ArrayList]@()
+            #     else {
+            #         #
+            #         [System.Collections.ArrayList]$thisParams.Filter = , $Filter
+            #     }
+            # }
+            # else {
+            #     [System.Collections.ArrayList]$thisParams.Filter = @()
         }
 
         $addedSysIdProp = $false
@@ -249,24 +252,24 @@ function Get-ServiceNowRecord {
         if ( $thisID ) {
 
             if ( $thisID -match '^[a-zA-Z0-9]{32}$' ) {
-                $null = $thisParams.Filter.Add(@('sys_id', '-eq', $thisID))
+                $thisParams.Filter += , @('sys_id', '-eq', $thisID)
             }
             else {
-                $null = $thisParams.Filter.Add(@('number', '-eq', $thisID))
+                $thisParams.Filter += , @('number', '-eq', $thisID)
             }
         }
 
         if ( $ParentID ) {
 
             if ( $thisParams.Filter ) {
-                $null = $thisParams.Filter.Add('and')
+                $thisParams.Filter += , 'and'
             }
 
             if ( $ParentID -match '^[a-zA-Z0-9]{32}$' ) {
-                $null = $thisParams.Filter.Add(@('parent.sys_id', '-eq', $ParentID))
+                $thisParams.Filter += , @('parent.sys_id', '-eq', $ParentID)
             }
             else {
-                $null = $thisParams.Filter.Add(@('parent.number', '-eq', $ParentID))
+                $thisParams.Filter += , @('parent.number', '-eq', $ParentID)
             }
 
             if ( -not $PSBoundParameters.ContainsKey('Table') ) {
@@ -282,9 +285,11 @@ function Get-ServiceNowRecord {
             }
 
             if ( $thisParams.Filter ) {
-                $null = $thisParams.Filter.Add('and')
+                $thisParams.Filter += 'and'
+                # $null = $thisParams.Filter.Add('and')
             }
-            $null = $thisParams.Filter.Add(@($thisTable.DescriptionField, '-like', $Description))
+            $thisParams.Filter += , @($thisTable.DescriptionField, '-like', $Description)
+            # $null = $thisParams.Filter.Add(@($thisTable.DescriptionField, '-like', $Description))
         }
 
         $thisParams.Table = $thisTable.Name
@@ -319,7 +324,7 @@ function Get-ServiceNowRecord {
                 $customVarParams = @{
                     Table             = 'sc_item_option_mtom'
                     Filter            = @('request_item', '-eq', $recordSysId), 'and', @('sc_item_option.item_option_new.type', '-in', '1,2,3,4,5,6,7,8,9,10,16,18,21,22,26')
-                    Property          = 'sc_item_option.item_option_new.name', 'sc_item_option.value', 'sc_item_option.sys_id', 'sc_item_option.item_option_new.type', 'sc_item_option.item_option_new.question_text', 'sc_item_option.item_option_new.reference'
+                    Property          = 'sc_item_option.item_option_new.sys_name', 'sc_item_option.item_option_new.name', 'sc_item_option.value', 'sc_item_option.sys_id', 'sc_item_option.item_option_new.type', 'sc_item_option.item_option_new.question_text', 'sc_item_option.item_option_new.reference'
                     IncludeTotalCount = $true
                     ServiceNowSession = $ServiceNowSession
                 }
@@ -333,7 +338,7 @@ function Get-ServiceNowRecord {
 
                 foreach ($var in $customVarsOut) {
                     $newVar = [pscustomobject] @{
-                        Name        = $var.'sc_item_option.item_option_new.name'
+                        Name        = if ($var.'sc_item_option.item_option_new.name') { $var.'sc_item_option.item_option_new.name' } else { $var.'sc_item_option.item_option_new.sys_name' }
                         Value       = $var.'sc_item_option.value'
                         DisplayName = $var.'sc_item_option.item_option_new.question_text'
                         Type        = $var.'sc_item_option.item_option_new.type'

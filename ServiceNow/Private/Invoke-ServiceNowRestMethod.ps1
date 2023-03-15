@@ -43,10 +43,10 @@ function Invoke-ServiceNowRestMethod {
         [hashtable] $Values,
 
         [parameter()]
-        [System.Collections.ArrayList] $Filter,
+        [object[]] $Filter,
 
         [parameter()]
-        [System.Collections.ArrayList] $Sort = @('opened_at', 'desc'),
+        [object[]] $Sort = @('opened_at', 'desc'),
 
         # sysparm_query param in the format of a ServiceNow encoded query string (see http://wiki.servicenow.com/index.php?title=Encoded_Query_Strings)
         [Parameter()]
