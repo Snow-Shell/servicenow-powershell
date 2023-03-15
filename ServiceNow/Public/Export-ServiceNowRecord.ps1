@@ -74,12 +74,12 @@ function Export-ServiceNowRecord {
 
     Param (
         [Parameter(ParameterSetName = 'Table', Mandatory)]
-        [Parameter(ParameterSetName = 'TableId', Mandatory)]
+        [Parameter(ParameterSetName = 'TableId', Mandatory, ValueFromPipelineByPropertyName)]
         [Alias('sys_class_name')]
         [string] $Table,
 
         [Parameter(ParameterSetName = 'Id', Mandatory, Position = 0)]
-        [Parameter(ParameterSetName = 'TableId', Mandatory)]
+        [Parameter(ParameterSetName = 'TableId', Mandatory, ValueFromPipelineByPropertyName)]
         [ValidateScript( {
                 if ($_ -match '^[a-zA-Z0-9]{32}$' -or $_ -match '^([a-zA-Z]+)[0-9]+$') {
                     $true
@@ -96,7 +96,7 @@ function Export-ServiceNowRecord {
         [string[]] $Property,
 
         [Parameter(ParameterSetName = 'Table')]
-        [object[]] $Filter,
+        [object[]] $Filter = @(),
 
         [Parameter(ParameterSetName = 'Table')]
         [ValidateNotNullOrEmpty()]
@@ -120,20 +120,26 @@ function Export-ServiceNowRecord {
 
     process {
 
+        $newFilter = $Filter
+
+        if ( $PSBoundParameters.ContainsKey('Filter') ) {
+            #     # we always want the filter to be arrays separated by joins
+            if ( $Filter[0].GetType().Name -ne 'Object[]' ) {
+                #
+                $newFilter = , $Filter
+            }
+        }
+
         $thisTable, $thisID = Invoke-TableIdLookup -T $Table -I $ID
 
         if ( $thisID ) {
 
             if ( $thisID -match '^[a-zA-Z0-9]{32}$' ) {
-                $newFilter = [System.Collections.ArrayList]@('sys_id', '-eq', $thisID)
+                $newFilter = , @('sys_id', '-eq', $thisID)
             }
             else {
-                $newFilter = [System.Collections.ArrayList]@('number', '-eq', $thisID)
+                $newFilter = , @('number', '-eq', $thisID)
             }
-        }
-
-        if ( $PSBoundParameters.ContainsKey('Filter') ) {
-            $newFilter = $Filter
         }
 
         $params = Get-ServiceNowAuth -S $ServiceNowSession

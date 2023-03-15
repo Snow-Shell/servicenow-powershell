@@ -221,20 +221,12 @@ function Get-ServiceNowRecord {
             ServiceNowSession = $ServiceNowSession
         }
 
-        # $thisParams.Filter = $Filter
         if ( $PSBoundParameters.ContainsKey('Filter') ) {
             #     # we always want the filter to be arrays separated by joins
             if ( $Filter[0].GetType().Name -ne 'Object[]' ) {
                 #
                 $thisParams.Filter = , $Filter
             }
-            #     else {
-            #         #
-            #         [System.Collections.ArrayList]$thisParams.Filter = , $Filter
-            #     }
-            # }
-            # else {
-            #     [System.Collections.ArrayList]$thisParams.Filter = @()
         }
 
         $addedSysIdProp = $false

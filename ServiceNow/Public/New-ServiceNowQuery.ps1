@@ -86,7 +86,7 @@ function New-ServiceNowQuery {
             $filterList = $Filter
         }
         else {
-            #
+            # change to array object as opposed to traditional array
             $filterList = , $Filter
         }
 
@@ -247,41 +247,4 @@ function New-ServiceNowQuery {
     }
 
     ($query -join '').Trim('^')
-
-    # }
-    # else {
-    #     # Basic parameter set
-
-    #     # Create StringBuilder
-    #     $Query = New-Object System.Text.StringBuilder
-
-    #     # Start the query off with a order direction
-    #     $direction = Switch ($OrderDirection) {
-    #         'Asc' { 'ORDERBY'; break }
-    #         Default { 'ORDERBYDESC' }
-    #     }
-    #     [void]$Query.Append($direction)
-
-    #     # Add OrderBy
-    #     [void]$Query.Append($OrderBy)
-
-    #     # Build the exact matches into the query
-    #     If ($MatchExact) {
-    #         ForEach ($Field in $MatchExact.keys) {
-    #             $ExactString = "^{0}={1}" -f $Field.ToString().ToLower(), ($MatchExact.$Field)
-    #             [void]$Query.Append($ExactString)
-    #         }
-    #     }
-
-    #     # Add the values which given fields should contain
-    #     If ($MatchContains) {
-    #         ForEach ($Field in $MatchContains.keys) {
-    #             $ContainsString = "^{0}LIKE{1}" -f $Field.ToString().ToLower(), ($MatchContains.$Field)
-    #             [void]$Query.Append($ContainsString)
-    #         }
-    #     }
-
-    #     # Output StringBuilder to string
-    #     $Query.ToString()
-    # }
 }
