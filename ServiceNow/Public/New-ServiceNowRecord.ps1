@@ -25,8 +25,13 @@
 
     Create a new record in the incident table
 
+.EXAMPLE
+    @{'short_description'='my issue';'assignment_group'='IT Support'}, @{'short_description'='another issue'} | New-ServiceNowRecord -Table incident
+
+    Create multiple records in the same table by piping the input data
+
 .INPUTS
-    None
+    InputData
 
 .OUTPUTS
     PSCustomObject if PassThru provided

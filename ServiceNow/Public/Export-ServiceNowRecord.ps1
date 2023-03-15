@@ -67,6 +67,12 @@
 
 .LINK
     https://docs.servicenow.com/bundle/sandiego-platform-administration/page/administer/exporting-data/task/t_ExportDirectlyFromTheURL.html#t_ExportDirectlyFromTheURL
+
+.INPUTS
+    Table, ID
+
+.OUTPUTS
+    None
 #>
 function Export-ServiceNowRecord {
 
