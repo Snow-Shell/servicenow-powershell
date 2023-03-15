@@ -75,7 +75,7 @@
 
 .EXAMPLE
     Get-ServiceNowRecord -Table incident -Filter @('state', '-eq', '1') -Description 'powershell'
-    Get incident records where state equals New or short description contains the word powershell
+    Get incident records where state equals New and short description contains the word powershell
 
 .EXAMPLE
     Get-ServiceNowRecord -Table incident -Filter @('assigned_to.name', '-like', 'greg')
@@ -100,7 +100,7 @@
     Get incident records where state equals New and first sort by the field opened_at descending and then sort by the field state ascending
 ]
 .EXAMPLE
-    Get-ServiceNowRecord -Table 'change request' -Filter @('opened_at', '-ge', 'javascript:gs.daysAgoEnd(30)')
+    Get-ServiceNowRecord -Table 'change request' -Filter @('opened_at', '-ge', (Get-Date).AddDays(-30))
     Get change requests opened in the last 30 days.  Use class name as opposed to table name.
 
 .EXAMPLE
@@ -139,44 +139,49 @@ function Get-ServiceNowRecord {
 
     Param (
         [Parameter(ParameterSetName = 'Table', Mandatory)]
+        [Parameter(ParameterSetName = 'TableId', Mandatory)]
+        [Parameter(ParameterSetName = 'TableParentId')]
         [Alias('sys_class_name')]
         [string] $Table,
 
         [Parameter(ParameterSetName = 'Id', Mandatory, ValueFromPipeline, ValueFromPipelineByPropertyName, Position = 0)]
-        [Parameter(ParameterSetName = 'Table', ValueFromPipeline, ValueFromPipelineByPropertyName)]
+        [Parameter(ParameterSetName = 'TableId', Mandatory, ValueFromPipeline, ValueFromPipelineByPropertyName)]
         [ValidateScript( {
                 if ($_ -match '^[a-zA-Z0-9]{32}$' -or $_ -match '^([a-zA-Z]+)[0-9]+$') {
                     $true
                 }
                 else {
-                    throw 'Id must be either a 32 character alphanumeric, ServiceNow sysid, or prefix/id, ServiceNow number.'
+                    throw 'Id must either be a SysId 32 character alphanumeric or Number with prefix and id.'
                 }
             })]
         [Alias('sys_id', 'number')]
         [string] $ID,
 
-        [Parameter()]
+        [Parameter(ParameterSetName = 'TableParentId', Mandatory)]
         [ValidateScript( {
                 if ($_ -match '^[a-zA-Z0-9]{32}$' -or $_ -match '^([a-zA-Z]+)[0-9]+$') {
                     $true
                 }
                 else {
-                    throw 'ParentId must be either a 32 character alphanumeric, ServiceNow sysid, or prefix/id, ServiceNow number.'
+                    throw 'ParentId must either be a SysId 32 character alphanumeric or Number with prefix and id.'
                 }
             })]
         [string] $ParentID,
 
-        [Parameter()]
+        [Parameter(ParameterSetName = 'Table')]
+        [Parameter(ParameterSetName = 'TableParentId')]
         [string] $Description,
 
         [Parameter()]
         [Alias('Fields', 'Properties')]
         [string[]] $Property,
 
-        [Parameter()]
+        [Parameter(ParameterSetName = 'Table')]
+        [Parameter(ParameterSetName = 'TableParentId')]
         [System.Collections.ArrayList] $Filter,
 
-        [parameter()]
+        [Parameter(ParameterSetName = 'Table')]
+        [Parameter(ParameterSetName = 'TableParentId')]
         [ValidateNotNullOrEmpty()]
         [System.Collections.ArrayList] $Sort,
 
@@ -189,9 +194,6 @@ function Get-ServiceNowRecord {
         [switch] $IncludeCustomVariable,
 
         [Parameter()]
-        [switch] $New,
-
-        [Parameter()]
         [switch] $AsValue,
 
         [Parameter()]
@@ -202,15 +204,12 @@ function Get-ServiceNowRecord {
     )
 
     begin {
-        if ( $New ) {
-            Write-Warning '-New is now deprecated and the new format is the default'
-        }
+
     }
 
     process {
 
-        $invokeParams = @{
-            Filter            = $Filter
+        $thisParams = @{
             Property          = $Property
             Sort              = $Sort
             DisplayValue      = $DisplayValue
@@ -221,42 +220,57 @@ function Get-ServiceNowRecord {
             ServiceNowSession = $ServiceNowSession
         }
 
+        if ( $PSBoundParameters.ContainsKey('Filter') ) {
+            # we always want the filter to be arrays separated by joins
+            if ( $Filter[0].GetType().BaseType.ToString() -eq 'System.Array' ) {
+                # already the format we want
+                $thisParams.Filter = [System.Collections.ArrayList]($Filter)
+            } else {
+                #
+                $thisParams.Filter = [System.Collections.ArrayList](,$Filter)
+            }
+        }
+        else {
+            $thisParams.Filter = [System.Collections.ArrayList]@()
+        }
+
+        $addedSysIdProp = $false
+        # we need the sys_id value in order to get custom var data
+        # add it in if specific properties were requested and not part of the list
+        if ( $IncludeCustomVariable ) {
+            if ( $Property -and 'sys_id' -notin $Property ) {
+                $thisParams.Property += 'sys_id'
+                $addedSysIdProp = $true
+            }
+        }
+
         $thisTable, $thisID = Invoke-TableIdLookup -T $Table -I $ID
 
         if ( $thisID ) {
 
             if ( $thisID -match '^[a-zA-Z0-9]{32}$' ) {
-                $idFilter = @('sys_id', '-eq', $thisID)
+                $null = $thisParams.Filter.Add(@('sys_id', '-eq', $thisID))
             }
             else {
-                $idFilter = @('number', '-eq', $thisID)
-            }
-
-            if ( $invokeParams.Filter ) {
-                $null = $invokeParams.Filter.Add('and')
-                $null = $invokeParams.Filter.Add($idFilter)
-            }
-            else {
-                $invokeParams.Filter = $idFilter
+                $null = $thisParams.Filter.Add(@('number', '-eq', $thisID))
             }
         }
 
-        # we have the table, update the params
-        $invokeParams.Table = $thisTable.Name
-
         if ( $ParentID ) {
-            if ( $ParentID -match '^[a-zA-Z0-9]{32}$' ) {
-                $parentIdFilter = @('parent.sys_id', '-eq', $ParentID)
-            }
-            else {
-                $parentIdFilter = @('parent.number', '-eq', $ParentID)
+
+            if ( $thisParams.Filter ) {
+                $null = $thisParams.Filter.Add('and')
             }
 
-            if ( $invokeParams.Filter ) {
-                $invokeParams.Filter = $invokeParams.Filter, 'and', $parentIdFilter
+            if ( $ParentID -match '^[a-zA-Z0-9]{32}$' ) {
+                $null = $thisParams.Filter.Add(@('parent.sys_id', '-eq', $ParentID))
             }
             else {
-                $invokeParams.Filter = $parentIdFilter
+                $null = $thisParams.Filter.Add(@('parent.number', '-eq', $ParentID))
+            }
+
+            if ( -not $PSBoundParameters.ContainsKey('Table') ) {
+                $thisTable, $null = Invoke-TableIdLookup -T 'Task' -I $null
             }
         }
 
@@ -267,32 +281,22 @@ function Get-ServiceNowRecord {
                 $thisTable.DescriptionField = 'short_description'
             }
 
-            if ( $invokeParams.Filter ) {
-                $invokeParams.Filter = $invokeParams.Filter, 'and', @($thisTable.DescriptionField, '-like', $Description)
+            if ( $thisParams.Filter ) {
+                $null = $thisParams.Filter.Add('and')
             }
-            else {
-                $invokeParams.Filter = @($thisTable.DescriptionField, '-like', $Description)
-            }
+            $null = $thisParams.Filter.Add(@($thisTable.DescriptionField, '-like', $Description))
         }
 
-        $addedSysIdProp = $false
-        # we need the sys_id value in order to get custom var data
-        # add it in if specific properties were requested and not part of the list
-        if ( $IncludeCustomVariable ) {
-            if ( $Property -and 'sys_id' -notin $Property ) {
-                $invokeParams.Property += 'sys_id'
-                $addedSysIdProp = $true
-            }
-        }
+        $thisParams.Table = $thisTable.Name
 
         # should use Get-ServiceNowAttachment, but put this here for ease of access
         if ( $thisTable.Name -eq 'attachment' ) {
             Write-Warning 'For attachments, use Get-ServiceNowAttachment'
-            $null = $invokeParams.Remove('Table')
-            $invokeParams.UriLeaf = '/attachment'
+            $null = $thisParams.Remove('Table')
+            $thisParams.UriLeaf = '/attachment'
         }
 
-        [array]$result = Invoke-ServiceNowRestMethod @invokeParams
+        [array]$result = Invoke-ServiceNowRestMethod @thisParams
 
         if ( -not $result ) {
             return

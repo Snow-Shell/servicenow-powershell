@@ -22,6 +22,11 @@
     Remove-ServiceNowRecord CHG0123456 -Confirm:$false
 
     Removes a record without prompting for confirmation
+
+.EXAMPLE
+    Get-ServiceNowRecord -Table incident -Description 'not needed' | Remove-ServiceNowRecord
+
+    Remove multiple records via pipeline
 #>
 
 function Remove-ServiceNowRecord {

@@ -74,16 +74,18 @@ function Export-ServiceNowRecord {
 
     Param (
         [Parameter(ParameterSetName = 'Table', Mandatory)]
+        [Parameter(ParameterSetName = 'TableId', Mandatory)]
         [Alias('sys_class_name')]
         [string] $Table,
 
         [Parameter(ParameterSetName = 'Id', Mandatory, Position = 0)]
-        [Parameter(ParameterSetName = 'Table')]
+        [Parameter(ParameterSetName = 'TableId', Mandatory)]
         [ValidateScript( {
                 if ($_ -match '^[a-zA-Z0-9]{32}$' -or $_ -match '^([a-zA-Z]+)[0-9]+$') {
                     $true
-                } else {
-                    throw 'Id must be either a 32 character alphanumeric, ServiceNow sysid, or prefix/id, ServiceNow number.'
+                }
+                else {
+                    throw 'Id must either be a SysId 32 character alphanumeric or Number with prefix and id.'
                 }
             })]
         [Alias('sys_id', 'number')]
@@ -93,10 +95,10 @@ function Export-ServiceNowRecord {
         [Alias('Fields', 'Properties')]
         [string[]] $Property,
 
-        [Parameter()]
+        [Parameter(ParameterSetName = 'Table')]
         [System.Collections.ArrayList] $Filter,
 
-        [parameter()]
+        [Parameter(ParameterSetName = 'Table')]
         [ValidateNotNullOrEmpty()]
         [System.Collections.ArrayList] $Sort,
 
@@ -105,7 +107,8 @@ function Export-ServiceNowRecord {
                 $allowedExts = '.csv', '.xml', '.pdf', '.xls', '.xlsx'
                 if ([System.IO.Path]::GetExtension($_).ToLower() -in $allowedExts ) {
                     $true
-                } else {
+                }
+                else {
                     throw ('File extension must be one of {0}' -f ($allowedExts -join ', '))
                 }
             })]
@@ -117,36 +120,30 @@ function Export-ServiceNowRecord {
 
     process {
 
-        $newFilter = $Filter
+        # $newFilter = $Filter
 
-        if ( $Table ) {
-            $thisTable = $Table
-        }
+        $thisTable, $thisID = Invoke-TableIdLookup -T $Table -I $ID
 
-        if ( $ID ) {
-            if ( $ID -match '^[a-zA-Z0-9]{32}$' ) {
-                if ( -not $thisTable ) {
-                    throw 'Providing sys_id for -Id requires a value for -Table.  Alternatively, provide an Id with a prefix, eg. INC1234567, and the table will be automatically determined.'
-                }
+        # $idFilter = $null
+        if ( $thisID ) {
 
-                $newFilter = @('sys_id', '-eq', $ID)
-            } else {
-                if ( -not $thisTable ) {
-                    # get table name from prefix if only Id was provided
-                    $idPrefix = ($ID | Select-String -Pattern '^([a-zA-Z]+)([0-9]+$)').Matches.Groups[1].Value.ToLower()
-                    Write-Debug "Id prefix is $idPrefix"
-                    $thisTable = $script:ServiceNowTable | Where-Object { $_.NumberPrefix -and $idPrefix -eq $_.NumberPrefix } | Select-Object -ExpandProperty Name
-                    if ( -not $thisTable ) {
-                        throw ('The prefix for Id ''{0}'' was not found and the appropriate table cannot be determined.  Known prefixes are {1}.  Please provide a value for -Table.' -f $ID, ($ServiceNowTable.NumberPrefix.Where( { $_ }) -join ', '))
-                    }
-                }
-                $newFilter = @('number', '-eq', $ID)
+            if ( $thisID -match '^[a-zA-Z0-9]{32}$' ) {
+                $newFilter = [System.Collections.ArrayList]@('sys_id', '-eq', $thisID)
+            }
+            else {
+                $newFilter = [System.Collections.ArrayList]@('number', '-eq', $thisID)
             }
         }
 
+        if ( $PSBoundParameters.ContainsKey('Filter') ) {
+            $newFilter = [System.Collections.ArrayList](, $Filter)
+        }
+
         $params = Get-ServiceNowAuth -S $ServiceNowSession
-        $params.Body = @{
-            'sysparm_query' = (New-ServiceNowQuery -Filter $newFilter -Sort $Sort)
+        $params.Body = @{}
+
+        if ( $newFilter ) {
+            $params.Body.sysparm_query = (New-ServiceNowQuery -Filter $newFilter -Sort $Sort)
         }
 
         if ($Property) {
@@ -161,7 +158,7 @@ function Export-ServiceNowRecord {
         # only exception to 'extension is the format' rule
         if ( $format -eq 'XLS' ) { $format = 'EXCEL' }
 
-        $params.Uri = 'https://{0}/{1}_list.do?{2}' -f $ServiceNowSession.Domain, $thisTable, $format
+        $params.Uri = 'https://{0}/{1}_list.do?{2}' -f $ServiceNowSession.Domain, $thisTable.Name, $format
 
         Write-Verbose ($params | ConvertTo-Json)
         Invoke-RestMethod @params

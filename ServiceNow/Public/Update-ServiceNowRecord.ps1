@@ -64,7 +64,7 @@
 
 function Update-ServiceNowRecord {
 
-    [CmdletBinding(SupportsShouldProcess)]
+    [CmdletBinding(SupportsShouldProcess, DefaultParameterSetName = 'field')]
 
     Param(
         [parameter(ValueFromPipelineByPropertyName)]

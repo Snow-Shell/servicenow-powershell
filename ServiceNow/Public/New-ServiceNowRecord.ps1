@@ -44,9 +44,6 @@ function New-ServiceNowRecord {
         [Alias('Values')]
         [hashtable] $InputData,
 
-        # [parameter()]
-        # [hashtable] $CustomVariableValue,
-
         [Parameter()]
         [Hashtable] $Connection,
 

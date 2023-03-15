@@ -74,7 +74,7 @@ Function Get-ServiceNowAttachment {
                 if ($_ -match '^[a-zA-Z0-9]{32}$' -or $_ -match '^([a-zA-Z]+)[0-9]+$') {
                     $true
                 } else {
-                    throw 'Id must be either a 32 character alphanumeric, ServiceNow sysid, or prefix/id, ServiceNow number.'
+                    throw 'Id must either be a SysId 32 character alphanumeric or Number with prefix and id.'
                 }
             })]
         [Alias('sys_id', 'SysId', 'number')]
