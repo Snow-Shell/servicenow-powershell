@@ -1,1 +1,13 @@
-- `Get-ServiceNowRecord`, custom variables of type Reference providing sysid instead of actual value, [#218](https://github.com/Snow-Shell/servicenow-powershell/issues/218)
+- Add `Update-ServiceNowRecord -CustomVariableData` to update custom variable values, [#237](https://github.com/Snow-Shell/servicenow-powershell/issues/237)
+- Add `New-ServiceNowChangeRequest` support for change models and standard change templates
+- Fix 0 byte file error with `Add-ServiceNowAttachment`, [#241](https://github.com/Snow-Shell/servicenow-powershell/issues/241)
+- `Get-ServiceNowRecord -New` has been deprecated and the new format is the only option
+- `Update-ServiceNowChangeRequest`, `Update-ServiceNowincident`, and `Update-ServiceNowRequestedItem` deprecated.  Use `Update-ServiceNowRecord`.  The only difference was the table name and didn't make sense to maintain so many functions when documenting will do.  `Update-ServiceNowRecord` has been enhanced as well so all updates can take advantage.
+- `Get-ServiceNowRecordInterim` has been deprecated.
+- Add generic `-Table` and `-ID` lookup function has been created and used across all functions where these parameters are used
+- Add `-Table` tab ahead for `Remove-ServiceNowRecord` and `Export-ServiceNowRecord`
+- Add `-ID` only lookup, no table name needed, for all
+- Add/Update parameter sets to make it clearer when to use `-Table`, `-ID`, `-Filter`, etc
+- Add pipeline support to `Export-ServiceNowRecord`, `New-ServiceNowRecord`, and `Update-ServiceNowRecord`
+- Add `Get-ServiceNowRecord -ParentID` without providing `-Table` returns all tasks associated with that parent record
+- Standardize parameter names across functions
