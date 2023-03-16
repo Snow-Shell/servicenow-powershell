@@ -3,7 +3,43 @@
 Generates a new ServiceNow Incident
 
 .DESCRIPTION
-Generates a new ServiceNow Incident using predefined or custom fields by invoking the ServiceNow API
+Generates a new ServiceNow Incident using predefined or other field values
+
+.PARAMETER Caller
+    Full name or sys_id of the caller
+
+.PARAMETER ShortDescription
+    Short description
+
+.PARAMETER Description
+   Long description
+
+.PARAMETER AssignmentGroup
+    Full name or sys_id of the assignment group
+
+.PARAMETER Comment
+    Comment to include
+
+.PARAMETER Category
+    Category name
+
+.PARAMETER Subcategory
+    Subcategory name
+
+.PARAMETER ConfigurationItem
+    Full name or sys_id of the configuration item to be associated with the change
+
+.PARAMETER InputData
+    Field values which aren't one of the built in function properties
+
+.PARAMETER ServiceNowSession
+ServiceNow session created by New-ServiceNowSession.  Will default to script-level variable $ServiceNowSession.
+
+.PARAMETER Connection
+    Azure Automation Connection object containing username, password, and URL for the ServiceNow instance
+
+.PARAMETER PassThru
+    If provided, the new record will be returned
 
 .EXAMPLE
 Generate a basic Incident attributed to the caller "UserName" with descriptions, categories, assignment groups and CMDB items set.
@@ -20,7 +56,7 @@ Generate a basic Incident attributed to the caller "UserName" with descriptions,
             Category = "Office"
             Subcategory = "Outlook"
             ConfigurationItem = "UserPC1"
-            CustomFields = @{u_custom1 = "Custom Field Entry"
+            InputData = @{u_custom1 = "Custom Field Entry"
                             u_another_custom = "Related Test"}
             }
         New-ServiceNowIncident @IncidentParams
@@ -32,42 +68,33 @@ function New-ServiceNowIncident {
 
     Param(
 
-        # sys_id of the caller of the incident (user Get-ServiceNowUser to retrieve this)
         [parameter(Mandatory)]
         [string] $Caller,
 
-        # Short description of the incident
         [parameter(Mandatory)]
         [string] $ShortDescription,
 
-        # Long description of the incident
         [parameter()]
         [string] $Description,
 
-        # sys_id of the assignment group (use Get-ServiceNowUserGroup to retrieve this)
         [parameter()]
         [string] $AssignmentGroup,
 
-        # Comment to include in the ticket
         [parameter()]
         [string] $Comment,
 
-        # Category of the incident (e.g. 'Network')
         [parameter()]
         [string] $Category,
 
-        # Subcategory of the incident (e.g. 'Network')
         [parameter()]
         [string] $Subcategory,
 
-        # sys_id of the configuration item of the incident
         [parameter()]
         [string] $ConfigurationItem,
 
-        # custom fields as hashtable
         [parameter()]
         [Alias('CustomFields')]
-        [hashtable] $CustomField,
+        [hashtable] $InputData,
 
         [Parameter()]
         [Hashtable] $Connection,
@@ -82,61 +109,51 @@ function New-ServiceNowIncident {
     begin {}
 
     process {
-        # Create a hash table of any defined parameters (not CustomField) that have values
-        $DefinedIncidentParameters = @('AssignmentGroup', 'Caller', 'Category', 'Comment', 'ConfigurationItem', 'Description', 'ShortDescription', 'Subcategory')
-        $TableEntryValues = @{}
-        ForEach ($Parameter in $DefinedIncidentParameters) {
-            If ($null -ne $PSBoundParameters.$Parameter) {
-                # Turn the defined parameter name into the ServiceNow attribute name
-                $KeyToAdd = Switch ($Parameter) {
-                    AssignmentGroup { 'assignment_group'; break }
-                    Caller { 'caller_id'; break }
-                    Category { 'category'; break }
-                    Comment { 'comments'; break }
-                    ConfigurationItem { 'cmdb_ci'; break }
-                    Description { 'description'; break }
-                    ShortDescription { 'short_description'; break }
-                    Subcategory { 'subcategory'; break }
-                }
-                $TableEntryValues.Add($KeyToAdd, $PSBoundParameters.$Parameter)
-            }
+        $values = @{}
+        Switch ($PSBoundParameters.Keys) {
+            AssignmentGroup { $values['assignment_group'] = $AssignmentGroup }
+            Caller { $values['caller_id'] = $Caller }
+            Category { $values['category'] = $Category }
+            Comment { $values['comments'] = $Comment }
+            ConfigurationItem { $values['cmdb_ci'] = $ConfigurationItem }
+            Description { $values['description'] = $Description }
+            ShortDescription { $values['short_description'] = $ShortDescription }
+            Subcategory { $values['subcategory'] = $Subcategory }
+            ModelID { $values['chg_model'] = $ModelID }
+            TemplateID { $values['std_change_producer_version'] = $TemplateID; $values['type'] = 'Standard' }
         }
 
-        # Add CustomField hash pairs to the Table Entry Values hash table
-        If ($null -ne $PSBoundParameters.CustomField) {
-            $DuplicateTableEntryValues = ForEach ($Key in $CustomField.Keys) {
-                If (($TableEntryValues.ContainsKey($Key) -eq $False)) {
-                    # Add the unique entry to the table entry values hash table
-                    $TableEntryValues.Add($Key, $CustomField[$Key])
-                }
-                Else {
-                    # Capture the duplicate key name
-                    $Key
-                }
+        # add custom fields
+        $duplicateValues = ForEach ($Key in $InputData.Keys) {
+            If ( $values.ContainsKey($Key) ) {
+                $Key
+            }
+            Else {
+                $values.Add($Key, $InputData[$Key])
             }
         }
 
         # Throw an error if duplicate fields were provided
-        If ($null -ne $DuplicateTableEntryValues) {
-            $DuplicateKeyList = $DuplicateTableEntryValues -join ","
-            Throw "Ticket fields may only be used once:  $DuplicateKeyList"
+        If ( $duplicateValues ) {
+            Throw ('Fields may only be used once and the following were duplicated: {0}' -f $duplicateValues -join ",")
         }
 
         # Table Entry Splat
         $params = @{
-            Method            = 'Post'
             Table             = 'incident'
-            Values            = $TableEntryValues
+            Values            = $values
             Connection        = $Connection
             ServiceNowSession = $ServiceNowSession
+            PassThru          = $true
         }
 
-        If ( $PSCmdlet.ShouldProcess($ShortDescription, 'Create new incident') ) {
-            $response = Invoke-ServiceNowRestMethod @params
-            If ($PassThru.IsPresent) {
+        If ( $PSCmdlet.ShouldProcess($ShortDescription, 'Create new Incident') ) {
+            $response = New-ServiceNowRecord @params
+            If ( $PassThru ) {
                 $response.PSObject.TypeNames.Insert(0, "ServiceNow.Incident")
                 $response
             }
         }
     }
 }
+

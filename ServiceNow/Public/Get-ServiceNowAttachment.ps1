@@ -54,6 +54,11 @@ Function Get-ServiceNowAttachment {
 
     Get attachment details where size is greater than 1M.
 
+    .EXAMPLE
+    Get-ServiceNowRecord -table incident -first 5 | Get-ServiceNowAttachment
+
+    Get attachment details from multiple records
+
     .INPUTS
     Table, ID
 
@@ -65,18 +70,14 @@ Function Get-ServiceNowAttachment {
     [CmdletBinding(SupportsPaging)]
 
     Param(
-        [Parameter(ValueFromPipelineByPropertyName)]
+        [Parameter(ParameterSetName = 'Table', Mandatory)]
+        [Parameter(ParameterSetName = 'TableId', Mandatory, ValueFromPipelineByPropertyName)]
         [Alias('sys_class_name')]
         [string] $Table,
 
-        [Parameter(Mandatory, ValueFromPipeline, ValueFromPipelineByPropertyName)]
-        [ValidateScript( {
-                if ($_ -match '^[a-zA-Z0-9]{32}$' -or $_ -match '^([a-zA-Z]+)[0-9]+$') {
-                    $true
-                } else {
-                    throw 'Id must be either a 32 character alphanumeric, ServiceNow sysid, or prefix/id, ServiceNow number.'
-                }
-            })]
+        # validation not needed as Invoke-TableIdLookup will handle it with -AsSysId
+        [Parameter(ParameterSetName = 'Id', Mandatory, ValueFromPipeline, Position = 0)]
+        [Parameter(ParameterSetName = 'TableId', Mandatory, ValueFromPipelineByPropertyName)]
         [Alias('sys_id', 'SysId', 'number')]
         [string] $ID,
 
@@ -84,11 +85,11 @@ Function Get-ServiceNowAttachment {
         [string] $FileName,
 
         [Parameter()]
-        [System.Collections.ArrayList] $Filter,
+        [object[]] $Filter,
 
         [parameter()]
         [ValidateNotNullOrEmpty()]
-        [System.Collections.ArrayList] $Sort,
+        [object[]] $Sort,
 
         [Parameter()]
         [Hashtable] $Connection,
@@ -106,71 +107,20 @@ Function Get-ServiceNowAttachment {
             Connection        = $Connection
             ServiceNowSession = $ServiceNowSession
         }
-
     }
 
     process	{
 
-        if ( $Table ) {
-            $thisTableName = $ServiceNowTable.Where{ $_.ClassName -eq $Table } | Select-Object -ExpandProperty Name
-            if ( -not $thisTableName ) {
-                $thisTableName = $Table
-            }
+        $thisTable, $thisID = Invoke-TableIdLookup -T $Table -I $ID -AsSysId -C $Connection -S $ServiceNowSession
+
+        $params.Filter = @('table_name', '-eq', $thisTable.Name), 'and', @('table_sys_id', '-eq', $thisID)
+
+        if ( $PSBoundParameters.ContainsKey('FileName') ) {
+            $params.Filter += 'and', @('file_name', '-like', $FileName)
         }
 
-        if ( $ID -match '^[a-zA-Z0-9]{32}$' ) {
-            if ( -not $thisTableName ) {
-                Write-Error 'Providing sys_id for -Id requires a value for -Table.  Alternatively, provide an -Id with a prefix, eg. INC1234567, and the table will be automatically determined.'
-                Continue
-            }
-
-            $thisSysId = $ID
-
-        } else {
-            if ( -not $thisTableName ) {
-                $thisTable = $ServiceNowTable.Where{ $_.NumberPrefix -and $ID.ToLower().StartsWith($_.NumberPrefix) }
-                if ( $thisTable ) {
-                    $thisTableName = $thisTable.Name
-                } else {
-                    Write-Error ('The prefix for Id ''{0}'' was not found and the appropriate table cannot be determined.  Known prefixes are {1}.  Please provide a value for -Table.' -f $ID, ($ServiceNowTable.NumberPrefix.Where( { $_ }) -join ', '))
-                    Continue
-                }
-            }
-
-            $getParams = @{
-                Table             = $thisTableName
-                Id                = $ID
-                Property          = 'sys_id'
-                Connection        = $Connection
-                ServiceNowSession = $ServiceNowSession
-            }
-
-            $tableRecord = Get-ServiceNowRecord @getParams
-
-            if ( -not $tableRecord ) {
-                Write-Error "Record not found for ID '$ID'"
-                continue
-            }
-
-            $thisSysId = $tableRecord.sys_id
-        }
-
-        $params.Filter = @(@('table_name', '-eq', $thisTableName), 'and', @('table_sys_id', '-eq', $thisSysId))
-
-        if ( $FileName ) {
-            if ( $params.Filter ) {
-                $params.Filter += 'and', @('file_name', '-like', $FileName)
-            } else {
-                $params.Filter = @('file_name', '-like', $FileName)
-            }
-        }
-
-        if ( $Filter ) {
-            if ( $params.Filter ) {
-                $params.Filter += 'and', $Filter
-            } else {
-                $params.Filter = $Filter
-            }
+        if ( $PSBoundParameters.ContainsKey('Filter') ) {
+            $params.Filter += 'and', $Filter
         }
 
         $response = Invoke-ServiceNowRestMethod @params

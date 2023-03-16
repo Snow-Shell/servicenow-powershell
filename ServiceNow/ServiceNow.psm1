@@ -13,7 +13,8 @@ $tableArgCompleterSb = {
     $ServiceNowTable | ForEach-Object {
         if ( $_.ClassName ) {
             '''{0}''' -f $_.ClassName
-        } else {
+        }
+        else {
             '''{0}''' -f $_.Name
         }
     }
@@ -25,7 +26,9 @@ $tableArgCompleterSb = {
     'Get-ServiceNowAttachment',
     'Add-ServiceNowAttachment',
     'New-ServiceNowRecord',
-    'Update-ServiceNowRecord'
+    'Update-ServiceNowRecord',
+    'Remove-ServiceNowRecord',
+    'Export-ServiceNowRecord'
 ) | ForEach-Object {
     Register-ArgumentCompleter -CommandName $_ -ParameterName 'Table' -ScriptBlock $tableArgCompleterSb
 }
@@ -49,12 +52,7 @@ $Script:ServiceNowSession = @{}
 Export-ModuleMember -Variable ServiceNowSession
 
 $aliases = @{
-    'Update-ServiceNowRequestItem'    = 'Update-ServiceNowRequestedItem'
-    'Remove-ServiceNowTableEntry'     = 'Remove-ServiceNowRecord'
-    'New-ServiceNowTableEntry'        = 'New-ServiceNowRecord'
-    'Update-ServiceNowTableEntry'     = 'Update-ServiceNowRecord'
-    'Update-ServiceNowNumber'         = 'Update-ServiceNowRecord'
-    'gsnr'                            = 'Get-ServiceNowRecord'
+    'gsnr' = 'Get-ServiceNowRecord'
 }
 $aliases.GetEnumerator() | ForEach-Object {
     Set-Alias -Name $_.Key -Value $_.Value

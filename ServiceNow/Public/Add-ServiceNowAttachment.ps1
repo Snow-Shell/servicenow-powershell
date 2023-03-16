@@ -43,6 +43,11 @@ Function Add-ServiceNowAttachment {
     Upload one or more files by record sys_id
 
     .EXAMPLE
+    Get-ServiceNowRecord inc0000010 | Add-ServiceNowAttachment -File '.\File01.txt'
+
+    Use Get-ServiceNowRecord for record details, one or more, to add an attachment to
+
+    .EXAMPLE
     New-ServiceNowIncident @params -PassThru | Add-ServiceNowAttachment -File file01.txt
 
     Create a new incident and add an attachment
@@ -69,18 +74,14 @@ Function Add-ServiceNowAttachment {
     [CmdletBinding(SupportsShouldProcess)]
 
     Param(
-        [Parameter(ValueFromPipelineByPropertyName)]
+        [Parameter(ParameterSetName = 'Table', Mandatory)]
+        [Parameter(ParameterSetName = 'TableId', Mandatory, ValueFromPipelineByPropertyName)]
         [Alias('sys_class_name')]
         [string] $Table,
 
-        [Parameter(Mandatory, ValueFromPipeline, ValueFromPipelineByPropertyName)]
-        [ValidateScript( {
-                if ($_ -match '^[a-zA-Z0-9]{32}$' -or $_ -match '^([a-zA-Z]+)[0-9]+$') {
-                    $true
-                } else {
-                    throw 'Id must be either a 32 character alphanumeric, ServiceNow sysid, or prefix/id, ServiceNow number.'
-                }
-            })]
+        # validation not needed as Invoke-TableIdLookup will handle it with -AsSysId
+        [Parameter(ParameterSetName = 'Id', Mandatory, ValueFromPipeline, Position = 0)]
+        [Parameter(ParameterSetName = 'TableId', Mandatory, ValueFromPipelineByPropertyName)]
         [Alias('sys_id', 'SysId', 'number')]
         [string] $ID,
 
@@ -88,7 +89,8 @@ Function Add-ServiceNowAttachment {
         [ValidateScript( {
                 if ( Test-Path $_ ) {
                     $true
-                } else {
+                }
+                else {
                     throw 'One or more files do not exist'
                 }
             })]
@@ -111,61 +113,23 @@ Function Add-ServiceNowAttachment {
 
     begin {
         $auth = Get-ServiceNowAuth -C $Connection -S $ServiceNowSession
-        $invokeRestMethodSplat = $auth
-        $invokeRestMethodSplat.UseBasicParsing = $true
-        $invokeRestMethodSplat.Method = 'POST'
+        $params = $auth
+        $params.UseBasicParsing = $true
+        $params.Method = 'POST'
     }
 
     process	{
 
-        if ( $Table ) {
-            $thisTableName = $ServiceNowTable.Where{ $_.ClassName -eq $Table } | Select-Object -ExpandProperty Name
-            if ( -not $thisTableName ) {
-                $thisTableName = $Table
-            }
-        }
-
-        if ( $ID -match '^[a-zA-Z0-9]{32}$' ) {
-            if ( -not $thisTableName ) {
-                Write-Error 'Providing sys_id for -Id requires a value for -Table.  Alternatively, provide an -Id with a prefix, eg. INC1234567, and the table will be automatically determined.'
-                Continue
-            }
-
-            $thisSysId = $ID
-
-        } else {
-            if ( -not $thisTableName ) {
-                $thisTable = $ServiceNowTable.Where{ $_.NumberPrefix -and $ID.ToLower().StartsWith($_.NumberPrefix) }
-                if ( $thisTable ) {
-                    $thisTableName = $thisTable.Name
-                } else {
-                    Write-Error ('The prefix for Id ''{0}'' was not found and the appropriate table cannot be determined.  Known prefixes are {1}.  Please provide a value for -Table.' -f $ID, ($ServiceNowTable.NumberPrefix.Where( { $_ }) -join ', '))
-                    Continue
-                }
-            }
-
-            $getParams = @{
-                Table             = $thisTableName
-                Id                = $ID
-                Property          = 'sys_id'
-                Connection        = $Connection
-                ServiceNowSession = $ServiceNowSession
-            }
-
-            $tableRecord = Get-ServiceNowRecord @getParams
-
-            if ( -not $tableRecord ) {
-                Write-Error "Record not found for Id '$ID'"
-                continue
-            }
-
-            $thisSysId = $tableRecord.sys_id
-        }
-
+        $thisTable, $thisID = Invoke-TableIdLookup -T $Table -I $ID -AsSysId -C $Connection -S $ServiceNowSession
 
         foreach ($thisFile in $File) {
 
             $thisFileObject = Get-ChildItem $thisFile
+
+            if ( $thisFileObject.Size -eq 0 ) {
+                Write-Warning ('{0} is a 0 byte file and will not be uploaded' -f $thisFileObject.FullName)
+                Continue
+            }
 
             If ( -not $PSBoundParameters.ContainsKey('ContentType') ) {
                 # Thanks to https://github.com/samuelneff/MimeTypeMap/blob/master/MimeTypeMap.cs from which
@@ -182,22 +146,23 @@ Function Add-ServiceNowAttachment {
             }
 
             # POST: https://instance.service-now.com/api/now/attachment/file?table_name=incident&table_sys_id=d71f7935c0a8016700802b64c67c11c6&file_name=Issue_screenshot
-            $invokeRestMethodSplat.Uri = '{0}/attachment/file?table_name={1}&table_sys_id={2}&file_name={3}' -f $auth.Uri, $thisTableName, $thisSysId, $thisFileObject.Name
-            $invokeRestMethodSplat.ContentType = $ContentType
-            $invokeRestMethodSplat.InFile = $thisFileObject.FullName
+            $params.Uri = '{0}/attachment/file?table_name={1}&table_sys_id={2}&file_name={3}' -f $auth.Uri, $thisTable.Name, $thisID, $thisFileObject.Name
+            $params.ContentType = $ContentType
+            $params.InFile = $thisFileObject.FullName
 
-            If ($PSCmdlet.ShouldProcess(('{0} {1}' -f $thisTableName, $thisSysId), ('Add attachment {0}' -f $thisFileObject.FullName))) {
+            If ($PSCmdlet.ShouldProcess(('{0} {1}' -f $thisTable.Name, $ID), ('Add attachment {0}' -f $thisFileObject.FullName))) {
 
-                Write-Verbose ($invokeRestMethodSplat | ConvertTo-Json)
+                Write-Verbose ($params | ConvertTo-Json)
 
-                $response = Invoke-WebRequest @invokeRestMethodSplat
+                $response = Invoke-WebRequest @params
 
                 if ( $response.Content ) {
                     if ( $PassThru ) {
                         $content = $response.content | ConvertFrom-Json
                         $content.result
                     }
-                } else {
+                }
+                else {
                     # invoke-webrequest didn't throw an error, but we didn't get content back either
                     throw ('"{0} : {1}' -f $response.StatusCode, $response | Out-String )
                 }

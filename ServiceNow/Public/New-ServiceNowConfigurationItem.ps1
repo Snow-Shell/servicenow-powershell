@@ -26,9 +26,9 @@
 .PARAMETER Connection
     Azure Automation Connection object containing username, password, and URL for the ServiceNow instance
 
-.PARAMETER ServiceNowSession    
+.PARAMETER ServiceNowSession
     ServiceNow session created by New-ServiceNowSession.  Will default to script-level variable $ServiceNowSession.
-    
+
 .EXAMPLE
     New-ServiceNowConfigurationItem -Name 'MyServer' -Class cmdb_ci_server
     Create a new CI
@@ -55,14 +55,12 @@ function New-ServiceNowConfigurationItem {
         [parameter()]
         [string] $OperationalStatus,
 
-        # custom fields as hashtable
         [parameter()]
         [hashtable] $CustomField,
 
         [Parameter()]
         [switch] $PassThru,
 
-        #Azure Automation Connection object containing username, password, and URL for the ServiceNow instance
         [Parameter(ParameterSetName = 'UseConnectionObject', Mandatory)]
         [ValidateNotNullOrEmpty()]
         [Hashtable] $Connection,
