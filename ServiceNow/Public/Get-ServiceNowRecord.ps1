@@ -48,7 +48,7 @@
     Some records may have associated custom variables, some may not.
     For instance, an RITM may have custom variables, but the associated tasks may not.
     A property named 'CustomVariable' will be added to the return object.
-    When used with -New, you can now get the value with $return.CustomVariable.CustomVarName.Value.
+    You can get the value with $return.CustomVariable.CustomVarName.Value.
 
 .PARAMETER AsValue
     Return the underlying value instead of pscustomobject.
@@ -63,22 +63,32 @@
 
 .EXAMPLE
     Get-ServiceNowRecord RITM0010001
+
     Get a specific record by number
 
 .EXAMPLE
     Get-ServiceNowRecord -Id RITM0010001 -Property 'short_description','sys_id'
+
     Get specific properties for a record
 
 .EXAMPLE
     Get-ServiceNowRecord -Table 'Catalog Task' -ParentId 'RITM0010001'
-    Get tasks for the parent requested item
+
+    Get catalog tasks for the parent requested item
+
+.EXAMPLE
+    Get-ServiceNowRecord -ParentId 'RITM0010001'
+
+    Get all tasks of all types for the parent requested item
 
 .EXAMPLE
     Get-ServiceNowRecord -Table incident -Filter @('state', '-eq', '1') -Description 'powershell'
+
     Get incident records where state equals New and short description contains the word powershell
 
 .EXAMPLE
     Get-ServiceNowRecord -Table incident -Filter @('assigned_to.name', '-like', 'greg')
+
     Get incident records where the assigned to user's name contains greg
 
 .EXAMPLE
@@ -88,35 +98,49 @@
                 '-group',
               @('state', '-eq', '2')
     PS > Get-ServiceNowRecord -Table incident -Filter $filter
+
     Get incident records where state is New and short description contains the word powershell or state is In Progress.
     The first 2 filters are combined and then or'd against the last.
 
 .EXAMPLE
     Get-ServiceNowRecord -Table 'Incident' -Filter @('opened_at', '-between', (Get-Date).AddMonths(-24), (get-date).AddMonths(-12)) -IncludeTotalCount
+
     Get all incident records that were opened between 1 and 2 years ago
 
 .EXAMPLE
     Get-ServiceNowRecord -Table incident -Filter @('state', '-eq', '1') -Sort @('opened_at', 'desc'), @('state')
+
     Get incident records where state equals New and first sort by the field opened_at descending and then sort by the field state ascending
 ]
 .EXAMPLE
     Get-ServiceNowRecord -Table 'change request' -Filter @('opened_at', '-ge', (Get-Date).AddDays(-30))
+
     Get change requests opened in the last 30 days.  Use class name as opposed to table name.
 
 .EXAMPLE
     Get-ServiceNowRecord -Table 'change request' -First 100 -IncludeTotalCount
+
     Get all change requests, paging 100 at a time.
 
 .EXAMPLE
     Get-ServiceNowRecord -Table 'change request' -IncludeCustomVariable -First 5
+
     Get the first 5 change requests and retrieve custom variable info
 
 .EXAMPLE
+    Get-ServiceNowRecord -Table 'user' -Filter @{'name', '-like', 'Greg'}
+
+    Find results from tables where there is no number field.
+    In this case, get a list of users whose name has 'Greg' in it.
+
+.EXAMPLE
     Get-ServiceNowRecord -Table 'cmdb_ci' -Property sys_id -First 1 -AsValue
+
     Get the underlying value for a property instead of a pscustomobject where the value needs to be extracted
 
 .EXAMPLE
     gsnr RITM0010001
+
     Get a specific record by number using the function alias
 
 .INPUTS

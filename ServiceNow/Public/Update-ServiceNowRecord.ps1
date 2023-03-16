@@ -71,6 +71,7 @@ function Update-ServiceNowRecord {
         [Alias('sys_class_name')]
         [string] $Table,
 
+        # validation not needed as Invoke-TableIdLookup will handle it with -AsSysId
         [Parameter(Mandatory, ValueFromPipelineByPropertyName)]
         [Alias('sys_id', 'SysId', 'number')]
         [string] $ID,

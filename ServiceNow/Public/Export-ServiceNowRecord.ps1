@@ -94,7 +94,7 @@ function Export-ServiceNowRecord {
                     throw 'Id must either be a SysId 32 character alphanumeric or Number with prefix and id.'
                 }
             })]
-        [Alias('sys_id', 'number')]
+        [Alias('sys_id', 'SysId', 'number')]
         [string] $ID,
 
         [Parameter()]
