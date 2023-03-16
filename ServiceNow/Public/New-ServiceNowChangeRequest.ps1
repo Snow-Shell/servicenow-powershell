@@ -9,7 +9,7 @@
     Name or sys_id of the change model to use
 
 .PARAMETER TemplateID
-    Name of sys_id of the standard change template to use
+    Name or sys_id of the standard change template to use
 
 .PARAMETER Caller
     Full name or sys_id of the caller
