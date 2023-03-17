@@ -70,7 +70,7 @@ Get-ServiceNowRecord -Table incident -Description 'powershell'
 ### Update a Ticket
 
 ```PowerShell
-Get-ServiceNowRecord -First 1 -Description 'powershell' | Update-ServiceNowRecord -InputData @{comments='Updated via PowerShell'}
+Get-ServiceNowRecord inc0010002 | Update-ServiceNowRecord -InputData @{comments='Updated via PowerShell'}
 ```
 
 ### Creating an Incident with custom table entries
