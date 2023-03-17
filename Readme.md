@@ -58,32 +58,35 @@ All examples below assume a new session has already been created.
 
 ### Getting incidents opened in the last 30 days
 ```PowerShell
-$filter = @('opened_at', '-ge', (Get-Date).AddDays(-30))
-Get-ServiceNowRecord -Table incident -Filter $filter
+Get-ServiceNowRecord -Table incident -Filter @('opened_at', '-ge', (Get-Date).AddDays(-30))
 ```
 
 ### Retrieving an Incident Containing the Word 'PowerShell'
 
 ```PowerShell
-Get-ServiceNowRecord -Table incident -Filter @('short_description','-like','PowerShell')
+Get-ServiceNowRecord -Table incident -Description 'powershell'
 ```
 
 ### Update a Ticket
 
 ```PowerShell
-Get-ServiceNowRecord -First 1 -Filter @('short_description','-eq','PowerShell') | Update-ServiceNowIncident -Values @{comments='Updated via PowerShell'}
+Get-ServiceNowRecord -First 1 -Description 'powershell' | Update-ServiceNowRecord -InputData @{comments='Updated via PowerShell'}
 ```
 
 ### Creating an Incident with custom table entries
 
 ```PowerShell
-$IncidentParams = @{Caller = "UserName"
-            ShortDescription = "New PS Incident"
-            Description = "This incident was created from Powershell"
-            CustomFields = @{u_service = "MyService"
-                            u_incident_type = "Request"}
-            }
-New-ServiceNowIncident @Params
+$params = @{
+    Caller = "UserName"
+    ShortDescription = "New PS Incident"
+    Description = "This incident was created from Powershell"
+    InputData = @{
+        u_service = "MyService"
+        u_incident_type = "Request"
+        urgency = 1
+    }
+}
+New-ServiceNowIncident @params
 ```
 
 ### Azure Connection Object (Automation Integration Module Support)
