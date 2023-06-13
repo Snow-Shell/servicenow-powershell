@@ -61,6 +61,9 @@
 .PARAMETER ServiceNowSession
     ServiceNow session created by New-ServiceNowSession.  Will default to script-level variable $ServiceNowSession.
 
+.PARAMETER TimeoutSec
+    Specifies how long the request can be pending before it times out. Enter a value in seconds. The default value, 0, specifies an indefinite time-out.
+
 .EXAMPLE
     Get-ServiceNowRecord RITM0010001
 
@@ -224,7 +227,10 @@ function Get-ServiceNowRecord {
         [hashtable] $Connection,
 
         [Parameter()]
-        [hashtable] $ServiceNowSession = $script:ServiceNowSession
+        [hashtable] $ServiceNowSession = $script:ServiceNowSession,
+
+        [Parameter()]
+        [Int32] $TimeoutSec = 0
     )
 
     begin {
@@ -243,6 +249,7 @@ function Get-ServiceNowRecord {
             IncludeTotalCount = $PSCmdlet.PagingParameters.IncludeTotalCount
             Connection        = $Connection
             ServiceNowSession = $ServiceNowSession
+            TimeoutSec        = $TimeoutSec
         }
 
         if ( $PSBoundParameters.ContainsKey('Filter') ) {

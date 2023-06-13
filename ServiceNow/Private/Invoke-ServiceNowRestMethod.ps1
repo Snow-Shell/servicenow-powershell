@@ -67,7 +67,10 @@ function Invoke-ServiceNowRestMethod {
         [hashtable] $Connection,
 
         [Parameter()]
-        [hashtable] $ServiceNowSession = $script:ServiceNowSession
+        [hashtable] $ServiceNowSession = $script:ServiceNowSession,
+
+        [Parameter()]
+        [Int32] $TimeoutSec
     )
 
     # get header/body auth values
@@ -76,6 +79,7 @@ function Invoke-ServiceNowRestMethod {
     $params.Method = $Method
     $params.ContentType = 'application/json'
     $params.UseBasicParsing = $true
+    $params.TimeoutSec = $TimeoutSec
 
     if ( $Table ) {
         # table can either be the actual table name or class name
