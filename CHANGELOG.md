@@ -1,3 +1,7 @@
+## 4.0.1
+- Add workaround for powershell basic header bug, [#249](https://github.com/Snow-Shell/servicenow-powershell/issues/249)
+
+
 ## 4.0.0
 - Add `Update-ServiceNowRecord -CustomVariableData` to update custom variable values, [#237](https://github.com/Snow-Shell/servicenow-powershell/issues/237)
 - Add `New-ServiceNowChangeRequest` support for change models and standard change templates
@@ -182,6 +186,7 @@ Be able to reference types from this config per table, removing the need to have
 - Add Get-ServiceNowAttachment
 - Add Get-ServiceNowAttachmentDetail
 - Add Remove-ServiceNowAttachment
+
 
 
 
