@@ -1,1 +1,1 @@
-- Add workaround for powershell basic header bug, [#249](https://github.com/Snow-Shell/servicenow-powershell/issues/249)
+- Add instance level timeout with `New-ServiceNowSession -TimeoutSec`, [#246](https://github.com/Snow-Shell/servicenow-powershell/issues/246)
