@@ -1,3 +1,7 @@
+## 4.0.2
+- Add instance level timeout with `New-ServiceNowSession -TimeoutSec`, [#246](https://github.com/Snow-Shell/servicenow-powershell/issues/246)
+
+
 ## 4.0.1
 - Add workaround for powershell basic header bug, [#249](https://github.com/Snow-Shell/servicenow-powershell/issues/249)
 
@@ -186,6 +190,7 @@ Be able to reference types from this config per table, removing the need to have
 - Add Get-ServiceNowAttachment
 - Add Get-ServiceNowAttachmentDetail
 - Add Remove-ServiceNowAttachment
+
 
 
 
