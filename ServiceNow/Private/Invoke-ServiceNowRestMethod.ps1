@@ -138,12 +138,6 @@ function Invoke-ServiceNowRestMethod {
         $params.Body = [System.Text.Encoding]::UTf8.GetBytes($Body)
     }
 
-    # if ( $Body ) {
-    #     $params.Body = $Body
-    # }
-
-    # Write-Verbose ($params | ConvertTo-Json)
-
     # hide invoke-webrequest progress
     $oldProgressPreference = $ProgressPreference
     $ProgressPreference = 'SilentlyContinue'

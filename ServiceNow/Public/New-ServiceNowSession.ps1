@@ -35,6 +35,10 @@ Use GraphQL instead of REST calls
 .PARAMETER GetAllTable
 Populate $ServiceNowTable with data from all tables the user has access to
 
+.PARAMETER TimeoutSec
+Timeout in seconds for all operations.
+The default is 0 which represents no timeout.
+
 .PARAMETER PassThru
 Provide the resulting session object to the pipeline as opposed to setting as a script scoped variable to be used by default for other calls.
 This is useful if you want to have multiple sessions with different api versions, credentials, etc.
@@ -120,6 +124,10 @@ function New-ServiceNowSession {
         [switch] $GraphQL,
 
         [Parameter()]
+        [ValidateRange(0, [int32]::MaxValue)]
+        [int32] $TimeoutSec = 0,
+
+        [Parameter()]
         [switch] $PassThru
     )
 
@@ -147,6 +155,9 @@ function New-ServiceNowSession {
             $newSession.Add('ProxyCredential', $ProxyCredential)
         }
     }
+
+    $PSDefaultParameterValues['Invoke-WebRequest:TimeoutSec'] = $TimeoutSec
+    $PSDefaultParameterValues['Invoke-RestMethodt:TimeoutSec'] = $TimeoutSec
 
     switch -Wildcard ($PSCmdLet.ParameterSetName) {
         'OAuth*' {
