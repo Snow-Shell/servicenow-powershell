@@ -31,7 +31,7 @@ function New-ServiceNowChangeTask {
         Return the newly created item details
 
     .EXAMPLE
-        New-ServiceNowChangeTask -ChangeRequest RITM0010001 -ShortDescription 'New PS change request' -Description 'This change request was created from Powershell' -AssignmentGroup ServiceDesk
+        New-ServiceNowChangeTask -ChangeRequest CHG0010001 -ShortDescription 'New PS change request' -Description 'This change request was created from Powershell' -AssignmentGroup ServiceDesk
 
         Create a new task
 
@@ -82,6 +82,7 @@ function New-ServiceNowChangeTask {
         switch ($PSBoundParameters.Keys) {
             'ChangeRequest' {
                 $createValues.parent = $ChangeRequest
+                $createValues.change_request = $ChangeRequest
             }
 
             'ShortDescription' {
@@ -101,11 +102,11 @@ function New-ServiceNowChangeTask {
             }
         }
 
-        $CustomField.GetEnumerator() | ForEach-Object {
-            if ( $createValues.($_.Key) ) {
-                Write-Warning ('Custom field {0} has already been added via parameter' -f $_.Key)
+        foreach ($key in $CustomField.Keys) {
+            if ( $createValues.$key ) {
+                Write-Warning "Custom field '$key' has already been provided via one of the dedicated parameters"
             } else {
-                $createValues.Add($_.Key, $_.Value)
+                $createValues.Add($key, $CustomField.$key)
             }
         }
 

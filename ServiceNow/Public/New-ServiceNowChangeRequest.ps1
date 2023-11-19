@@ -35,7 +35,7 @@
 .PARAMETER ConfigurationItem
     Full name or sys_id of the configuration item to be associated with the change
 
-.PARAMETER InputData
+.PARAMETER CustomField
     Field values which aren't one of the built in function properties
 
 .PARAMETER ServiceNowSession
@@ -109,8 +109,8 @@ function New-ServiceNowChangeRequest {
         [string] $ConfigurationItem,
 
         [parameter()]
-        [Alias('CustomFields')]
-        [hashtable] $InputData,
+        [Alias('CustomFields', 'InputData')]
+        [hashtable] $CustomField,
 
         [Parameter()]
         [Hashtable] $Connection,
@@ -141,12 +141,12 @@ function New-ServiceNowChangeRequest {
         }
 
         # add custom fields
-        $duplicateValues = ForEach ($Key in $InputData.Keys) {
+        $duplicateValues = ForEach ($Key in $CustomField.Keys) {
             If ( $values.ContainsKey($Key) ) {
                 $Key
             }
             Else {
-                $values.Add($Key, $InputData[$Key])
+                $values.Add($Key, $CustomField[$Key])
             }
         }
 

@@ -29,7 +29,7 @@ Generates a new ServiceNow Incident using predefined or other field values
 .PARAMETER ConfigurationItem
     Full name or sys_id of the configuration item to be associated with the change
 
-.PARAMETER InputData
+.PARAMETER CustomField
     Field values which aren't one of the built in function properties
 
 .PARAMETER ServiceNowSession
@@ -56,7 +56,7 @@ Generate a basic Incident attributed to the caller "UserName" with descriptions,
             Category = "Office"
             Subcategory = "Outlook"
             ConfigurationItem = "UserPC1"
-            InputData = @{u_custom1 = "Custom Field Entry"
+            CustomField = @{u_custom1 = "Custom Field Entry"
                             u_another_custom = "Related Test"}
             }
         New-ServiceNowIncident @IncidentParams
@@ -93,8 +93,8 @@ function New-ServiceNowIncident {
         [string] $ConfigurationItem,
 
         [parameter()]
-        [Alias('CustomFields')]
-        [hashtable] $InputData,
+        [Alias('CustomFields', 'InputData')]
+        [hashtable] $CustomField,
 
         [Parameter()]
         [Hashtable] $Connection,
@@ -124,12 +124,12 @@ function New-ServiceNowIncident {
         }
 
         # add custom fields
-        $duplicateValues = ForEach ($Key in $InputData.Keys) {
+        $duplicateValues = ForEach ($Key in $CustomField.Keys) {
             If ( $values.ContainsKey($Key) ) {
                 $Key
             }
             Else {
-                $values.Add($Key, $InputData[$Key])
+                $values.Add($Key, $CustomField[$Key])
             }
         }
 
