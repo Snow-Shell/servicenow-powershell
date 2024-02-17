@@ -105,6 +105,13 @@ function Update-ServiceNowRecord {
 
         if ( $PSBoundParameters.ContainsKey('InputData') ) {
 
+            # arrays should be passed as comma-separated
+            foreach ($key in @($InputData.Keys)) {
+                if ( $InputData[$key].GetType().IsArray ) {
+                    $InputData[$key] = $InputData[$key] -join ','
+                }
+            }
+
             $params = @{
                 Method            = 'Patch'
                 Table             = $thisTable.Name
