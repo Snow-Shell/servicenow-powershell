@@ -364,10 +364,15 @@ function Get-ServiceNowRecord {
                         if ($var.'sc_item_option.value' -eq "" -or $null -eq $var.'sc_item_option.value') {
                             continue
                         }
-                        $newVar | Add-Member @{'ReferenceTable' = $var.'sc_item_option.item_option_new.reference' }
-                        $newVar | Add-Member @{'ReferenceID' = $var.'sc_item_option.value' }
-                        # issue 234.  ID might not be sysid or number for reference...odd
-                        $refValue = Get-ServiceNowRecord -Table $var.'sc_item_option.item_option_new.reference' -ID $var.'sc_item_option.value' -Property name -AsValue -ServiceNowSession $ServiceNowSession -ErrorAction SilentlyContinue
+                        $sysidPattern = "[0-9a-fA-F]{32}"
+                        $sysid = [Regex]::Matches($var.'sc_item_option.value', $sysidPattern).Value
+                        if ($sysid) {
+                            Write-Verbose "Custom variable lookup for $($newvar.name) from table '$($var.'sc_item_option.item_option_new.reference')' sysid:'$($var.'sc_item_option.value')'"
+                            $newVar | Add-Member @{'ReferenceTable' = $var.'sc_item_option.item_option_new.reference' }
+                            $newVar | Add-Member @{'ReferenceID' = $var.'sc_item_option.value' }
+                            # issue 234.  ID might not be sysid or number for reference...odd
+                            $refValue = Get-ServiceNowRecord -Table $var.'sc_item_option.item_option_new.reference' -ID $var.'sc_item_option.value' -Property name -AsValue -ServiceNowSession $ServiceNowSession -ErrorAction SilentlyContinue
+                        }
                         if ( $refValue ) {
                             $newVar.Value = $refValue
                         }
