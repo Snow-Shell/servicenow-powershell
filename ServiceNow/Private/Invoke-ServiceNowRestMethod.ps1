@@ -249,19 +249,12 @@ function Invoke-ServiceNowRestMethod {
                             $CultureDateTimeFormat = (Get-Culture).DateTimeFormat
                             $DateFormat = $CultureDateTimeFormat.ShortDatePattern
                             $TimeFormat = $CultureDateTimeFormat.LongTimePattern
-                            $DateTimeFormat = "$DateFormat $TimeFormat"
+                            $DateTimeFormat = [string[]]@("$DateFormat $TimeFormat", 'yyyy-MM-dd HH:mm:ss')
                             $SNResult.$Property = [DateTime]::ParseExact($($SNResult.$Property), $DateTimeFormat, [System.Globalization.DateTimeFormatInfo]::InvariantInfo, [System.Globalization.DateTimeStyles]::None)
                         }
                         Catch {
-                            Try {
-                                # Universal Format
-                                $DateTimeFormat = 'yyyy-MM-dd HH:mm:ss'
-                                $SNResult.$Property = [DateTime]::ParseExact($($SNResult.$Property), $DateTimeFormat, [System.Globalization.DateTimeFormatInfo]::InvariantInfo, [System.Globalization.DateTimeStyles]::None)
-                            }
-                            Catch {
-                                # If the local culture and universal formats both fail keep the property as a string (Do nothing)
-                                $null = 'Silencing a PSSA alert with this line'
-                            }
+                            # If the local culture and universal formats both fail keep the property as a string (Do nothing)
+                            $null = 'Silencing a PSSA alert with this line'
                         }
                     }
                 }
