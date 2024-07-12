@@ -130,7 +130,7 @@ function Invoke-ServiceNowRestMethod {
     }
 
     if ( $Values ) {
-        $Body = $Values | ConvertTo-Json
+        $Body = $Values | ConvertTo-Json -Compress
         $params.Body = $Body
         Write-Verbose ($params | ConvertTo-Json)
 
