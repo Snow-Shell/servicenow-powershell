@@ -372,10 +372,11 @@ function Get-ServiceNowRecord {
                             $newVar | Add-Member @{'ReferenceID' = $var.'sc_item_option.value' }
                             # issue 234.  ID might not be sysid or number for reference...odd
                             $refValue = Get-ServiceNowRecord -Table $var.'sc_item_option.item_option_new.reference' -ID $var.'sc_item_option.value' -Property name -AsValue -ServiceNowSession $ServiceNowSession -ErrorAction SilentlyContinue
-                        }
-                        if ( $refValue ) {
-                            $newVar.Value = $refValue
-                        }
+                           if ( $refValue ) {
+                               $newVar.Value = $refValue
+                           }
+                   }
+                        
                     }
 
                     if ( $var.'sc_item_option.item_option_new.name' ) {
