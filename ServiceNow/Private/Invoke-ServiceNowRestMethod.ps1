@@ -46,6 +46,9 @@ function Invoke-ServiceNowRestMethod {
         [object[]] $Filter,
 
         [parameter()]
+        [string] $FilterString,
+
+        [parameter()]
         [object[]] $Sort = @('opened_at', 'desc'),
 
         # sysparm_query param in the format of a ServiceNow encoded query string (see http://wiki.servicenow.com/index.php?title=Encoded_Query_Strings)
@@ -98,8 +101,13 @@ function Invoke-ServiceNowRestMethod {
     if ( $Method -eq 'Get') {
         $Body = @{
             'sysparm_display_value' = $DisplayValue
-            'sysparm_query'         = (New-ServiceNowQuery -Filter $Filter -Sort $Sort)
             'sysparm_limit'         = 10
+        }
+
+        if ( $FilterString ) {
+            $Body.sysparm_query = $FilterString
+        } else {
+            $Body.sysparm_query = (New-ServiceNowQuery -Filter $Filter -Sort $Sort)
         }
 
         # Handle paging parameters
