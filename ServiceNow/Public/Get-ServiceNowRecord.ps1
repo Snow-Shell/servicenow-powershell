@@ -183,8 +183,7 @@ function Get-ServiceNowRecord {
         [ValidateScript( {
                 if ($_ -match '^[a-zA-Z0-9]{32}$' -or $_ -match '^([a-zA-Z]+)[0-9]+$') {
                     $true
-                }
-                else {
+                } else {
                     throw 'Id must either be a SysId 32 character alphanumeric or Number with prefix and id.'
                 }
             })]
@@ -195,8 +194,7 @@ function Get-ServiceNowRecord {
         [ValidateScript( {
                 if ($_ -match '^[a-zA-Z0-9]{32}$' -or $_ -match '^([a-zA-Z]+)[0-9]+$') {
                     $true
-                }
-                else {
+                } else {
                     throw 'ParentId must either be a SysId 32 character alphanumeric or Number with prefix and id.'
                 }
             })]
@@ -287,8 +285,7 @@ function Get-ServiceNowRecord {
 
             if ( $thisID -match '^[a-zA-Z0-9]{32}$' ) {
                 $thisParams.Filter += , @('sys_id', '-eq', $thisID)
-            }
-            else {
+            } else {
                 $thisParams.Filter += , @('number', '-eq', $thisID)
             }
         }
@@ -301,8 +298,7 @@ function Get-ServiceNowRecord {
 
             if ( $ParentID -match '^[a-zA-Z0-9]{32}$' ) {
                 $thisParams.Filter += , @('parent.sys_id', '-eq', $ParentID)
-            }
-            else {
+            } else {
                 $thisParams.Filter += , @('parent.number', '-eq', $ParentID)
             }
 
@@ -381,43 +377,50 @@ function Get-ServiceNowRecord {
 
                     # show the underlying value if the option is a reference type
                     if ( $newVar.Type -eq 'Reference' ) {
-                        $newVar | Add-Member @{'ReferenceTable' = $var.'sc_item_option.item_option_new.reference' }
-                        # issue 234.  ID might not be sysid or number for reference...odd
-                        $refValue = Get-ServiceNowRecord -Table $var.'sc_item_option.item_option_new.reference' -ID $var.'sc_item_option.value' -Property name -AsValue -ServiceNowSession $ServiceNowSession -ErrorAction SilentlyContinue
-                        if ( $refValue ) {
-                            $newVar.Value = $refValue
+                        #do not do any further lookup when the value is blank or null
+                        #resolves #234 and 262
+                        if ($var.'sc_item_option.value' -eq "" -or $null -eq $var.'sc_item_option.value') {
+                            continue
                         }
+                        $sysidPattern = "[0-9a-fA-F]{32}"
+                        $sysid = [Regex]::Matches($var.'sc_item_option.value', $sysidPattern).Value
+                        if ($sysid) {
+                            Write-Verbose "Custom variable lookup for $($newvar.name) from table '$($var.'sc_item_option.item_option_new.reference')' sysid:'$($var.'sc_item_option.value')'"
+                            $newVar | Add-Member @{'ReferenceTable' = $var.'sc_item_option.item_option_new.reference' }
+                            $newVar | Add-Member @{'ReferenceID' = $var.'sc_item_option.value' }
+                            # issue 234.  ID might not be sysid or number for reference...odd
+                            $refValue = Get-ServiceNowRecord -Table $var.'sc_item_option.item_option_new.reference' -ID $var.'sc_item_option.value' -Property name -AsValue -ServiceNowSession $ServiceNowSession -ErrorAction SilentlyContinue
+                           if ( $refValue ) {
+                               $newVar.Value = $refValue
+                           }
+                   }
+                        
                     }
 
                     if ( $var.'sc_item_option.item_option_new.name' ) {
                         $record.CustomVariable | Add-Member @{ $var.'sc_item_option.item_option_new.name' = $newVar }
-                    }
-                    else {
+                    } else {
                         $record.CustomVariable | Add-Member @{ $var.'sc_item_option.item_option_new.question_text' = $newVar }
                     }
                 }
 
                 if ( $addedSysIdProp ) {
                     $record | Select-Object -Property * -ExcludeProperty sys_id
-                }
-                else {
+                } else {
                     $record
                 }
             }
-        }
-        else {
+        } else {
 
             # format the results
             if ( $Property ) {
                 if ( $Property.Count -eq 1 -and $AsValue ) {
                     $propName = $result | Get-Member | Where-Object { $_.MemberType -eq 'NoteProperty' } | Select-Object -ExpandProperty Name
                     $result.$propName
-                }
-                else {
+                } else {
                     $result
                 }
-            }
-            else {
+            } else {
                 if ($thisTable.Type) {
                     $result | ForEach-Object { $_.PSObject.TypeNames.Insert(0, $thisTable.Type) }
                 }
