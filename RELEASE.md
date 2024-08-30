@@ -1,3 +1,1 @@
-- Add `Get-ServiceNowRecord -FilterString` to provide a filter from the UI, [#267](https://github.com/Snow-Shell/servicenow-powershell/issues/267)
-- Update datetime conversion in `Get-ServiceNowRecord` to reduce possible exceptions, [#265](https://github.com/Snow-Shell/servicenow-powershell/issues/265)
-- Fix list based fields appending brackets in `Update-ServiceNowRecord`, [#260](https://github.com/Snow-Shell/servicenow-powershell/issues/260)
+- Fix invalid Id error, [#262](https://github.com/Snow-Shell/servicenow-powershell/issues/262)
