@@ -1,3 +1,7 @@
+## 4.0.5
+- Fix invalid Id error, [#262](https://github.com/Snow-Shell/servicenow-powershell/issues/262)
+
+
 ## 4.0.4
 - Add `Get-ServiceNowRecord -FilterString` to provide a filter from the UI, [#267](https://github.com/Snow-Shell/servicenow-powershell/issues/267)
 - Update datetime conversion in `Get-ServiceNowRecord` to reduce possible exceptions, [#265](https://github.com/Snow-Shell/servicenow-powershell/issues/265)
@@ -200,6 +204,7 @@ Be able to reference types from this config per table, removing the need to have
 - Add Get-ServiceNowAttachment
 - Add Get-ServiceNowAttachmentDetail
 - Add Remove-ServiceNowAttachment
+
 
 
 
