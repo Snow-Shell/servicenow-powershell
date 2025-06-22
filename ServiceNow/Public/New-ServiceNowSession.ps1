@@ -6,7 +6,10 @@ Create a new ServiceNow session
 Create a new ServiceNow session via credentials, OAuth, or access token.
 This session will be used by default for all future calls.
 Optionally, you can specify the api version you'd like to use; the default is the latest.
+
 To use OAuth, ensure you've set it up, https://docs.servicenow.com/bundle/quebec-platform-administration/page/administer/security/task/t_SettingUpOAuth.html.
+
+If using OAuth, the client credential will be stored in the script scoped variable ServiceNowSession and the access token will be automatically refreshed.
 
 .PARAMETER Url
 Base domain for your ServiceNow instance, eg. tenant.domain.com
@@ -200,8 +203,11 @@ function New-ServiceNowSession {
                 if ($token.expires_in) {
                     $expiryTime = (Get-Date).AddSeconds($token.expires_in)
                     $newSession.Add('ExpiresOn', $expiryTime)
-                    Write-Verbose "Token will expire at $expiryTime"
+                    Write-Verbose "Access token will expire at $expiryTime"
                 }
+                # store client credential as it will be needed to refresh the access token
+                $newSession.Add('ClientCredential', $ClientCredential)
+            
             }
             else {
                 # invoke-webrequest didn't throw an error, but we didn't get a token back either
