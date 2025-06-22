@@ -1,2 +1,3 @@
 *.Pester.Defaults.json
 *.zip
+.DS_Store

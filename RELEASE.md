@@ -1,1 +1,1 @@
-- Fix invalid Id error, [#262](https://github.com/Snow-Shell/servicenow-powershell/issues/262)
+- Add support for access token refresh, [#277](https://github.com/Snow-Shell/servicenow-powershell/issues/277)
