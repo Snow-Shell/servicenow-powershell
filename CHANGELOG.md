@@ -1,3 +1,7 @@
+## 4.1.0
+- Add support for access token refresh, [#277](https://github.com/Snow-Shell/servicenow-powershell/issues/277)
+
+
 ## 4.0.5
 - Fix invalid Id error, [#262](https://github.com/Snow-Shell/servicenow-powershell/issues/262)
 
@@ -204,6 +208,7 @@ Be able to reference types from this config per table, removing the need to have
 - Add Get-ServiceNowAttachment
 - Add Get-ServiceNowAttachmentDetail
 - Add Remove-ServiceNowAttachment
+
 
 
 
