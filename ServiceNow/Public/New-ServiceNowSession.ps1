@@ -197,6 +197,11 @@ function New-ServiceNowSession {
                 $token = $response.Content | ConvertFrom-Json
                 $newSession.Add('AccessToken', (New-Object System.Management.Automation.PSCredential('AccessToken', ($token.access_token | ConvertTo-SecureString -AsPlainText -Force))))
                 $newSession.Add('RefreshToken', (New-Object System.Management.Automation.PSCredential('RefreshToken', ($token.refresh_token | ConvertTo-SecureString -AsPlainText -Force))))
+                if ($token.expires_in) {
+                    $expiryTime = (Get-Date).AddSeconds($token.expires_in)
+                    $newSession.Add('ExpiresOn', $expiryTime)
+                    Write-Verbose "Token will expire at $expiryTime"
+                }
             }
             else {
                 # invoke-webrequest didn't throw an error, but we didn't get a token back either
