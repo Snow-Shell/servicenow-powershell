@@ -373,7 +373,7 @@ function Get-ServiceNowRecord {
                         }
                        
                         $newObj | Add-Member -MemberType ScriptProperty -Name $key -Value {
-                            Get-ServiceNowRecord -Table $refTable -ID $refId -ServiceNowSession $ServiceNowSession
+                            Get-ServiceNowRecord -Table $refTable -ID $refId -ServiceNowSession $ServiceNowSession -EnableDotWalking
                         }.GetNewClosure()
                     }
                     else {
