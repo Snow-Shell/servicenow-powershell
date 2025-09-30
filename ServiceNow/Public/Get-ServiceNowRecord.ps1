@@ -33,7 +33,7 @@
     For a complete list of comparison operators, see $script:ServiceNowOperator and use Name in your filter.
     See the examples.
 
-    .PARAMETER FilterString
+.PARAMETER FilterString
     A string representation of the filter.  This is useful when the filter is complex and hard to specify as an array.
     Retrieve the filter string from the ServiceNow UI via right click on the filter and selecting 'Copy query'.
 
@@ -120,7 +120,7 @@
     Get-ServiceNowRecord -Table incident -Filter @('state', '-eq', '1') -Sort @('opened_at', 'desc'), @('state')
 
     Get incident records where state equals New and first sort by the field opened_at descending and then sort by the field state ascending
-]
+
 .EXAMPLE
     Get-ServiceNowRecord -Table 'change request' -Filter @('opened_at', '-ge', (Get-Date).AddDays(-30))
 
@@ -158,7 +158,7 @@
 
     Get a specific record by number using the function alias
 
-    .EXAMPLE
+.EXAMPLE
     Get-ServiceNowRecord -Table 'incident' -FilterString 'active=true^state=1'
 
     Provide a filter string from the UI to get records where active is true and state is 1
