@@ -46,6 +46,9 @@ function Invoke-ServiceNowRestMethod {
         [object[]] $Filter,
 
         [parameter()]
+        [string] $FilterString,
+
+        [parameter()]
         [object[]] $Sort = @('opened_at', 'desc'),
 
         # sysparm_query param in the format of a ServiceNow encoded query string (see http://wiki.servicenow.com/index.php?title=Encoded_Query_Strings)
@@ -98,8 +101,13 @@ function Invoke-ServiceNowRestMethod {
     if ( $Method -eq 'Get') {
         $Body = @{
             'sysparm_display_value' = $DisplayValue
-            'sysparm_query'         = (New-ServiceNowQuery -Filter $Filter -Sort $Sort)
             'sysparm_limit'         = 10
+        }
+
+        if ( $FilterString ) {
+            $Body.sysparm_query = $FilterString
+        } else {
+            $Body.sysparm_query = (New-ServiceNowQuery -Filter $Filter -Sort $Sort)
         }
 
         # Handle paging parameters
@@ -130,7 +138,7 @@ function Invoke-ServiceNowRestMethod {
     }
 
     if ( $Values ) {
-        $Body = $Values | ConvertTo-Json
+        $Body = $Values | ConvertTo-Json -Compress
         $params.Body = $Body
         Write-Verbose ($params | ConvertTo-Json)
 
@@ -249,19 +257,12 @@ function Invoke-ServiceNowRestMethod {
                             $CultureDateTimeFormat = (Get-Culture).DateTimeFormat
                             $DateFormat = $CultureDateTimeFormat.ShortDatePattern
                             $TimeFormat = $CultureDateTimeFormat.LongTimePattern
-                            $DateTimeFormat = "$DateFormat $TimeFormat"
+                            $DateTimeFormat = [string[]]@("$DateFormat $TimeFormat", 'yyyy-MM-dd HH:mm:ss')
                             $SNResult.$Property = [DateTime]::ParseExact($($SNResult.$Property), $DateTimeFormat, [System.Globalization.DateTimeFormatInfo]::InvariantInfo, [System.Globalization.DateTimeStyles]::None)
                         }
                         Catch {
-                            Try {
-                                # Universal Format
-                                $DateTimeFormat = 'yyyy-MM-dd HH:mm:ss'
-                                $SNResult.$Property = [DateTime]::ParseExact($($SNResult.$Property), $DateTimeFormat, [System.Globalization.DateTimeFormatInfo]::InvariantInfo, [System.Globalization.DateTimeStyles]::None)
-                            }
-                            Catch {
-                                # If the local culture and universal formats both fail keep the property as a string (Do nothing)
-                                $null = 'Silencing a PSSA alert with this line'
-                            }
+                            # If the local culture and universal formats both fail keep the property as a string (Do nothing)
+                            $null = 'Silencing a PSSA alert with this line'
                         }
                     }
                 }

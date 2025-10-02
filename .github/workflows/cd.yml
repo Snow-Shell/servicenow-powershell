@@ -8,7 +8,7 @@ jobs:
     env:
       module_name: ServiceNow
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
           token: ${{ secrets.CD_TOKEN }}
 

@@ -43,7 +43,7 @@ $params = @{
 New-ServiceNowSession @params
 ```
 
-Oauth authentication with user credential as well as application/client credential.  The application/client credential can be found in the System OAuth->Application Registry section of ServiceNow.
+Oauth authentication with user credential as well as application/client credential.  The application/client credential can be found in the System OAuth->Application Registry section of ServiceNow.  The access token will be refreshed automatically when it expires.
 ```PowerShell
 $params = @{
     Url = 'instance.service-now.com'

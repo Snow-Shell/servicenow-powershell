@@ -1,1 +1,1 @@
-- Add instance level timeout with `New-ServiceNowSession -TimeoutSec`, [#246](https://github.com/Snow-Shell/servicenow-powershell/issues/246)
+- Add support for access token refresh, [#277](https://github.com/Snow-Shell/servicenow-powershell/issues/277)

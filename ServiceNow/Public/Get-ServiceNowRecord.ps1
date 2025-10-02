@@ -33,6 +33,10 @@
     For a complete list of comparison operators, see $script:ServiceNowOperator and use Name in your filter.
     See the examples.
 
+    .PARAMETER FilterString
+    A string representation of the filter.  This is useful when the filter is complex and hard to specify as an array.
+    Retrieve the filter string from the ServiceNow UI via right click on the filter and selecting 'Copy query'.
+
 .PARAMETER Sort
     Array or multidimensional array of fields to sort on.
     Each array should be of the format @(field, asc/desc).
@@ -143,6 +147,11 @@
 
     Get a specific record by number using the function alias
 
+    .EXAMPLE
+    Get-ServiceNowRecord -Table 'incident' -FilterString 'active=true^state=1'
+
+    Provide a filter string from the UI to get records where active is true and state is 1
+
 .INPUTS
     ID
 
@@ -165,6 +174,7 @@ function Get-ServiceNowRecord {
         [Parameter(ParameterSetName = 'Table', Mandatory)]
         [Parameter(ParameterSetName = 'TableId', Mandatory)]
         [Parameter(ParameterSetName = 'TableParentId')]
+        [Parameter(ParameterSetName = 'FilterString', Mandatory)]
         [Alias('sys_class_name')]
         [string] $Table,
 
@@ -202,6 +212,10 @@ function Get-ServiceNowRecord {
         [Parameter(ParameterSetName = 'TableParentId')]
         [object[]] $Filter = @(),
 
+        [Parameter(ParameterSetName = 'FilterString', Mandatory)]
+        [Alias('fs')]
+        [string] $FilterString,
+
         [Parameter(ParameterSetName = 'Table')]
         [Parameter(ParameterSetName = 'TableParentId')]
         [ValidateNotNullOrEmpty()]
@@ -232,7 +246,6 @@ function Get-ServiceNowRecord {
     process {
 
         $thisParams = @{
-            Filter            = $Filter
             Property          = $Property
             Sort              = $Sort
             DisplayValue      = $DisplayValue
@@ -244,11 +257,16 @@ function Get-ServiceNowRecord {
         }
 
         if ( $PSBoundParameters.ContainsKey('Filter') ) {
+            $thisParams.Filter = $Filter
             #     # we always want the filter to be arrays separated by joins
             if ( $Filter[0].GetType().Name -ne 'Object[]' ) {
                 #
                 $thisParams.Filter = , $Filter
             }
+        }
+
+        if ( $FilterString ) {
+            $thisParams.FilterString = $FilterString
         }
 
         $addedSysIdProp = $false
