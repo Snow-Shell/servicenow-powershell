@@ -25,7 +25,8 @@
     The comparison performed is a 'like'.
 
 .PARAMETER Property
-    Return one or more specific fields otherwise all fields will be returned
+    Return one or more specific fields otherwise all fields will be returned.
+    Field names are case sensitive.
 
 .PARAMETER Filter
     Array or multidimensional array of fields and values to filter on.
