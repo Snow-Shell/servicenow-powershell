@@ -127,7 +127,7 @@ function Invoke-ServiceNowRestMethod {
         }
 
         if ($Property) {
-            $Body.sysparm_fields = ($Property -join ',').ToLower()
+            $Body.sysparm_fields = $Property -join ','
         }
 
         if ( $Body ) {

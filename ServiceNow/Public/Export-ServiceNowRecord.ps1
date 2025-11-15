@@ -17,7 +17,8 @@
     If providing just an Id, not with Table, the Id prefix will be looked up to find the table name.
 
 .PARAMETER Property
-    Return one or more specific fields otherwise all fields will be returned
+    Return one or more specific fields otherwise all fields will be returned.
+    Field names are case sensitive.
 
 .PARAMETER Filter
     Array or multidimensional array of fields and values to filter on.
