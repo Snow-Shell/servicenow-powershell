@@ -17,7 +17,7 @@ function Invoke-ServiceNowRestMethod {
     [CmdletBinding(SupportsPaging)]
     [System.Diagnostics.CodeAnalysis.SuppressMessage('PSUseBOMForUnicodeEncodedFile', '', Justification = 'issuees with *nix machines and no benefit')]
 
-    Param (
+    param (
         [parameter()]
         [ValidateSet('Get', 'Post', 'Patch', 'Delete')]
         [string] $Method = 'Get',
@@ -49,6 +49,9 @@ function Invoke-ServiceNowRestMethod {
         [string] $FilterString,
 
         [parameter()]
+        [string] $Namespace,
+
+        [parameter()]
         [object[]] $Sort = @('opened_at', 'desc'),
 
         # sysparm_query param in the format of a ServiceNow encoded query string (see http://wiki.servicenow.com/index.php?title=Encoded_Query_Strings)
@@ -74,7 +77,11 @@ function Invoke-ServiceNowRestMethod {
     )
 
     # get header/body auth values
-    $params = Get-ServiceNowAuth -C $Connection -S $ServiceNowSession
+    if ($namespace) {
+        $params = Get-ServiceNowAuth -C $Connection -S $ServiceNowSession -N $namespace
+    } else {
+        $params = Get-ServiceNowAuth -C $Connection -S $ServiceNowSession
+    }
 
     $params.Method = $Method
     $params.ContentType = 'application/json'
@@ -93,8 +100,7 @@ function Invoke-ServiceNowRestMethod {
         if ( $SysId ) {
             $params.Uri += "/$SysId"
         }
-    }
-    else {
+    } else {
         $params.Uri += $UriLeaf
     }
 
@@ -153,8 +159,7 @@ function Invoke-ServiceNowRestMethod {
     try {
         $response = Invoke-WebRequest @params
         Write-Debug $response
-    }
-    catch {
+    } catch {
         $ProgressPreference = $oldProgressPreference
         throw $_
     }
@@ -174,12 +179,10 @@ function Invoke-ServiceNowRestMethod {
                 $content = $response.content | ConvertFrom-Json
                 if ( $content.PSobject.Properties.Name -contains "result" ) {
                     $records = @($content | Select-Object -ExpandProperty result)
-                }
-                else {
+                } else {
                     $records = @($content)
                 }
-            }
-            else {
+            } else {
                 # invoke-webrequest didn't throw an error per se, but we didn't get content back either
                 throw ('"{0} : {1}' -f $response.StatusCode, $response | Out-String )
             }
@@ -190,8 +193,7 @@ function Invoke-ServiceNowRestMethod {
     if ( $response.Headers.'X-Total-Count' ) {
         if ($PSVersionTable.PSVersion.Major -lt 6) {
             $totalRecordCount = [int]$response.Headers.'X-Total-Count'
-        }
-        else {
+        } else {
             $totalRecordCount = [int]($response.Headers.'X-Total-Count'[0])
         }
         Write-Verbose "Total number of records for this query: $totalRecordCount"
@@ -215,16 +217,14 @@ function Invoke-ServiceNowRestMethod {
 
             $end = if ( $totalRecordCount -lt $setPoint ) {
                 $totalRecordCount
-            }
-            else {
+            } else {
                 $setPoint
             }
 
             Write-Verbose ('getting {0}-{1} of {2}' -f ($params.body.sysparm_offset + 1), $end, $totalRecordCount)
             try {
                 $response = Invoke-WebRequest @params -Verbose:$false
-            }
-            catch {
+            } catch {
                 $ProgressPreference = $oldProgressPreference
                 throw $_
             }
@@ -232,8 +232,7 @@ function Invoke-ServiceNowRestMethod {
             $content = $response.content | ConvertFrom-Json
             if ( $content.PSobject.Properties.Name -contains "result" ) {
                 $records += $content | Select-Object -ExpandProperty result
-            }
-            else {
+            } else {
                 $records += $content
             }
         }
@@ -249,18 +248,17 @@ function Invoke-ServiceNowRestMethod {
     switch ($Method) {
         'Get' {
             $ConvertToDateField = @('closed_at', 'expected_start', 'follow_up', 'opened_at', 'sys_created_on', 'sys_updated_on', 'work_end', 'work_start')
-            ForEach ($SNResult in $records) {
-                ForEach ($Property in $ConvertToDateField) {
-                    If (-not [string]::IsNullOrEmpty($SNResult.$Property)) {
-                        Try {
+            foreach ($SNResult in $records) {
+                foreach ($Property in $ConvertToDateField) {
+                    if (-not [string]::IsNullOrEmpty($SNResult.$Property)) {
+                        try {
                             # Extract the default Date/Time formatting from the local computer's "Culture" settings, and then create the format to use when parsing the date/time from Service-Now
                             $CultureDateTimeFormat = (Get-Culture).DateTimeFormat
                             $DateFormat = $CultureDateTimeFormat.ShortDatePattern
                             $TimeFormat = $CultureDateTimeFormat.LongTimePattern
                             $DateTimeFormat = [string[]]@("$DateFormat $TimeFormat", 'yyyy-MM-dd HH:mm:ss')
                             $SNResult.$Property = [DateTime]::ParseExact($($SNResult.$Property), $DateTimeFormat, [System.Globalization.DateTimeFormatInfo]::InvariantInfo, [System.Globalization.DateTimeStyles]::None)
-                        }
-                        Catch {
+                        } catch {
                             # If the local culture and universal formats both fail keep the property as a string (Do nothing)
                             $null = 'Silencing a PSSA alert with this line'
                         }
