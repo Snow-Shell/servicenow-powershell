@@ -12,7 +12,7 @@
 RootModule = 'ServiceNow.psm1'
 
 # Version number of this module.
-ModuleVersion = '4.2.0'
+ModuleVersion = '4.1.0'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
@@ -76,8 +76,7 @@ FunctionsToExport = 'New-ServiceNowConfigurationItem', 'Get-ServiceNowRecord',
                'New-ServiceNowQuery', 'New-ServiceNowRecord',
                'Remove-ServiceNowAttachment', 'Remove-ServiceNowRecord',
                'Update-ServiceNowRecord', 'Export-ServiceNowRecord',
-               'Invoke-ServiceNowGraphQL', 'New-ServiceNowChangeTask',
-               'New-ServiceNowCatalogItem'
+               'Invoke-ServiceNowGraphQL', 'New-ServiceNowChangeTask'
 
 # Cmdlets to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no cmdlets to export.
 CmdletsToExport = @()
@@ -137,4 +136,3 @@ PrivateData = @{
 # DefaultCommandPrefix = ''
 
 }
-
