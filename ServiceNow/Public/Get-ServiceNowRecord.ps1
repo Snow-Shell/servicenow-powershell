@@ -34,7 +34,7 @@
     For a complete list of comparison operators, see $script:ServiceNowOperator and use Name in your filter.
     See the examples.
 
-    .PARAMETER FilterString
+.PARAMETER FilterString
     A string representation of the filter.  This is useful when the filter is complex and hard to specify as an array.
     Retrieve the filter string from the ServiceNow UI via right click on the filter and selecting 'Copy query'.
 
@@ -59,6 +59,11 @@
     Return the underlying value instead of pscustomobject.
     Only valid when the Property parameter is set to 1 item.
     Helpful when retrieving sys_id for example.
+
+.PARAMETER EnableDotWalking
+    Returns an pscustomobject that supports dot-walking for reference fields.
+    This option will automatically add getter methods for refrence fields.
+    When you access the property, a call will be made to ServiceNow to retrieve the referenced record.
 
 .PARAMETER Connection
     Azure Automation Connection object containing username, password, and URL for the ServiceNow instance
@@ -116,7 +121,7 @@
     Get-ServiceNowRecord -Table incident -Filter @('state', '-eq', '1') -Sort @('opened_at', 'desc'), @('state')
 
     Get incident records where state equals New and first sort by the field opened_at descending and then sort by the field state ascending
-]
+
 .EXAMPLE
     Get-ServiceNowRecord -Table 'change request' -Filter @('opened_at', '-ge', (Get-Date).AddDays(-30))
 
@@ -142,13 +147,19 @@
     Get-ServiceNowRecord -Table 'cmdb_ci' -Property sys_id -First 1 -AsValue
 
     Get the underlying value for a property instead of a pscustomobject where the value needs to be extracted
+ 
+.EXAMPLE
+    $incident=Get-ServiceNowRecord -Table 'incident' -First 1 -EnableDotWalking
+    $incident.caller_id.manager.email
+ 
+    Get the email address of the manager of the caller for an incident using dot-walking
 
 .EXAMPLE
     gsnr RITM0010001
 
     Get a specific record by number using the function alias
 
-    .EXAMPLE
+.EXAMPLE
     Get-ServiceNowRecord -Table 'incident' -FilterString 'active=true^state=1'
 
     Provide a filter string from the UI to get records where active is true and state is 1
@@ -232,6 +243,9 @@ function Get-ServiceNowRecord {
 
         [Parameter()]
         [switch] $AsValue,
+ 
+        [Parameter()]
+        [switch] $EnableDotWalking,
 
         [Parameter()]
         [hashtable] $Connection,
@@ -341,6 +355,34 @@ function Get-ServiceNowRecord {
         # custom tables do not have a sys_class_name property, add it
         if ( -not $Property -and $result[0].PSObject.Properties.name -notcontains 'sys_class_name' ) {
             $result | Add-Member @{'sys_class_name' = $Table }
+        }
+        
+        if ($EnableDotWalking) {
+            foreach ($record in $result) {
+                $newObj = New-Object PSCustomObject
+                foreach ($key in $record.PSObject.Properties.Name) {
+                    $value = $record.$key
+                    # if the value is a reference
+                    if ($value -and ($value.GetType().Name -eq "PSCustomObject") -and ($value.link -ne $null)) {
+                        $refTable = $value.link.split("/")[6]
+                        $refId = $value.link.split("/")[7]
+ 
+                        # there are some fields that seem to be references, but are different
+                        if ($refId -notmatch '^[a-zA-Z0-9]{32}$') {
+                            $newObj | Add-Member -MemberType NoteProperty -Name $key -Value $value
+                            continue
+                        }
+                       
+                        $newObj | Add-Member -MemberType ScriptProperty -Name $key -Value {
+                            Get-ServiceNowRecord -Table $refTable -ID $refId -ServiceNowSession $ServiceNowSession -EnableDotWalking
+                        }.GetNewClosure()
+                    }
+                    else {
+                        $newObj | Add-Member -MemberType NoteProperty -Name $key -Value $value
+                    }
+                }
+            }
+            $result = $newObj
         }
 
         if ( $IncludeCustomVariable ) {
