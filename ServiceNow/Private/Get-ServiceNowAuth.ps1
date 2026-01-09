@@ -34,11 +34,8 @@ function Get-ServiceNowAuth {
     process {
 
         if ( $ServiceNowSession.Count -gt 0 ) {
-            if ($Namespace -ne 'now') {
-                $hashOut.Uri = $($ServiceNowSession.BaseUri -split ('api'))[0] + 'api/' + $Namespace
-            } else {
-                $hashOut.Uri = $ServiceNowSession.BaseUri
-            }
+            $hashOut.Uri = $ServiceNowSession.BaseUri + $Namespace
+            if ($ServiceNowSession.Version) { $hashOut.uri = $hashOut.uri + $ServiceNowSession.Version }
 
             # check if we need a new access token
             if ( $ServiceNowSession.ExpiresOn -lt (Get-Date) -and $ServiceNowSession.RefreshToken -and $ServiceNowSession.ClientCredential ) {

@@ -49,7 +49,7 @@ function Invoke-ServiceNowRestMethod {
         [string] $FilterString,
 
         [parameter()]
-        [string] $Namespace,
+        [string] $Namespace = 'now',
 
         [parameter()]
         [object[]] $Sort = @('opened_at', 'desc'),
@@ -77,11 +77,7 @@ function Invoke-ServiceNowRestMethod {
     )
 
     # get header/body auth values
-    if ($namespace) {
-        $params = Get-ServiceNowAuth -C $Connection -S $ServiceNowSession -N $namespace
-    } else {
-        $params = Get-ServiceNowAuth -C $Connection -S $ServiceNowSession
-    }
+    $params = Get-ServiceNowAuth -C $Connection -S $ServiceNowSession -N $namespace
 
     $params.Method = $Method
     $params.ContentType = 'application/json'

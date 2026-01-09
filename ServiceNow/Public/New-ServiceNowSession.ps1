@@ -138,14 +138,14 @@ function New-ServiceNowSession {
 
     if ( $ApiVersion -le 0 ) {
         $version = ''
-    }
-    else {
+    } else {
         $version = ('/v{0}' -f $ApiVersion)
     }
 
     $newSession = @{
         Domain  = $Url
-        BaseUri = ('https://{0}/api/now{1}' -f $Url, $version)
+        BaseUri = ('https://{0}/api/' -f $Url)
+        Version = $version
     }
 
     if ( $GraphQL ) {
@@ -182,8 +182,7 @@ function New-ServiceNowSession {
                 $params.Add('Proxy', $Proxy)
                 if ( $PSBoundParameters.ContainsKey('ProxyCredential') ) {
                     $params.Add('ProxyCredential', $ProxyCredential)
-                }
-                else {
+                } else {
                     $params.Add('ProxyUseDefaultCredentials', $true)
                 }
             }
@@ -207,9 +206,8 @@ function New-ServiceNowSession {
                 }
                 # store client credential as it will be needed to refresh the access token
                 $newSession.Add('ClientCredential', $ClientCredential)
-            
-            }
-            else {
+
+            } else {
                 # invoke-webrequest didn't throw an error, but we didn't get a token back either
                 throw ('"{0} : {1}' -f $response.StatusCode, $response | Out-String )
             }
@@ -258,8 +256,7 @@ function New-ServiceNowSession {
 
     if ( $PassThru ) {
         $newSession
-    }
-    else {
+    } else {
         $Script:ServiceNowSession = $newSession
     }
 
@@ -281,8 +278,7 @@ function New-ServiceNowSession {
                     ) | Out-Null
                 }
             }
-        }
-        catch {
+        } catch {
             Write-Verbose "Session created, but failed to populate ServiceNowTable.  Prefixes beyond the default won't be available.  $_"
         }
     }
