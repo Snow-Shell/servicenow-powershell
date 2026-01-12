@@ -55,6 +55,13 @@
     A property named 'CustomVariable' will be added to the return object.
     You can get the value with $return.CustomVariable.CustomVarName.Value.
 
+.PARAMETER IncludeMRVS
+    Include custom variables in the return object.
+    Some records may have associated custom variables, some may not.
+    For instance, an RITM may have custom variables, but the associated tasks may not.
+    A property named 'MRVS' will be added to the return object.
+    You can get the value with $return.MRVS.
+
 .PARAMETER AsValue
     Return the underlying value instead of pscustomobject.
     Only valid when the Property parameter is set to 1 item.
@@ -171,7 +178,7 @@ function Get-ServiceNowRecord {
     [CmdletBinding(DefaultParameterSetName = 'Id', SupportsPaging)]
     [Alias('gsnr')]
 
-    Param (
+    param (
         [Parameter(ParameterSetName = 'Table', Mandatory)]
         [Parameter(ParameterSetName = 'TableId', Mandatory)]
         [Parameter(ParameterSetName = 'TableParentId')]
@@ -229,6 +236,9 @@ function Get-ServiceNowRecord {
 
         [Parameter()]
         [switch] $IncludeCustomVariable,
+
+        [Parameter()]
+        [switch] $IncludeMRVS,
 
         [Parameter()]
         [switch] $AsValue,
@@ -343,6 +353,85 @@ function Get-ServiceNowRecord {
             $result | Add-Member @{'sys_class_name' = $Table }
         }
 
+        if ( $IncludeMRVS) {
+            foreach ($record in $result) {
+
+                $recordSysId = if ($DisplayValue -eq 'all') { $record.sys_id.value } else { $record.sys_id }
+
+                $MRVSParams = @{
+                    Table             = 'sc_multi_row_question_answer'
+                    Filter            = @('parent_id', '-eq', $recordSysId)
+                    Property          = 'row_index', 'sc_item_option.item_option_new.sys_name', 'sc_item_option.item_option_new.name', 'value', 'sc_item_option.sys_id', 'sc_item_option.item_option_new.type', 'sc_item_option.item_option_new.question_text', 'sc_item_option.item_option_new.reference', 'sc_item_option.item_option_new.variable_set'
+                    IncludeTotalCount = $true
+                    ServiceNowSession = $ServiceNowSession
+                }
+
+                # suppress warning when getting total count
+                $MRVSOut = Get-ServiceNowRecord @MRVSParams -WarningAction SilentlyContinue
+                $MRVSOut = $MRVSOut | Group-Object row_index
+
+                $record | Add-Member @{
+                    'MRVS' = @()
+                }
+
+                foreach ($MRVSRow in $MRVSOut) {
+                    $flattenMRVSresult = [pscustomobject] @{
+                        'row_index' = $MRVSRow.name
+                    }
+
+                    $MRVSRow.group | ForEach-Object {
+                        if ($_.'sc_item_option.item_option_new.name') {
+                            $flattenMRVSresult | Add-Member -Name $_.'sc_item_option.item_option_new.name' -Value $_.value -member NoteProperty
+                        } else {
+                            $flattenMRVSresult | Add-Member -Name $_.'sc_item_option.item_option_new.sys_name' -Value $_.value -member NoteProperty
+                        }
+
+                        $flattenMRVSresult | Add-Member -Name 'variable_set' -Value $_.'sc_item_option.item_option_new.variable_set' -member NoteProperty -Force
+
+                        # show the underlying value if the option is a reference type
+                        if ($_.'sc_item_option.item_option_new.type' -eq 'Reference') {
+                            #do not do any further lookup when the value is blank or null
+                            #resolves #234 and #262
+                            if ($_.'value' -eq "" -or $null -eq $_.'value') {
+                                continue
+                            }
+                            $sysidPattern = "[0-9a-fA-F]{32}"
+                            $sysid = [Regex]::Matches($_.'value', $sysidPattern).Value
+                            if ($sysid) {
+                                Write-Verbose "Custom variable lookup for $($flattenMRVSresult.name) from table '$($_.'sc_item_option.item_option_new.reference')' sysid:'$($_.'value')'"
+                                # issue 234.  ID might not be sysid or number for reference...odd
+                                $refValue = Get-ServiceNowRecord -Table $_.'sc_item_option.item_option_new.reference' -ID $_.'value' -Property name -AsValue -ServiceNowSession $ServiceNowSession -ErrorAction SilentlyContinue
+                                if ($refValue) {
+                                    if ($_.'sc_item_option.item_option_new.name') {
+                                        # Prefix the name onto the ReferenceTable/ReferenceID values when there are multiple references used in an MRVS
+                                        $flattenMRVSresult | Add-Member @{"$($_.'sc_item_option.item_option_new.name')_ReferenceTable" = $_.'sc_item_option.item_option_new.reference' }
+                                        $flattenMRVSresult | Add-Member @{"$($_.'sc_item_option.item_option_new.name')_ReferenceID" = $_.'value' }
+                                        # Rewrite the value to be the retrieved name from the reference ID
+                                        $flattenMRVSresult | Add-Member -Name $_.'sc_item_option.item_option_new.name' -Value $refValue -member NoteProperty -Force
+                                    } else {
+                                        # Prefix the name onto the ReferenceTable/ReferenceID values when there are multiple references used in an MRVS
+                                        $flattenMRVSresult | Add-Member @{"$($_.'sc_item_option.item_option_new.sys_name')_ReferenceTable" = $_.'sc_item_option.item_option_new.reference' }
+                                        $flattenMRVSresult | Add-Member @{"$($_.'sc_item_option.item_option_new.sys_name')_ReferenceID" = $_.'value' }
+                                        # Rewrite the value to be the retrieved name from the reference ID
+                                        $flattenMRVSresult | Add-Member -Name $_.'sc_item_option.item_option_new.sys_name' -Value $refValue -member NoteProperty -Force
+                                    }
+                                }
+                            }
+
+                        }
+                    }
+
+                    $record.MRVS += $flattenMRVSresult
+                }
+
+                if ( $addedSysIdProp ) {
+                    $record | Select-Object -Property * -ExcludeProperty sys_id
+                } else {
+                    $record
+                }
+            }
+        }
+
         if ( $IncludeCustomVariable ) {
 
             # for each record, get the variable names and then get the variable values
@@ -391,11 +480,11 @@ function Get-ServiceNowRecord {
                             $newVar | Add-Member @{'ReferenceID' = $var.'sc_item_option.value' }
                             # issue 234.  ID might not be sysid or number for reference...odd
                             $refValue = Get-ServiceNowRecord -Table $var.'sc_item_option.item_option_new.reference' -ID $var.'sc_item_option.value' -Property name -AsValue -ServiceNowSession $ServiceNowSession -ErrorAction SilentlyContinue
-                           if ( $refValue ) {
-                               $newVar.Value = $refValue
-                           }
-                   }
-                        
+                            if ( $refValue ) {
+                                $newVar.Value = $refValue
+                            }
+                        }
+
                     }
 
                     if ( $var.'sc_item_option.item_option_new.name' ) {
