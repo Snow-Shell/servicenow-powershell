@@ -56,9 +56,9 @@
     You can get the value with $return.CustomVariable.CustomVarName.Value.
 
 .PARAMETER IncludeMRVS
-    Include custom variables in the return object.
-    Some records may have associated custom variables, some may not.
-    For instance, an RITM may have custom variables, but the associated tasks may not.
+    Include variable sets in the return object.
+    Some records may have associated variable sets, some may not.
+    For instance, an RITM may have variable sets, but the associated tasks may not.
     A property named 'MRVS' will be added to the return object.
     You can get the value with $return.MRVS.
 
