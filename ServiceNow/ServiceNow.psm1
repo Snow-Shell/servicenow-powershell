@@ -37,7 +37,7 @@ $tableLookupArgCompleterSb = {
     }
 }
 
-Register-ArgumentCompleter -CommandName 'New-ServiceNowCatalogItem' -ParameterName 'CatalogItem' -ScriptBlock $tableLookupArgCompleterSb
+Register-ArgumentCompleter -CommandName 'New-ServiceNowCartItem' -ParameterName 'CatalogItem' -ScriptBlock $tableLookupArgCompleterSb
 
 $tableArgCompleterSb = {
     $ServiceNowTable | ForEach-Object {
