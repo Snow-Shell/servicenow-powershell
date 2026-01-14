@@ -73,6 +73,8 @@
 #>
 function New-ServiceNowCartItem {
     [CmdletBinding(SupportsShouldProcess)]
+    [Alias('Add-ServiceNowCartItem')]
+
     param
     (
         [Parameter(Mandatory, ValueFromPipeline)]
