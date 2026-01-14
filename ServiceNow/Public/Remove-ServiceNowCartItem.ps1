@@ -46,7 +46,7 @@ function Remove-ServiceNowCartItem {
     (
         [Parameter(Mandatory, ValueFromPipeline, ParameterSetName = 'ByCatalogItemId')]
         [ValidateScript( {
-                if ($_ -match '^[a-zA-Z0-9]{32}$') {
+                if ($_ | Test-ServiceNowSysId) {
                     $true
                 }
                 else {
@@ -60,7 +60,7 @@ function Remove-ServiceNowCartItem {
         
         [Parameter(ParameterSetName = 'All')]
         [ValidateScript( {
-                if ($_ -match '^[a-zA-Z0-9]{32}$') {
+                if ($_ | Test-ServiceNowSysId) {
                     $true
                 }
                 else {

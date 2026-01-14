@@ -46,9 +46,24 @@
     Add multiple catalog items to the cart
 
 .EXAMPLE
-    New-ServiceNowCartItem -CatalogItem "04b7e94b4f7b42000086eeed18110c7fd" -ItemValues @{'acrobat' = 'true'; 'photoshop' = 'true'; ' Additional_software_requirements' = 'Testing Service catalog API' }
+    New-ServiceNowCartItem -CatalogItem "Standard Laptop" -PassThru
 
-    Raise a new catalog request using Item ID
+    Add a catalog item to the cart and return the cart details
+
+.EXAMPLE
+    New-ServiceNowCartItem -CatalogItem "Standard Laptop" -PassThru -Checkout
+
+    Add a catalog item to the cart, checkout to create the order, and return the order details
+
+.EXAMPLE
+    'Packaging and Shipping' | New-ServiceNowCartItem -ItemValues @{'type'='Inter-office';'parcel_details'='fragile'}
+
+    Add a catalog item to the cart with mandatory values
+
+.EXAMPLE
+    New-ServiceNowCartItem -CatalogItem 'ce40793b53d6ba10295d38e0a0490e86'
+
+    Add a catalog item to the cart using its sys_id
 
 .INPUTS
     CatalogItem
@@ -81,7 +96,7 @@ function New-ServiceNowCartItem {
     )
 
     process {
-        if ($CatalogItem -match '^[a-zA-Z0-9]{32}$') {
+        if ($CatalogItem | Test-ServiceNowSysId ) {
             #Verify the sys_id of the Catalog Item
             $catalogItemID = Get-ServiceNowRecord -Table sc_cat_item -AsValue -ID $CatalogItem -Property sys_id
         }

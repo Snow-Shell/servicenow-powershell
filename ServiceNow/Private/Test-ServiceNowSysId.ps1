@@ -25,14 +25,14 @@ function Test-ServiceNowSysId {
     param (
         [Parameter(Mandatory, ValueFromPipeline)]
         [AllowEmptyString()]
-        [string] $Value
+        [string] $InputObject
     )
 
     process {
-        if ([string]::IsNullOrEmpty($Value)) {
+        if ([string]::IsNullOrEmpty($InputObject)) {
             return $false
         }
 
-        return $Value -match '^[a-zA-Z0-9]{32}$'
+        return $InputObject -match '^[a-zA-Z0-9]{32}$'
     }
 }
