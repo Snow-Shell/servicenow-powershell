@@ -5,15 +5,15 @@
 .DESCRIPTION
     Validates that a string matches the ServiceNow sys_id format of a 32-character alphanumeric string
 
-.PARAMETER Value
+.PARAMETER InputObject
     The string value to test
 
 .EXAMPLE
-    Test-ServiceNowSysId -Value '9d385017c611228701d22104cc95c371'
+    Test-ServiceNowSysId -InputObject '9d385017c611228701d22104cc95c371'
     Returns $true
 
 .EXAMPLE
-    Test-ServiceNowSysId -Value 'INC0010001'
+    Test-ServiceNowSysId -InputObject 'INC0010001'
     Returns $false
 
 .OUTPUTS
