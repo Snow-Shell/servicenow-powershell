@@ -76,7 +76,9 @@ FunctionsToExport = 'New-ServiceNowConfigurationItem', 'Get-ServiceNowRecord',
                'New-ServiceNowQuery', 'New-ServiceNowRecord',
                'Remove-ServiceNowAttachment', 'Remove-ServiceNowRecord',
                'Update-ServiceNowRecord', 'Export-ServiceNowRecord',
-               'Invoke-ServiceNowGraphQL', 'New-ServiceNowChangeTask'
+               'Invoke-ServiceNowGraphQL', 'New-ServiceNowChangeTask',
+               'Get-ServiceNowCart', 'New-ServiceNowCartItem',
+               'Remove-ServiceNowCartItem', 'Submit-ServiceNowCart'
 
 # Cmdlets to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no cmdlets to export.
 CmdletsToExport = @()
@@ -85,7 +87,7 @@ CmdletsToExport = @()
 VariablesToExport = 'ServiceNowSession', 'ServiceNowOperator', 'ServiceNowTable'
 
 # Aliases to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no aliases to export.
-AliasesToExport = 'gsnr'
+AliasesToExport = 'gsnr', 'Add-ServiceNowCartItem'
 
 # DSC resources to export from this module
 # DscResourcesToExport = @()
