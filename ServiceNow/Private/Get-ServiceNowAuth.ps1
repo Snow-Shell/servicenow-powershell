@@ -15,10 +15,6 @@ function Get-ServiceNowAuth {
 
     param (
         [Parameter()]
-        [Alias('C')]
-        [hashtable] $Connection,
-
-        [Parameter()]
         [Alias('N')]
         [string] $Namespace = 'now',
 
@@ -83,12 +79,12 @@ function Get-ServiceNowAuth {
                     $hashOut.ProxyUseDefaultCredentials = $true
                 }
             }
-        } elseif ( $Connection ) {
-            Write-Verbose 'connection'
-            # issue 248
-            $pair = '{0}:{1}' -f $Connection.Username, $Connection.Password
-            $hashOut.Headers = @{ Authorization = 'Basic ' + [System.Convert]::ToBase64String([System.Text.Encoding]::ASCII.GetBytes($pair)) }
-            $hashOut.Uri = 'https://{0}/api/{1}/v1' -f $Connection.ServiceNowUri, $Namespace
+        # } elseif ( $Connection ) {
+        #     Write-Verbose 'connection'
+        #     # issue 248
+        #     $pair = '{0}:{1}' -f $Connection.Username, $Connection.Password
+        #     $hashOut.Headers = @{ Authorization = 'Basic ' + [System.Convert]::ToBase64String([System.Text.Encoding]::ASCII.GetBytes($pair)) }
+        #     $hashOut.Uri = 'https://{0}/api/{1}/v1' -f $Connection.ServiceNowUri, $Namespace
         } elseif ( $env:SNOW_SERVER ) {
             $hashOut.Uri = 'https://{0}/api/{1}' -f $env:SNOW_SERVER, $Namespace
             if ( $env:SNOW_TOKEN ) {

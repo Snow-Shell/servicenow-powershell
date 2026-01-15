@@ -234,9 +234,6 @@ function Get-ServiceNowRecord {
         [switch] $AsValue,
 
         [Parameter()]
-        [hashtable] $Connection,
-
-        [Parameter()]
         [hashtable] $ServiceNowSession = $script:ServiceNowSession
     )
 
@@ -253,7 +250,7 @@ function Get-ServiceNowRecord {
             First             = $PSCmdlet.PagingParameters.First
             Skip              = $PSCmdlet.PagingParameters.Skip
             IncludeTotalCount = $PSCmdlet.PagingParameters.IncludeTotalCount
-            Connection        = $Connection
+            Connection        =
             ServiceNowSession = $ServiceNowSession
         }
 
@@ -395,7 +392,7 @@ function Get-ServiceNowRecord {
                                $newVar.Value = $refValue
                            }
                    }
-                        
+
                     }
 
                     if ( $var.'sc_item_option.item_option_new.name' ) {

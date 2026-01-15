@@ -113,9 +113,6 @@ function New-ServiceNowChangeRequest {
         [hashtable] $CustomField,
 
         [Parameter()]
-        [Hashtable] $Connection,
-
-        [Parameter()]
         [hashtable] $ServiceNowSession = $script:ServiceNowSession,
 
         [Parameter()]
@@ -159,7 +156,7 @@ function New-ServiceNowChangeRequest {
         $params = @{
             Table             = 'change_request'
             Values            = $values
-            Connection        = $Connection
+            Connection        =
             ServiceNowSession = $ServiceNowSession
             PassThru          = $true
         }

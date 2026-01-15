@@ -97,9 +97,6 @@ function New-ServiceNowIncident {
         [hashtable] $CustomField,
 
         [Parameter()]
-        [Hashtable] $Connection,
-
-        [Parameter()]
         [hashtable] $ServiceNowSession = $script:ServiceNowSession,
 
         [Parameter()]
@@ -142,7 +139,7 @@ function New-ServiceNowIncident {
         $params = @{
             Table             = 'incident'
             Values            = $values
-            Connection        = $Connection
+            Connection        =
             ServiceNowSession = $ServiceNowSession
             PassThru          = $true
         }

@@ -33,9 +33,6 @@ Function Get-ServiceNowAttachment {
     Array or multidimensional array of fields to sort on.
     Each array should be of the format @(field, asc/desc).
 
-    .PARAMETER Connection
-    Azure Automation Connection object containing username, password, and URL for the ServiceNow instance
-
     .PARAMETER ServiceNowSession
     ServiceNow session created by New-ServiceNowSession.  Will default to script-level variable $ServiceNowSession.
 
@@ -92,9 +89,6 @@ Function Get-ServiceNowAttachment {
         [object[]] $Sort,
 
         [Parameter()]
-        [Hashtable] $Connection,
-
-        [Parameter()]
         [hashtable] $ServiceNowSession = $script:ServiceNowSession
     )
 
@@ -104,14 +98,14 @@ Function Get-ServiceNowAttachment {
             First             = $PSCmdlet.PagingParameters.First
             Skip              = $PSCmdlet.PagingParameters.Skip
             IncludeTotalCount = $PSCmdlet.PagingParameters.IncludeTotalCount
-            Connection        = $Connection
+            Connection        =
             ServiceNowSession = $ServiceNowSession
         }
     }
 
     process	{
 
-        $thisTable, $thisID = Invoke-TableIdLookup -T $Table -I $ID -AsSysId -C $Connection -S $ServiceNowSession
+        $thisTable, $thisID = Invoke-TableIdLookup -T $Table -I $ID -AsSysId -S $ServiceNowSession
 
         $params.Filter = @('table_name', '-eq', $thisTable.Name), 'and', @('table_sys_id', '-eq', $thisID)
 

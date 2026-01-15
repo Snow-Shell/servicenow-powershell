@@ -64,9 +64,6 @@ function New-ServiceNowChangeTask {
         [hashtable] $CustomField,
 
         [Parameter()]
-        [Hashtable] $Connection,
-
-        [Parameter()]
         [hashtable] $ServiceNowSession = $script:ServiceNowSession,
 
         [Parameter()]
@@ -114,7 +111,7 @@ function New-ServiceNowChangeTask {
             Method            = 'Post'
             Table             = 'change_task'
             Values            = $createValues
-            Connection        = $Connection
+            Connection        =
             ServiceNowSession = $ServiceNowSession
         }
 

@@ -44,15 +44,12 @@ function Remove-ServiceNowRecord {
         [string] $ID,
 
         [Parameter()]
-        [Hashtable] $Connection,
-
-        [Parameter()]
         [hashtable] $ServiceNowSession = $script:ServiceNowSession
     )
 
     process {
 
-        $thisTable, $thisID = Invoke-TableIdLookup -T $Table -I $ID -AsSysId -C $Connection -S $ServiceNowSession
+        $thisTable, $thisID = Invoke-TableIdLookup -T $Table -I $ID -AsSysId -S $ServiceNowSession
 
         If ($PSCmdlet.ShouldProcess("$($thisTable.ClassName) $ID", 'Remove record')) {
 
@@ -60,7 +57,7 @@ function Remove-ServiceNowRecord {
                 Method            = 'Delete'
                 Table             = $thisTable.Name
                 SysId             = $thisID
-                Connection        = $Connection
+
                 ServiceNowSession = $ServiceNowSession
             }
 

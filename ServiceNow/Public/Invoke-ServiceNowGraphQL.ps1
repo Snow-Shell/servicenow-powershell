@@ -69,9 +69,6 @@ function Invoke-ServiceNowGraphQL {
         [switch] $Raw,
 
         [Parameter()]
-        [hashtable] $Connection,
-
-        [Parameter()]
         [hashtable] $ServiceNowSession = $script:ServiceNowSession
     )
 
@@ -85,7 +82,7 @@ function Invoke-ServiceNowGraphQL {
             $fullQuery = ('{0} {{ {1} {{ {2} {{ {3} }}}}}}' -f $Operation, $Application, $Schema, $Query)
         }
 
-        $params = Get-ServiceNowAuth -C $Connection -S $ServiceNowSession
+        $params = Get-ServiceNowAuth -S $ServiceNowSession
 
         $params.Method = 'Post'
         $params.ContentType = 'application/json'

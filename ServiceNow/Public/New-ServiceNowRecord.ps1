@@ -50,9 +50,6 @@ function New-ServiceNowRecord {
         [hashtable] $InputData,
 
         [Parameter()]
-        [Hashtable] $Connection,
-
-        [Parameter()]
         [hashtable] $ServiceNowSession = $script:ServiceNowSession,
 
         [Parameter()]
@@ -65,7 +62,7 @@ function New-ServiceNowRecord {
             Method            = 'Post'
             Table             = $Table
             Values            = $InputData
-            Connection        = $Connection
+            Connection        =
             ServiceNowSession = $ServiceNowSession
         }
 

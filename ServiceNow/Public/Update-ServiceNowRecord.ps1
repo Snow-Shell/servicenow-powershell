@@ -89,15 +89,12 @@ function Update-ServiceNowRecord {
         [switch] $PassThru,
 
         [Parameter()]
-        [Hashtable] $Connection,
-
-        [Parameter()]
         [hashtable] $ServiceNowSession = $script:ServiceNowSession
     )
 
     process {
 
-        $thisTable, $thisID = Invoke-TableIdLookup -T $Table -I $ID -AsSysId -C $Connection -S $ServiceNowSession
+        $thisTable, $thisID = Invoke-TableIdLookup -T $Table -I $ID -AsSysId -S $ServiceNowSession
 
         If (-not $PSCmdlet.ShouldProcess("$($thisTable.ClassName) $ID", 'Update values')) {
             return
@@ -117,7 +114,7 @@ function Update-ServiceNowRecord {
                 Table             = $thisTable.Name
                 SysId             = $thisID
                 Values            = $InputData
-                Connection        = $Connection
+
                 ServiceNowSession = $ServiceNowSession
             }
 
@@ -126,7 +123,7 @@ function Update-ServiceNowRecord {
 
         if ( $PSBoundParameters.ContainsKey('CustomVariableData') ) {
 
-            $customVarsOut = Get-ServiceNowRecord -Table $thisTable.Name -ID $thisID -IncludeCustomVariable -Property sys_id, number -Connection $Connection -ServiceNowSession $ServiceNowSession | Select-Object -ExpandProperty CustomVariable
+            $customVarsOut = Get-ServiceNowRecord -Table $thisTable.Name -ID $thisID -IncludeCustomVariable -Property sys_id, number -ServiceNowSession $ServiceNowSession | Select-Object -ExpandProperty CustomVariable
 
             foreach ($key in $CustomVariableData.Keys) {
 
@@ -138,7 +135,7 @@ function Update-ServiceNowRecord {
                         Table             = 'sc_item_option'
                         SysId             = $thisCustomVar.SysId
                         Values            = @{'value' = $CustomVariableData[$key] }
-                        Connection        = $Connection
+
                         ServiceNowSession = $ServiceNowSession
                     }
                     $null = Invoke-ServiceNowRestMethod @params
@@ -151,7 +148,7 @@ function Update-ServiceNowRecord {
 
         if ( $PassThru ) {
             if ( $PSBoundParameters.ContainsKey('CustomVariableData') ) {
-                $response = Get-ServiceNowRecord -Table $thisTable.Name -ID $thisID -IncludeCustomVariable -Connection $Connection -ServiceNowSession $ServiceNowSession
+                $response = Get-ServiceNowRecord -Table $thisTable.Name -ID $thisID -IncludeCustomVariable -ServiceNowSession $ServiceNowSession
             }
 
             if ($thisTable.Type) {

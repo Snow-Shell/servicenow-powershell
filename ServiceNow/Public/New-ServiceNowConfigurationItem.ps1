@@ -39,7 +39,7 @@
 #>
 function New-ServiceNowConfigurationItem {
 
-    [CmdletBinding(DefaultParameterSetName = 'Session', SupportsShouldProcess)]
+    [CmdletBinding(SupportsShouldProcess)]
 
     Param(
 
@@ -61,11 +61,7 @@ function New-ServiceNowConfigurationItem {
         [Parameter()]
         [switch] $PassThru,
 
-        [Parameter(ParameterSetName = 'UseConnectionObject', Mandatory)]
-        [ValidateNotNullOrEmpty()]
-        [Hashtable] $Connection,
-
-        [Parameter(ParameterSetName = 'Session')]
+        [Parameter()]
         [ValidateNotNullOrEmpty()]
         [hashtable] $ServiceNowSession = $script:ServiceNowSession
     )
@@ -109,13 +105,7 @@ function New-ServiceNowConfigurationItem {
             Table    = 'cmdb_ci'
             Values   = $TableEntryValues
             PassThru = $true
-        }
-
-        if ($ServiceNowSession) {
-            $params.ServiceNowSession = $ServiceNowSession
-        }
-        else {
-            $params.Connection = $Connection
+            ServiceNowSession = $ServiceNowSession
         }
 
         If ( $PSCmdlet.ShouldProcess($Name, 'Create new configuration item') ) {
