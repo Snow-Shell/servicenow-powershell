@@ -101,6 +101,7 @@ function New-ServiceNowSession {
 
         [Parameter(Mandatory, ParameterSetName = 'OAuth')]
         [Parameter(Mandatory, ParameterSetName = 'OAuthProxy')]
+        [Parameter(Mandatory, ParameterSetName = 'OAuthClientCredential')]
         [System.Management.Automation.PSCredential] $ClientCredential,
 
         [Parameter(Mandatory, ParameterSetName = 'AccessToken')]
@@ -160,19 +161,32 @@ function New-ServiceNowSession {
     }
 
     $script:PSDefaultParameterValues['Invoke-WebRequest:TimeoutSec'] = $TimeoutSec
-    $script:PSDefaultParameterValues['Invoke-RestMethodt:TimeoutSec'] = $TimeoutSec
+    $script:PSDefaultParameterValues['Invoke-RestMethod:TimeoutSec'] = $TimeoutSec
 
     switch -Wildcard ($PSCmdLet.ParameterSetName) {
         'OAuth*' {
+            # Determine OAuth grant type and build request body
+            $oauthBody = @{
+                'client_id'     = $ClientCredential.UserName
+                'client_secret' = $ClientCredential.GetNetworkCredential().Password
+            }
+
+            if ($PSCmdLet.ParameterSetName -eq 'OAuthClientCredential') {
+                # Client Credentials Grant (machine-to-machine)
+                $oauthBody['grant_type'] = 'client_credentials'
+                $grantType = 'client_credentials'
+            }
+            else {
+                # Password Grant (user credentials)
+                $oauthBody['grant_type'] = 'password'
+                $oauthBody['username'] = $Credential.UserName
+                $oauthBody['password'] = $Credential.GetNetworkCredential().Password
+                $grantType = 'password'
+            }
+
             $params = @{
                 Uri             = 'https://{0}/oauth_token.do' -f $Url
-                Body            = @{
-                    'grant_type'    = 'password'
-                    'client_id'     = $ClientCredential.UserName
-                    'client_secret' = $ClientCredential.GetNetworkCredential().Password
-                    'username'      = $Credential.UserName
-                    'password'      = $Credential.GetNetworkCredential().Password
-                }
+                Body            = $oauthBody
                 Method          = 'Post'
                 UseBasicParsing = $true
             }
@@ -198,18 +212,24 @@ function New-ServiceNowSession {
             if ( $response.Content ) {
                 $token = $response.Content | ConvertFrom-Json
                 $newSession.Add('AccessToken', (New-Object System.Management.Automation.PSCredential('AccessToken', ($token.access_token | ConvertTo-SecureString -AsPlainText -Force))))
-                $newSession.Add('RefreshToken', (New-Object System.Management.Automation.PSCredential('RefreshToken', ($token.refresh_token | ConvertTo-SecureString -AsPlainText -Force))))
+                
+                # Password grant returns refresh_token, client credentials does not
+                if ($token.refresh_token) {
+                    $newSession.Add('RefreshToken', (New-Object System.Management.Automation.PSCredential('RefreshToken', ($token.refresh_token | ConvertTo-SecureString -AsPlainText -Force))))
+                }
+
                 if ($token.expires_in) {
                     $expiryTime = (Get-Date).AddSeconds($token.expires_in)
                     $newSession.Add('ExpiresOn', $expiryTime)
                     Write-Verbose "Access token will expire at $expiryTime"
                 }
-                # store client credential as it will be needed to refresh the access token
-                $newSession.Add('ClientCredential', $ClientCredential)
 
+                # Store credentials and grant type for token refresh
+                $newSession.Add('ClientCredential', $ClientCredential)
+                $newSession.Add('GrantType', $grantType)
             } else {
                 # invoke-webrequest didn't throw an error, but we didn't get a token back either
-                throw ('"{0} : {1}' -f $response.StatusCode, $response | Out-String )
+                throw ('{0} : {1}' -f $response.StatusCode, $response | Out-String )
             }
         }
 
