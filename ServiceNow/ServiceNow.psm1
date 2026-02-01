@@ -56,8 +56,6 @@ $propSb = {
         }
 
         $script:tableField.$t | Where-Object { $_ -like ('{0}*' -f $wordToComplete.Trim("'")) } | ForEach-Object {
-            # $itemText = "'{0}'" -f $_
-            # [System.Management.Automation.CompletionResult]::new($_)
             [System.Management.Automation.CompletionResult]::new($_.Name, $_.Name, 'ParameterValue', ('{0}, ex: {1}' -f $_.TypeNameOfValue, $_.Value))
         }
     }

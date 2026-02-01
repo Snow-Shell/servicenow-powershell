@@ -112,7 +112,7 @@ function New-ServiceNowChangeTask {
         }
 
         If ( $PSCmdlet.ShouldProcess($ShortDescription, 'Create new change task') ) {
-            $response = Invoke-ServiceNowWebRequest @params
+            $response = Invoke-ServiceNowRestMethoduest @params
             If ( $PassThru ) {
                 $response.PSObject.TypeNames.Insert(0, "ServiceNow.ChangeTask")
                 $response

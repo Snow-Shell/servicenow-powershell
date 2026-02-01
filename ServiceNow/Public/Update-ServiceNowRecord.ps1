@@ -115,7 +115,7 @@ function Update-ServiceNowRecord {
                 ServiceNowSession = $ServiceNowSession
             }
 
-            $response = Invoke-ServiceNowWebRequest @params
+            $response = Invoke-ServiceNowRestMethoduest @params
         }
 
         if ( $PSBoundParameters.ContainsKey('CustomVariableData') ) {
@@ -135,7 +135,7 @@ function Update-ServiceNowRecord {
 
                         ServiceNowSession = $ServiceNowSession
                     }
-                    $null = Invoke-ServiceNowWebRequest @params
+                    $null = Invoke-ServiceNowRestMethoduest @params
                 }
                 else {
                     Write-Warning ('Custom variable {0} not found' -f $key)

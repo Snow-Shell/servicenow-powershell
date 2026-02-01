@@ -325,7 +325,7 @@ function Get-ServiceNowRecord {
             $thisParams.UriLeaf = '/attachment'
         }
 
-        [array]$result = Invoke-ServiceNowWebRequest @thisParams
+        [array]$result = Invoke-ServiceNowRestMethoduest @thisParams
 
         if ( -not $result ) {
             return

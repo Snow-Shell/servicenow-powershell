@@ -64,7 +64,7 @@ function New-ServiceNowRecord {
 
         If ( $PSCmdlet.ShouldProcess($Table, 'Create new record') ) {
 
-            $response = Invoke-ServiceNowWebRequest @params
+            $response = Invoke-ServiceNowRestMethoduest @params
 
             If ( $PassThru ) {
                 $type = $script:ServiceNowTable | Where-Object { $_.Name -eq $Table -or $_.ClassName -eq $Table } | Select-Object -ExpandProperty Type
