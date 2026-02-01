@@ -12,7 +12,7 @@
 RootModule = 'ServiceNow.psm1'
 
 # Version number of this module.
-ModuleVersion = '4.1.0'
+ModuleVersion = '5.0'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
@@ -27,10 +27,10 @@ Author = 'Greg Brownstein, Rick Arroues, Sam Martin'
 CompanyName = 'None'
 
 # Copyright statement for this module
-Copyright = '(c) 2015-2025 Snow-Shell. All rights reserved.'
+Copyright = '(c) 2015-2026 Snow-Shell. All rights reserved.'
 
 # Description of the functionality provided by this module
-Description = 'Automate against ServiceNow service and asset management.  This module can be used standalone, with Azure Automation, or Docker.'
+Description = 'Automate against ServiceNow service and asset management.  This module can be used standalone or with Docker.'
 
 # Minimum version of the PowerShell engine required by this module
 # PowerShellVersion = ''
@@ -104,7 +104,7 @@ PrivateData = @{
     PSData = @{
 
         # Tags applied to this module. These help with module discovery in online galleries.
-        Tags = 'Azure','Automation','ServiceNow','PSModule'
+        Tags = 'Automation','ServiceNow','PSModule'
 
         # A URL to the license for this module.
         LicenseUri = 'https://github.com/Snow-Shell/servicenow-powershell/blob/master/LICENSE'
