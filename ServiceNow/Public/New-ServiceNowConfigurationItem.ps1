@@ -23,9 +23,6 @@
 .PARAMETER PassThru
     Return the newly created CI
 
-.PARAMETER Connection
-    Azure Automation Connection object containing username, password, and URL for the ServiceNow instance
-
 .PARAMETER ServiceNowSession
     ServiceNow session created by New-ServiceNowSession.  Will default to script-level variable $ServiceNowSession.
 

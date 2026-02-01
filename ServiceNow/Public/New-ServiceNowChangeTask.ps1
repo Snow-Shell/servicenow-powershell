@@ -24,9 +24,6 @@ function New-ServiceNowChangeTask {
     .PARAMETER CustomField
         Other key/value pairs to create the task which are not one of the existing parameters
 
-    .PARAMETER Connection
-        Azure Automation Connection object containing username, password, and URL for the ServiceNow instance
-
     .PARAMETER PassThru
         Return the newly created item details
 
@@ -111,12 +108,11 @@ function New-ServiceNowChangeTask {
             Method            = 'Post'
             Table             = 'change_task'
             Values            = $createValues
-            Connection        =
             ServiceNowSession = $ServiceNowSession
         }
 
         If ( $PSCmdlet.ShouldProcess($ShortDescription, 'Create new change task') ) {
-            $response = Invoke-ServiceNowRestMethod @params
+            $response = Invoke-ServiceNowWebRequest @params
             If ( $PassThru ) {
                 $response.PSObject.TypeNames.Insert(0, "ServiceNow.ChangeTask")
                 $response

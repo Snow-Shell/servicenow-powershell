@@ -98,7 +98,6 @@ Function Get-ServiceNowAttachment {
             First             = $PSCmdlet.PagingParameters.First
             Skip              = $PSCmdlet.PagingParameters.Skip
             IncludeTotalCount = $PSCmdlet.PagingParameters.IncludeTotalCount
-            Connection        =
             ServiceNowSession = $ServiceNowSession
         }
     }

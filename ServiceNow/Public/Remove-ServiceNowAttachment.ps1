@@ -42,7 +42,6 @@ Function Remove-ServiceNowAttachment {
         $params = @{
             Method            = 'Delete'
             UriLeaf           = "/attachment/$SysId"
-            Connection        =
             ServiceNowSession = $ServiceNowSession
         }
 

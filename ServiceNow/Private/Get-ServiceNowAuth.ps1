@@ -97,7 +97,7 @@ function Get-ServiceNowAuth {
                 throw 'A ServiceNow server environment variable has been set, but authentication via SNOW_TOKEN or SNOW_USER/SNOW_PASS was not found'
             }
         } else {
-            throw "You must authenticate by either calling the New-ServiceNowSession cmdlet or passing in an Azure Automation connection object"
+            throw "You must authenticate by calling the New-ServiceNowSession cmdlet"
         }
     }
 

@@ -35,9 +35,6 @@ Generates a new ServiceNow Incident using predefined or other field values
 .PARAMETER ServiceNowSession
 ServiceNow session created by New-ServiceNowSession.  Will default to script-level variable $ServiceNowSession.
 
-.PARAMETER Connection
-    Azure Automation Connection object containing username, password, and URL for the ServiceNow instance
-
 .PARAMETER PassThru
     If provided, the new record will be returned
 
@@ -139,7 +136,6 @@ function New-ServiceNowIncident {
         $params = @{
             Table             = 'incident'
             Values            = $values
-            Connection        =
             ServiceNowSession = $ServiceNowSession
             PassThru          = $true
         }

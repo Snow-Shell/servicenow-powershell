@@ -14,9 +14,6 @@
 .PARAMETER PassThru
     If provided, the new record will be returned
 
-.PARAMETER Connection
-    Azure Automation Connection object containing username, password, and URL for the ServiceNow instance
-
 .PARAMETER ServiceNowSession
     ServiceNow session created by New-ServiceNowSession.  Will default to script-level variable $ServiceNowSession.
 
@@ -62,13 +59,12 @@ function New-ServiceNowRecord {
             Method            = 'Post'
             Table             = $Table
             Values            = $InputData
-            Connection        =
             ServiceNowSession = $ServiceNowSession
         }
 
         If ( $PSCmdlet.ShouldProcess($Table, 'Create new record') ) {
 
-            $response = Invoke-ServiceNowRestMethod @params
+            $response = Invoke-ServiceNowWebRequest @params
 
             If ( $PassThru ) {
                 $type = $script:ServiceNowTable | Where-Object { $_.Name -eq $Table -or $_.ClassName -eq $Table } | Select-Object -ExpandProperty Type

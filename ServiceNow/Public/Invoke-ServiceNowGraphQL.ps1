@@ -26,9 +26,6 @@
 .PARAMETER Raw
     Provide the server response as is instead of parsing out the application, schema, and service names.
 
-.PARAMETER Connection
-    Azure Automation Connection object containing username, password, and URL for the ServiceNow instance
-
 .PARAMETER ServiceNowSession
     ServiceNow session created by New-ServiceNowSession.  Will default to script-level variable $ServiceNowSession.
 

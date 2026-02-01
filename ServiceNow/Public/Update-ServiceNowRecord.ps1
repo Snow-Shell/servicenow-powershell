@@ -23,9 +23,6 @@
 .PARAMETER PassThru
     If provided, the updated record will be returned
 
-.PARAMETER Connection
-    Azure Automation Connection object containing username, password, and URL for the ServiceNow instance
-
 .PARAMETER ServiceNowSession
     ServiceNow session created by New-ServiceNowSession.  Will default to script-level variable $ServiceNowSession.
 
@@ -118,7 +115,7 @@ function Update-ServiceNowRecord {
                 ServiceNowSession = $ServiceNowSession
             }
 
-            $response = Invoke-ServiceNowRestMethod @params
+            $response = Invoke-ServiceNowWebRequest @params
         }
 
         if ( $PSBoundParameters.ContainsKey('CustomVariableData') ) {
@@ -138,7 +135,7 @@ function Update-ServiceNowRecord {
 
                         ServiceNowSession = $ServiceNowSession
                     }
-                    $null = Invoke-ServiceNowRestMethod @params
+                    $null = Invoke-ServiceNowWebRequest @params
                 }
                 else {
                     Write-Warning ('Custom variable {0} not found' -f $key)
