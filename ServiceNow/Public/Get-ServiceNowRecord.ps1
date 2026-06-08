@@ -59,7 +59,7 @@
     Include variable sets in the return object.
     Some records may have associated variable sets, some may not.
     For instance, an RITM may have variable sets, but the associated tasks may not.
-    A property named 'MRVS' will be added to the return object.
+    A property named  will be added to the return object.
     You can get the value with $return.MRVS.
 
 .PARAMETER AsValue
@@ -447,7 +447,7 @@ function Get-ServiceNowRecord {
                 $MRVSOut = $MRVSOut | Group-Object row_index
 
                 $record | Add-Member @{
-                    'MRVS' = [pscustomobject]@{}
+                    'MRVS' = @()
                 }
 
                 foreach ($MRVSRow in $MRVSOut) {
