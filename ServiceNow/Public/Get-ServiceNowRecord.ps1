@@ -456,6 +456,12 @@ function Get-ServiceNowRecord {
                     }
 
                     $MRVSRow.group | ForEach-Object {
+                        if ($_.'sc_item_option.item_option_new.name') {
+                            $flattenMRVSresult | Add-Member -Name $_.'sc_item_option.item_option_new.name' -Value $_.value -member NoteProperty
+                        } else {
+                            $flattenMRVSresult | Add-Member -Name $_.'sc_item_option.item_option_new.sys_name' -Value $_.value -member NoteProperty
+                        }
+
                         $flattenMRVSresult | Add-Member -Name 'variable_set' -Value $_.'sc_item_option.item_option_new.variable_set' -member NoteProperty -Force
 
                         # show the underlying value if the option is a reference type
