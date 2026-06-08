@@ -55,6 +55,13 @@
     A property named 'CustomVariable' will be added to the return object.
     You can get the value with $return.CustomVariable.CustomVarName.Value.
 
+.PARAMETER IncludeMRVS
+    Include variable sets in the return object.
+    Some records may have associated variable sets, some may not.
+    For instance, an RITM may have variable sets, but the associated tasks may not.
+    A property named  will be added to the return object.
+    You can get the value with $return.MRVS.
+
 .PARAMETER AsValue
     Return the underlying value instead of pscustomobject.
     Only valid when the Property parameter is set to 1 item.
@@ -171,7 +178,7 @@ function Get-ServiceNowRecord {
     [CmdletBinding(DefaultParameterSetName = 'Id', SupportsPaging)]
     [Alias('gsnr')]
 
-    Param (
+    param (
         [Parameter(ParameterSetName = 'Table', Mandatory)]
         [Parameter(ParameterSetName = 'TableId', Mandatory)]
         [Parameter(ParameterSetName = 'TableParentId')]
@@ -229,6 +236,9 @@ function Get-ServiceNowRecord {
 
         [Parameter()]
         [switch] $IncludeCustomVariable,
+
+        [Parameter()]
+        [switch] $IncludeMRVS,
 
         [Parameter()]
         [switch] $AsValue,
@@ -333,6 +343,7 @@ function Get-ServiceNowRecord {
         }
 
         [array]$result = Invoke-ServiceNowRestMethod @thisParams
+        Write-Verbose "Received $(($result | Measure-Object).count) records`r`n"
 
         if ( -not $result ) {
             return
@@ -348,6 +359,7 @@ function Get-ServiceNowRecord {
             # for each record, get the variable names and then get the variable values
             foreach ($record in $result) {
 
+                Write-Verbose "Checking $($result.IndexOf($record)) record of results for custom variables`r`n"
                 $recordSysId = if ($DisplayValue -eq 'all') { $record.sys_id.value } else { $record.sys_id }
 
                 # YES_NO = 1; MULTI_LINE_TEXT = 2; MULTIPLE_CHOICE = 3; NUMERIC_SCALE = 4; SELECT_BOX = 5; SINGLE_LINE_TEXT = 6; CHECKBOX = 7; REFERENCE = 8; DATE = 9; DATE_TIME = 10; LABEL = 11; BREAK = 12; MACRO = 14; UI_PAGE = 15; WIDE_SINGLE_LINE_TEXT = 16; MACRO_WITH_LABEL = 17; LOOKUP_SELECT_BOX = 18; CONTAINER_START = 19; CONTAINER_END = 20; LIST_COLLECTOR = 21; LOOKUP_MULTIPLE_CHOICE = 22; HTML = 23; SPLIT = 24; MASKED = 25;
@@ -363,46 +375,129 @@ function Get-ServiceNowRecord {
                 # suppress warning when getting total count
                 $customVarsOut = Get-ServiceNowRecord @customVarParams -WarningAction SilentlyContinue
 
-                $record | Add-Member @{
-                    'CustomVariable' = [pscustomobject]@{}
+                if ($customVarsOut) {
+                    Write-Verbose "Received $(($customVarsOut | Measure-Object).count) CustomVariable results`r`n"
+                    $record | Add-Member @{
+                        'CustomVariable' = [pscustomobject]@{}
+                    }
+
+                    foreach ($var in $customVarsOut) {
+                        $newVar = [pscustomobject] @{
+                            Name        = if ($var.'sc_item_option.item_option_new.name') { $var.'sc_item_option.item_option_new.name' } else { $var.'sc_item_option.item_option_new.sys_name' }
+                            Value       = $var.'sc_item_option.value'
+                            DisplayName = $var.'sc_item_option.item_option_new.question_text'
+                            Type        = $var.'sc_item_option.item_option_new.type'
+                            SysId       = $var.'sc_item_option.sys_id'
+                        }
+
+                        # show the underlying value if the option is a reference type
+                        if ( $newVar.Type -eq 'Reference' ) {
+                            #do not do any further lookup when the value is blank or null
+                            #resolves #234 and 262
+                            if ($var.'sc_item_option.value' -eq "" -or $null -eq $var.'sc_item_option.value') {
+                                continue
+                            }
+                            $sysidPattern = "[0-9a-fA-F]{32}"
+                            $sysid = [Regex]::Matches($var.'sc_item_option.value', $sysidPattern).Value
+                            if ($sysid) {
+                                Write-Verbose "Custom variable lookup for $($newvar.name) from table '$($var.'sc_item_option.item_option_new.reference')' sysid:'$($var.'sc_item_option.value')'"
+                                $newVar | Add-Member @{'ReferenceTable' = $var.'sc_item_option.item_option_new.reference' }
+                                $newVar | Add-Member @{'ReferenceID' = $var.'sc_item_option.value' }
+                                # issue 234.  ID might not be sysid or number for reference...odd
+                                $refValue = Get-ServiceNowRecord -Table $var.'sc_item_option.item_option_new.reference' -ID $var.'sc_item_option.value' -Property name -AsValue -ServiceNowSession $ServiceNowSession -ErrorAction SilentlyContinue
+                                if ( $refValue ) {
+                                    $newVar.Value = $refValue
+                                }
+                            }
+                        }
+
+                        if ( $var.'sc_item_option.item_option_new.name' ) {
+                            $record.CustomVariable | Add-Member @{ $var.'sc_item_option.item_option_new.name' = $newVar }
+                        } else {
+                            $record.CustomVariable | Add-Member @{ $var.'sc_item_option.item_option_new.question_text' = $newVar }
+                        }
+                    }
+
+                    if ( $addedSysIdProp ) {
+                        $record | Select-Object -Property * -ExcludeProperty sys_id
+                    } else {
+                        $record
+                    }
+                } else {
+                    Write-Verbose "No CustomVariable results`r`n"
+                }
+            }
+        }
+
+        if ( $IncludeMRVS ) {
+            foreach ($record in $result) {
+
+                $recordSysId = if ($DisplayValue -eq 'all') { $record.sys_id.value } else { $record.sys_id }
+
+                $MRVSParams = @{
+                    Table             = 'sc_multi_row_question_answer'
+                    Filter            = @('parent_id', '-eq', $recordSysId)
+                    Property          = 'row_index', 'sc_item_option.item_option_new.sys_name', 'sc_item_option.item_option_new.name', 'value', 'sc_item_option.sys_id', 'sc_item_option.item_option_new.type', 'sc_item_option.item_option_new.question_text', 'sc_item_option.item_option_new.reference', 'sc_item_option.item_option_new.variable_set'
+                    IncludeTotalCount = $true
+                    ServiceNowSession = $ServiceNowSession
                 }
 
-                foreach ($var in $customVarsOut) {
-                    $newVar = [pscustomobject] @{
-                        Name        = if ($var.'sc_item_option.item_option_new.name') { $var.'sc_item_option.item_option_new.name' } else { $var.'sc_item_option.item_option_new.sys_name' }
-                        Value       = $var.'sc_item_option.value'
-                        DisplayName = $var.'sc_item_option.item_option_new.question_text'
-                        Type        = $var.'sc_item_option.item_option_new.type'
-                        SysId       = $var.'sc_item_option.sys_id'
+                # suppress warning when getting total count
+                $MRVSOut = Get-ServiceNowRecord @MRVSParams -WarningAction SilentlyContinue
+                $MRVSOut = $MRVSOut | Group-Object row_index
+
+                $record | Add-Member @{
+                    'MRVS' = @()
+                }
+
+                foreach ($MRVSRow in $MRVSOut) {
+                    $flattenMRVSresult = [pscustomobject] @{
+                        'row_index' = $MRVSRow.name
                     }
 
-                    # show the underlying value if the option is a reference type
-                    if ( $newVar.Type -eq 'Reference' ) {
-                        #do not do any further lookup when the value is blank or null
-                        #resolves #234 and 262
-                        if ($var.'sc_item_option.value' -eq "" -or $null -eq $var.'sc_item_option.value') {
-                            continue
+                    $MRVSRow.group | ForEach-Object {
+                        if ($_.'sc_item_option.item_option_new.name') {
+                            $flattenMRVSresult | Add-Member -Name $_.'sc_item_option.item_option_new.name' -Value $_.value -member NoteProperty
+                        } else {
+                            $flattenMRVSresult | Add-Member -Name $_.'sc_item_option.item_option_new.sys_name' -Value $_.value -member NoteProperty
                         }
-                        $sysidPattern = "[0-9a-fA-F]{32}"
-                        $sysid = [Regex]::Matches($var.'sc_item_option.value', $sysidPattern).Value
-                        if ($sysid) {
-                            Write-Verbose "Custom variable lookup for $($newvar.name) from table '$($var.'sc_item_option.item_option_new.reference')' sysid:'$($var.'sc_item_option.value')'"
-                            $newVar | Add-Member @{'ReferenceTable' = $var.'sc_item_option.item_option_new.reference' }
-                            $newVar | Add-Member @{'ReferenceID' = $var.'sc_item_option.value' }
-                            # issue 234.  ID might not be sysid or number for reference...odd
-                            $refValue = Get-ServiceNowRecord -Table $var.'sc_item_option.item_option_new.reference' -ID $var.'sc_item_option.value' -Property name -AsValue -ServiceNowSession $ServiceNowSession -ErrorAction SilentlyContinue
-                           if ( $refValue ) {
-                               $newVar.Value = $refValue
-                           }
-                   }
-                        
+
+                        $flattenMRVSresult | Add-Member -Name 'variable_set' -Value $_.'sc_item_option.item_option_new.variable_set' -member NoteProperty -Force
+
+                        # show the underlying value if the option is a reference type
+                        if ($_.'sc_item_option.item_option_new.type' -eq 'Reference') {
+                            #do not do any further lookup when the value is blank or null
+                            #resolves #234 and #262
+                            if ($_.'value' -eq "" -or $null -eq $_.'value') {
+                                continue
+                            }
+                            $sysidPattern = "[0-9a-fA-F]{32}"
+                            $sysid = [Regex]::Matches($_.'value', $sysidPattern).Value
+                            if ($sysid) {
+                                Write-Verbose "Custom variable lookup for $($flattenMRVSresult.name) from table '$($_.'sc_item_option.item_option_new.reference')' sysid:'$($_.'value')'"
+                                # issue 234.  ID might not be sysid or number for reference...odd
+                                $refValue = Get-ServiceNowRecord -Table $_.'sc_item_option.item_option_new.reference' -ID $_.'value' -Property name -AsValue -ServiceNowSession $ServiceNowSession -ErrorAction SilentlyContinue
+                                if ($refValue) {
+                                    if ($_.'sc_item_option.item_option_new.name') {
+                                        # Prefix the name onto the ReferenceTable/ReferenceID values when there are multiple references used in an MRVS
+                                        $flattenMRVSresult | Add-Member @{"$($_.'sc_item_option.item_option_new.name')_ReferenceTable" = $_.'sc_item_option.item_option_new.reference' }
+                                        $flattenMRVSresult | Add-Member @{"$($_.'sc_item_option.item_option_new.name')_ReferenceID" = $_.'value' }
+                                        # Rewrite the value to be the retrieved name from the reference ID
+                                        $flattenMRVSresult | Add-Member -Name $_.'sc_item_option.item_option_new.name' -Value $refValue -member NoteProperty -Force
+                                    } else {
+                                        # Prefix the name onto the ReferenceTable/ReferenceID values when there are multiple references used in an MRVS
+                                        $flattenMRVSresult | Add-Member @{"$($_.'sc_item_option.item_option_new.sys_name')_ReferenceTable" = $_.'sc_item_option.item_option_new.reference' }
+                                        $flattenMRVSresult | Add-Member @{"$($_.'sc_item_option.item_option_new.sys_name')_ReferenceID" = $_.'value' }
+                                        # Rewrite the value to be the retrieved name from the reference ID
+                                        $flattenMRVSresult | Add-Member -Name $_.'sc_item_option.item_option_new.sys_name' -Value $refValue -member NoteProperty -Force
+                                    }
+                                }
+                            }
+
+                        }
                     }
 
-                    if ( $var.'sc_item_option.item_option_new.name' ) {
-                        $record.CustomVariable | Add-Member @{ $var.'sc_item_option.item_option_new.name' = $newVar }
-                    } else {
-                        $record.CustomVariable | Add-Member @{ $var.'sc_item_option.item_option_new.question_text' = $newVar }
-                    }
+                    $record.MRVS += $flattenMRVSresult
                 }
 
                 if ( $addedSysIdProp ) {
@@ -411,8 +506,12 @@ function Get-ServiceNowRecord {
                     $record
                 }
             }
-        } else {
+        }
 
+        if (-not ($IncludeCustomVariable.IsPresent -or $IncludeMRVS.IsPresent) ) {
+            Write-Verbose "IncludeCustomVariable: $($IncludeCustomVariable.IsPresent)"
+            Write-Verbose "IncludeMRVS: $($IncludeMRVS.IsPresent)"
+            Write-Verbose 'IncludeCustomVariable or IncludeMRVS params not passed'
             # format the results
             if ( $Property ) {
                 if ( $Property.Count -eq 1 -and $AsValue ) {
