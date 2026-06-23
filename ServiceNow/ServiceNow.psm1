@@ -9,6 +9,36 @@ $Script:ServiceNowOperator = $config.FilterOperators
 
 Export-ModuleMember -Variable ServiceNowOperator, ServiceNowTable
 
+$script:catalogItems = [System.Collections.Generic.List[object]]::new()
+
+$tableLookupArgCompleterSb = {
+    param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameters)
+
+    switch ($parameterName) {
+        'CatalogItem' {
+            if ( $script:catalogItems.Count -eq 0 ) {
+                $allItems = Get-ServiceNowRecord -Table sc_cat_item -Property sys_id, name, short_description -IncludeTotalCount -ErrorAction SilentlyContinue -WarningAction SilentlyContinue -ServiceNowSession $script:ServiceNowSession
+                $script:catalogItems.AddRange($allItems)
+            }
+
+            $out = $script:catalogItems
+            if ( $wordToComplete ) {
+                $out = $script:catalogItems | Where-Object {
+                    ($_.sys_id -like ('{0}*' -f $wordToComplete.Trim("'"))) -or
+                    ($_.name -like ('{0}*' -f $wordToComplete.Trim("'")))
+                }
+            }
+            $out | ForEach-Object {
+                $itemText = "'{0}'" -f $_.name
+                $itemDescription = if ($_.short_description) { $_.short_description } else { ' ' }
+                [System.Management.Automation.CompletionResult]::new($itemText, $_.name, 'ParameterValue', $itemDescription)
+            }
+        }
+    }
+}
+
+Register-ArgumentCompleter -CommandName 'New-ServiceNowCartItem' -ParameterName 'CatalogItem' -ScriptBlock $tableLookupArgCompleterSb
+
 $tableArgCompleterSb = {
     $ServiceNowTable | ForEach-Object {
         if ( $_.ClassName ) {
