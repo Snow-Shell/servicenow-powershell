@@ -356,8 +356,9 @@ function Get-ServiceNowRecord {
         if ( -not $Property -and $result[0].PSObject.Properties.name -notcontains 'sys_class_name' ) {
             $result | Add-Member @{'sys_class_name' = $Table }
         }
-        
+
         if ($EnableDotWalking) {
+            $dotWalkResult = [System.Collections.Generic.List[object]]::new()
             foreach ($record in $result) {
                 $newObj = New-Object PSCustomObject
                 foreach ($key in $record.PSObject.Properties.Name) {
@@ -381,8 +382,9 @@ function Get-ServiceNowRecord {
                         $newObj | Add-Member -MemberType NoteProperty -Name $key -Value $value
                     }
                 }
+                $dotWalkResult.Add($newObj)
             }
-            $result = $newObj
+            $result = $dotWalkResult.ToArray()
         }
 
         if ( $IncludeCustomVariable ) {
