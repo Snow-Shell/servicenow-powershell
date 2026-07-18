@@ -7,7 +7,7 @@ Import-Module $ModulePsd -Force
 Describe 'New-ServiceNowSession OAuth Client Credentials Grant' {
 
     BeforeAll {
-        $script:testClientCredential = [PSCredential]::new('myClientId', ('myClientSecret' | ConvertTo-SecureString -AsPlainText -Force))
+        $script:testClientCredential = [PSCredential]::new('myClientId', ([System.Net.NetworkCredential]::new('', 'myClientSecret').SecurePassword))
     }
 
     Context 'Client credentials grant without proxy' {
@@ -61,7 +61,7 @@ Describe 'New-ServiceNowSession OAuth Client Credentials Grant' {
                 }
             }
 
-            $proxyCred = [PSCredential]::new('proxyuser', ('proxypass' | ConvertTo-SecureString -AsPlainText -Force))
+            $proxyCred = [PSCredential]::new('proxyuser', ([System.Net.NetworkCredential]::new('', 'proxypass').SecurePassword))
 
             { New-ServiceNowSession -Url 'test.service-now.com' -ClientCredential $script:testClientCredential -Proxy 'http://proxy.example.com:8080' -ProxyCredential $proxyCred -PassThru } | Should -Not -Throw
         }
@@ -77,7 +77,7 @@ Describe 'New-ServiceNowSession OAuth Client Credentials Grant' {
                 }
             }
 
-            $userCred = [PSCredential]::new('user', ('pass' | ConvertTo-SecureString -AsPlainText -Force))
+            $userCred = [PSCredential]::new('user', ([System.Net.NetworkCredential]::new('', 'pass').SecurePassword))
 
             $session = New-ServiceNowSession -Url 'test.service-now.com' -Credential $userCred -ClientCredential $script:testClientCredential -PassThru
 
@@ -107,7 +107,7 @@ Describe 'Get-ServiceNowAuth Token Refresh Logic' {
                 Domain           = 'test.service-now.com'
                 BaseUri          = 'https://test.service-now.com/api/'
                 Version          = ''
-                ClientCredential = [PSCredential]::new('clientid', ('secret' | ConvertTo-SecureString -AsPlainText -Force))
+                ClientCredential = [PSCredential]::new('clientid', ([System.Net.NetworkCredential]::new('', 'secret').SecurePassword))
                 GrantType        = 'client_credentials'
                 ExpiresOn        = (Get-Date).AddMinutes(-5)
             }
@@ -140,8 +140,8 @@ Describe 'Get-ServiceNowAuth Token Refresh Logic' {
                 Domain           = 'test.service-now.com'
                 BaseUri          = 'https://test.service-now.com/api/'
                 Version          = ''
-                ClientCredential = [PSCredential]::new('clientid', ('secret' | ConvertTo-SecureString -AsPlainText -Force))
-                RefreshToken     = [PSCredential]::new('RefreshToken', ('oldrefresh' | ConvertTo-SecureString -AsPlainText -Force))
+                ClientCredential = [PSCredential]::new('clientid', ([System.Net.NetworkCredential]::new('', 'secret').SecurePassword))
+                RefreshToken     = [PSCredential]::new('RefreshToken', ([System.Net.NetworkCredential]::new('', 'oldrefresh').SecurePassword))
                 GrantType        = 'password'
                 ExpiresOn        = (Get-Date).AddMinutes(-5)
             }
@@ -168,8 +168,8 @@ Describe 'Get-ServiceNowAuth Token Refresh Logic' {
                 Domain           = 'test.service-now.com'
                 BaseUri          = 'https://test.service-now.com/api/'
                 Version          = ''
-                ClientCredential = [PSCredential]::new('clientid', ('secret' | ConvertTo-SecureString -AsPlainText -Force))
-                AccessToken      = [PSCredential]::new('AccessToken', ('staletoken' | ConvertTo-SecureString -AsPlainText -Force))
+                ClientCredential = [PSCredential]::new('clientid', ([System.Net.NetworkCredential]::new('', 'secret').SecurePassword))
+                AccessToken      = [PSCredential]::new('AccessToken', ([System.Net.NetworkCredential]::new('', 'staletoken').SecurePassword))
                 GrantType        = 'password'
                 ExpiresOn        = (Get-Date).AddMinutes(-5)
             }
