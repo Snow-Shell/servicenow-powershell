@@ -149,12 +149,66 @@ function Invoke-ServiceNowRestMethod {
     $oldProgressPreference = $ProgressPreference
     $ProgressPreference = 'SilentlyContinue'
 
-    try {
-        $response = Invoke-WebRequest @params
-        Write-Debug $response
-    } catch {
-        $ProgressPreference = $oldProgressPreference
-        throw $_
+    # Retry configuration from session
+    $retryStatusCodes = @(429, 502, 503, 504, 408, 409)
+    $maxRetries = if ( $ServiceNowSession.ContainsKey('RetryCount') ) { $ServiceNowSession.RetryCount } else { 2 }
+    $retryWait = if ( $ServiceNowSession.ContainsKey('RetryWaitSeconds') ) { $ServiceNowSession.RetryWaitSeconds } else { 5 }
+    $maxRetryAfter = if ( $ServiceNowSession.ContainsKey('MaxRetryAfterSeconds') ) { $ServiceNowSession.MaxRetryAfterSeconds } else { 10 }
+
+    $attempt = 0
+    while ($true) {
+        try {
+            $response = Invoke-WebRequest @params
+            Write-Debug $response
+            break
+        } catch {
+            $attempt++
+            $statusCode = $null
+
+            if ( $_.Exception.Response ) {
+                $statusCode = [int]$_.Exception.Response.StatusCode
+            }
+
+            if ( $statusCode -and $statusCode -in $retryStatusCodes -and $attempt -le $maxRetries ) {
+                Write-Warning "HTTP $statusCode received. Retry attempt $attempt of $maxRetries."
+
+                # Check for Retry-After header
+                $waitSeconds = $retryWait
+                if ( $_.Exception.Response.Headers ) {
+                    $retryAfterValue = $null
+                    try {
+                        if ( $PSVersionTable.PSVersion.Major -lt 6 ) {
+                            $retryAfterValue = $_.Exception.Response.Headers['Retry-After']
+                        } else {
+                            $retryAfterHeader = $_.Exception.Response.Headers.GetValues('Retry-After')
+                            if ( $retryAfterHeader ) {
+                                $retryAfterValue = $retryAfterHeader[0]
+                            }
+                        }
+                    } catch {
+                        # Header not present, use default wait
+                    }
+
+                    if ( $retryAfterValue ) {
+                        $retryAfterSeconds = 0
+                        if ( [int]::TryParse($retryAfterValue, [ref]$retryAfterSeconds) ) {
+                            if ( $retryAfterSeconds -gt $maxRetryAfter ) {
+                                Write-Warning "Server requested Retry-After of $retryAfterSeconds seconds which exceeds maximum of $maxRetryAfter seconds."
+                                $ProgressPreference = $oldProgressPreference
+                                throw $_
+                            }
+                            $waitSeconds = $retryAfterSeconds
+                        }
+                    }
+                }
+
+                Write-Verbose "Waiting $waitSeconds seconds before retry..."
+                Start-Sleep -Seconds $waitSeconds
+            } else {
+                $ProgressPreference = $oldProgressPreference
+                throw $_
+            }
+        }
     }
 
     # validate response
@@ -215,11 +269,28 @@ function Invoke-ServiceNowRestMethod {
             }
 
             Write-Verbose ('getting {0}-{1} of {2}' -f ($params.body.sysparm_offset + 1), $end, $totalRecordCount)
-            try {
-                $response = Invoke-WebRequest @params -Verbose:$false
-            } catch {
-                $ProgressPreference = $oldProgressPreference
-                throw $_
+
+            $pagingAttempt = 0
+            while ($true) {
+                try {
+                    $response = Invoke-WebRequest @params -Verbose:$false
+                    break
+                } catch {
+                    $pagingAttempt++
+                    $pagingStatusCode = $null
+
+                    if ( $_.Exception.Response ) {
+                        $pagingStatusCode = [int]$_.Exception.Response.StatusCode
+                    }
+
+                    if ( $pagingStatusCode -and $pagingStatusCode -in $retryStatusCodes -and $pagingAttempt -le $maxRetries ) {
+                        Write-Warning "HTTP $pagingStatusCode received during paging. Retry attempt $pagingAttempt of $maxRetries."
+                        Start-Sleep -Seconds $retryWait
+                    } else {
+                        $ProgressPreference = $oldProgressPreference
+                        throw $_
+                    }
+                }
             }
 
             $content = $response.content | ConvertFrom-Json

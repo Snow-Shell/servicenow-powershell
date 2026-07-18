@@ -42,6 +42,19 @@ Populate $ServiceNowTable with data from all tables the user has access to
 Timeout in seconds for all operations.
 The default is 0 which represents no timeout.
 
+.PARAMETER RetryCount
+Number of times to retry a request when a retryable HTTP error is received (429, 502, 503, 504, 408, 409).
+The default is 2.
+
+.PARAMETER RetryWaitSeconds
+Number of seconds to wait between retries when no Retry-After header is provided.
+The default is 5.
+
+.PARAMETER MaxRetryAfterSeconds
+Maximum number of seconds to honor from a Retry-After header.
+If the server requests a wait longer than this value, the error will be thrown immediately.
+The default is 10.
+
 .PARAMETER PassThru
 Provide the resulting session object to the pipeline as opposed to setting as a script scoped variable to be used by default for other calls.
 This is useful if you want to have multiple sessions with different api versions, credentials, etc.
@@ -131,6 +144,18 @@ function New-ServiceNowSession {
         [int32] $TimeoutSec = 0,
 
         [Parameter()]
+        [ValidateRange(0, 10)]
+        [int] $RetryCount = 2,
+
+        [Parameter()]
+        [ValidateRange(1, 60)]
+        [int] $RetryWaitSeconds = 5,
+
+        [Parameter()]
+        [ValidateRange(1, 300)]
+        [int] $MaxRetryAfterSeconds = 10,
+
+        [Parameter()]
         [switch] $PassThru
     )
 
@@ -143,9 +168,12 @@ function New-ServiceNowSession {
     }
 
     $newSession = @{
-        Domain  = $Url
-        BaseUri = ('https://{0}/api/' -f $Url)
-        Version = $version
+        Domain              = $Url
+        BaseUri             = ('https://{0}/api/' -f $Url)
+        Version             = $version
+        RetryCount          = $RetryCount
+        RetryWaitSeconds    = $RetryWaitSeconds
+        MaxRetryAfterSeconds = $MaxRetryAfterSeconds
     }
 
     if ( $GraphQL ) {
