@@ -15,10 +15,12 @@ If using OAuth, the client credential will be stored in the script scoped variab
 Base domain for your ServiceNow instance, eg. tenant.domain.com
 
 .PARAMETER Credential
-Username and password to connect.  This can be used standalone to use basic authentication or in conjunction with ClientCredential for OAuth.
+Username and password to connect.  This can be used standalone to use basic authentication or in conjunction with ClientCredential for OAuth password grant.
+Not required when using ClientCredential alone for the OAuth client_credentials grant (machine-to-machine).
 
 .PARAMETER ClientCredential
 Required for OAuth.  Credential where the username is the Client ID and the password is the Secret.
+If provided along with Credential, the OAuth password grant is used.  If provided alone, the OAuth client_credentials grant is used, which does not require user credentials and is useful for machine-to-machine authentication or when MFA is enforced for interactive users.
 
 .PARAMETER AccessToken
 Provide the access token directly if obtained outside of this module.
@@ -71,7 +73,11 @@ Use GraphQL instead of REST.
 
 .EXAMPLE
 New-ServiceNowSession -Url tenant.domain.com -Credential $mycred -ClientCredential $myClientCred
-Create a session using OAuth and save it as the default
+Create a session using OAuth password grant and save it as the default
+
+.EXAMPLE
+New-ServiceNowSession -Url tenant.domain.com -ClientCredential $myClientCred
+Create a session using the OAuth client_credentials grant (machine-to-machine, no user context) and save it as the default
 
 .EXAMPLE
 New-ServiceNowSession -Url tenant.domain.com -AccessToken 'asdfasd9f87adsfkksk3nsnd87g6s'
@@ -114,6 +120,8 @@ function New-ServiceNowSession {
 
         [Parameter(Mandatory, ParameterSetName = 'OAuth')]
         [Parameter(Mandatory, ParameterSetName = 'OAuthProxy')]
+        [Parameter(Mandatory, ParameterSetName = 'OAuthClientCredential')]
+        [Parameter(Mandatory, ParameterSetName = 'OAuthClientCredentialProxy')]
         [System.Management.Automation.PSCredential] $ClientCredential,
 
         [Parameter(Mandatory, ParameterSetName = 'AccessToken')]
@@ -122,11 +130,13 @@ function New-ServiceNowSession {
 
         [Parameter(Mandatory, ParameterSetName = 'BasicAuthProxy')]
         [Parameter(Mandatory, ParameterSetName = 'OAuthProxy')]
+        [Parameter(Mandatory, ParameterSetName = 'OAuthClientCredentialProxy')]
         [Parameter(Mandatory, ParameterSetName = 'AccessTokenProxy')]
         [string] $Proxy,
 
         [Parameter(ParameterSetName = 'BasicAuthProxy')]
         [Parameter(ParameterSetName = 'OAuthProxy')]
+        [Parameter(ParameterSetName = 'OAuthClientCredentialProxy')]
         [Parameter(ParameterSetName = 'AccessTokenProxy')]
         [System.Management.Automation.PSCredential] $ProxyCredential,
 
@@ -188,19 +198,32 @@ function New-ServiceNowSession {
     }
 
     $script:PSDefaultParameterValues['Invoke-WebRequest:TimeoutSec'] = $TimeoutSec
-    $script:PSDefaultParameterValues['Invoke-RestMethodt:TimeoutSec'] = $TimeoutSec
+    $script:PSDefaultParameterValues['Invoke-RestMethod:TimeoutSec'] = $TimeoutSec
 
     switch -Wildcard ($PSCmdLet.ParameterSetName) {
         'OAuth*' {
+            # Determine OAuth grant type and build request body
+            $oauthBody = @{
+                'client_id'     = $ClientCredential.UserName
+                'client_secret' = $ClientCredential.GetNetworkCredential().Password
+            }
+
+            if ($PSCmdLet.ParameterSetName -like 'OAuthClientCredential*') {
+                # Client Credentials Grant (machine-to-machine)
+                $oauthBody['grant_type'] = 'client_credentials'
+                $grantType = 'client_credentials'
+            }
+            else {
+                # Password Grant (user credentials)
+                $oauthBody['grant_type'] = 'password'
+                $oauthBody['username'] = $Credential.UserName
+                $oauthBody['password'] = $Credential.GetNetworkCredential().Password
+                $grantType = 'password'
+            }
+
             $params = @{
                 Uri             = 'https://{0}/oauth_token.do' -f $Url
-                Body            = @{
-                    'grant_type'    = 'password'
-                    'client_id'     = $ClientCredential.UserName
-                    'client_secret' = $ClientCredential.GetNetworkCredential().Password
-                    'username'      = $Credential.UserName
-                    'password'      = $Credential.GetNetworkCredential().Password
-                }
+                Body            = $oauthBody
                 Method          = 'Post'
                 UseBasicParsing = $true
             }
@@ -226,18 +249,24 @@ function New-ServiceNowSession {
             if ( $response.Content ) {
                 $token = $response.Content | ConvertFrom-Json
                 $newSession.Add('AccessToken', (New-Object System.Management.Automation.PSCredential('AccessToken', ($token.access_token | ConvertTo-SecureString -AsPlainText -Force))))
-                $newSession.Add('RefreshToken', (New-Object System.Management.Automation.PSCredential('RefreshToken', ($token.refresh_token | ConvertTo-SecureString -AsPlainText -Force))))
+                
+                # Password grant returns refresh_token, client credentials does not
+                if ($token.refresh_token) {
+                    $newSession.Add('RefreshToken', (New-Object System.Management.Automation.PSCredential('RefreshToken', ($token.refresh_token | ConvertTo-SecureString -AsPlainText -Force))))
+                }
+
                 if ($token.expires_in) {
                     $expiryTime = (Get-Date).AddSeconds($token.expires_in)
                     $newSession.Add('ExpiresOn', $expiryTime)
                     Write-Verbose "Access token will expire at $expiryTime"
                 }
-                # store client credential as it will be needed to refresh the access token
-                $newSession.Add('ClientCredential', $ClientCredential)
 
+                # Store credentials and grant type for token refresh
+                $newSession.Add('ClientCredential', $ClientCredential)
+                $newSession.Add('GrantType', $grantType)
             } else {
                 # invoke-webrequest didn't throw an error, but we didn't get a token back either
-                throw ('"{0} : {1}' -f $response.StatusCode, $response | Out-String )
+                throw ('{0} : {1}' -f $response.StatusCode, $response | Out-String )
             }
         }
 

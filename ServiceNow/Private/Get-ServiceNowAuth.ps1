@@ -34,31 +34,52 @@ function Get-ServiceNowAuth {
             if ($ServiceNowSession.Version) { $hashOut.uri = $hashOut.uri + $ServiceNowSession.Version }
 
             # check if we need a new access token
-            if ( $ServiceNowSession.ExpiresOn -lt (Get-Date) -and $ServiceNowSession.RefreshToken -and $ServiceNowSession.ClientCredential ) {
-                # we've expired and have a refresh token
-                $refreshParams = @{
-                    Uri         = 'https://{0}/oauth_token.do' -f $ServiceNowSession.Domain
-                    Method      = 'POST'
-                    ContentType = 'application/x-www-form-urlencoded'
-                    Body        = @{
-                        grant_type    = 'refresh_token'
-                        client_id     = $ServiceNowSession.ClientCredential.UserName
-                        client_secret = $ServiceNowSession.ClientCredential.GetNetworkCredential().password
-                        refresh_token = $ServiceNowSession.RefreshToken.GetNetworkCredential().password
+            if ( $ServiceNowSession.ExpiresOn -lt (Get-Date) -and $ServiceNowSession.ClientCredential ) {
+                
+                # Build refresh/re-auth body based on grant type
+                $refreshBody = @{
+                    client_id     = $ServiceNowSession.ClientCredential.UserName
+                    client_secret = $ServiceNowSession.ClientCredential.GetNetworkCredential().password
+                }
+
+                if ($ServiceNowSession.GrantType -eq 'client_credentials') {
+                    # Client credentials: re-authenticate (no refresh token available)
+                    $refreshBody['grant_type'] = 'client_credentials'
+                }
+                elseif ($ServiceNowSession.RefreshToken) {
+                    # Password grant: use refresh token
+                    $refreshBody['grant_type'] = 'refresh_token'
+                    $refreshBody['refresh_token'] = $ServiceNowSession.RefreshToken.GetNetworkCredential().password
+                }
+                else {
+                    Write-Warning 'Access token expired but no refresh method available'
+                }
+
+                if ($refreshBody.ContainsKey('grant_type')) {
+                    $refreshParams = @{
+                        Uri         = 'https://{0}/oauth_token.do' -f $ServiceNowSession.Domain
+                        Method      = 'POST'
+                        ContentType = 'application/x-www-form-urlencoded'
+                        Body        = $refreshBody
                     }
+
+                    $response = Invoke-RestMethod @refreshParams
+
+                    $ServiceNowSession.AccessToken = New-Object System.Management.Automation.PSCredential('AccessToken', ($response.access_token | ConvertTo-SecureString -AsPlainText -Force))
+                    
+                    # Update refresh token if provided (password grant only)
+                    if ($response.refresh_token) {
+                         $ServiceNowSession.RefreshToken = New-Object System.Management.Automation.PSCredential('RefreshToken', ($response.refresh_token | ConvertTo-SecureString -AsPlainText -Force))
+                    }
+
+                    if ($response.expires_in) {
+                        $ServiceNowSession.ExpiresOn = (Get-Date).AddSeconds($response.expires_in)
+                        Write-Verbose ('Access token has been refreshed and will expire at {0}' -f $ServiceNowSession.ExpiresOn)
+                    }
+
+                    # ensure script/module scoped variable is updated
+                    $script:ServiceNowSession = $ServiceNowSession
                 }
-
-                $response = Invoke-RestMethod @refreshParams
-
-                $ServiceNowSession.AccessToken = New-Object System.Management.Automation.PSCredential('AccessToken', ($response.access_token | ConvertTo-SecureString -AsPlainText -Force))
-                $ServiceNowSession.RefreshToken = New-Object System.Management.Automation.PSCredential('RefreshToken', ($response.refresh_token | ConvertTo-SecureString -AsPlainText -Force))
-                if ($response.expires_in) {
-                    $ServiceNowSession.ExpiresOn = (Get-Date).AddSeconds($response.expires_in)
-                    Write-Verbose ('Access token has been refreshed and will expire at {0}' -f $ServiceNowSession.ExpiresOn)
-                }
-
-                # ensure script/module scoped variable is updated
-                $script:ServiceNowSession = $ServiceNowSession
             }
 
             if ( $ServiceNowSession.AccessToken ) {
