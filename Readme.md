@@ -89,12 +89,6 @@ $params = @{
 New-ServiceNowIncident @params
 ```
 
-### Azure Connection Object (Automation Integration Module Support)
-
-The module can use the `Connection` parameter in conjunction with the included `ServiceNow-Automation.json` file for use as an Azure automation integration module.  Details of the process is available at [Authoring Integration Modules for Azure Automation](https://azure.microsoft.com/en-us/blog/authoring-integration-modules-for-azure-automation).
-
-The `Connection` parameter accepts a hashtable object that requires a username, password, and ServiceNowURL.
-
 ## Scope & Contributing
 
 Contributions are gratefully received, so please feel free to submit a pull request with additional features or amendments.

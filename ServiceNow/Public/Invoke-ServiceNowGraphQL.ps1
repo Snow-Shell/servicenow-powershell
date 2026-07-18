@@ -26,9 +26,6 @@
 .PARAMETER Raw
     Provide the server response as is instead of parsing out the application, schema, and service names.
 
-.PARAMETER Connection
-    Azure Automation Connection object containing username, password, and URL for the ServiceNow instance
-
 .PARAMETER ServiceNowSession
     ServiceNow session created by New-ServiceNowSession.  Will default to script-level variable $ServiceNowSession.
 
@@ -69,9 +66,6 @@ function Invoke-ServiceNowGraphQL {
         [switch] $Raw,
 
         [Parameter()]
-        [hashtable] $Connection,
-
-        [Parameter()]
         [hashtable] $ServiceNowSession = $script:ServiceNowSession
     )
 
@@ -85,7 +79,7 @@ function Invoke-ServiceNowGraphQL {
             $fullQuery = ('{0} {{ {1} {{ {2} {{ {3} }}}}}}' -f $Operation, $Application, $Schema, $Query)
         }
 
-        $params = Get-ServiceNowAuth -C $Connection -S $ServiceNowSession
+        $params = Get-ServiceNowAuth -S $ServiceNowSession
 
         $params.Method = 'Post'
         $params.ContentType = 'application/json'

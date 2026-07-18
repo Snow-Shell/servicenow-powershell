@@ -39,6 +39,30 @@ $tableLookupArgCompleterSb = {
 
 Register-ArgumentCompleter -CommandName 'New-ServiceNowCartItem' -ParameterName 'CatalogItem' -ScriptBlock $tableLookupArgCompleterSb
 
+
+$script:tableField = @{}
+
+$propSb = {
+    param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameters)
+
+    $t = $fakeBoundParameters.Table
+
+    if ( $t ) {
+        if ( -not $script:tableField.$t) {
+            # first time with this table
+            $tableItem = Get-ServiceNowRecord -Table $t -First 1
+            $properties = $tableItem.psobject.Properties | Select-Object Name, TypeNameOfValue, Value
+            $script:tableField.Add($t, $properties)
+        }
+
+        $script:tableField.$t | Where-Object { $_ -like ('{0}*' -f $wordToComplete.Trim("'")) } | ForEach-Object {
+            [System.Management.Automation.CompletionResult]::new($_.Name, $_.Name, 'ParameterValue', ('{0}, ex: {1}' -f $_.TypeNameOfValue, $_.Value))
+        }
+    }
+}
+
+Register-ArgumentCompleter -CommandName 'Get-ServiceNowRecord' -ParameterName 'Property' -ScriptBlock $propSb
+
 $tableArgCompleterSb = {
     $ServiceNowTable | ForEach-Object {
         if ( $_.ClassName ) {

@@ -24,9 +24,6 @@ function New-ServiceNowChangeTask {
     .PARAMETER CustomField
         Other key/value pairs to create the task which are not one of the existing parameters
 
-    .PARAMETER Connection
-        Azure Automation Connection object containing username, password, and URL for the ServiceNow instance
-
     .PARAMETER PassThru
         Return the newly created item details
 
@@ -62,9 +59,6 @@ function New-ServiceNowChangeTask {
 
         [Parameter()]
         [hashtable] $CustomField,
-
-        [Parameter()]
-        [Hashtable] $Connection,
 
         [Parameter()]
         [hashtable] $ServiceNowSession = $script:ServiceNowSession,
@@ -114,7 +108,6 @@ function New-ServiceNowChangeTask {
             Method            = 'Post'
             Table             = 'change_task'
             Values            = $createValues
-            Connection        = $Connection
             ServiceNowSession = $ServiceNowSession
         }
 

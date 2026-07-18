@@ -32,9 +32,6 @@ Function Remove-ServiceNowAttachment {
         [string] $SysId,
 
         [Parameter()]
-        [Hashtable] $Connection,
-
-        [Parameter()]
         [hashtable] $ServiceNowSession = $script:ServiceNowSession
     )
 
@@ -45,7 +42,6 @@ Function Remove-ServiceNowAttachment {
         $params = @{
             Method            = 'Delete'
             UriLeaf           = "/attachment/$SysId"
-            Connection        = $Connection
             ServiceNowSession = $ServiceNowSession
         }
 

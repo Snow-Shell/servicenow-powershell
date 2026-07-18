@@ -23,9 +23,6 @@
 .PARAMETER PassThru
     Return the newly created CI
 
-.PARAMETER Connection
-    Azure Automation Connection object containing username, password, and URL for the ServiceNow instance
-
 .PARAMETER ServiceNowSession
     ServiceNow session created by New-ServiceNowSession.  Will default to script-level variable $ServiceNowSession.
 
@@ -39,7 +36,7 @@
 #>
 function New-ServiceNowConfigurationItem {
 
-    [CmdletBinding(DefaultParameterSetName = 'Session', SupportsShouldProcess)]
+    [CmdletBinding(SupportsShouldProcess)]
 
     Param(
 
@@ -61,11 +58,7 @@ function New-ServiceNowConfigurationItem {
         [Parameter()]
         [switch] $PassThru,
 
-        [Parameter(ParameterSetName = 'UseConnectionObject', Mandatory)]
-        [ValidateNotNullOrEmpty()]
-        [Hashtable] $Connection,
-
-        [Parameter(ParameterSetName = 'Session')]
+        [Parameter()]
         [ValidateNotNullOrEmpty()]
         [hashtable] $ServiceNowSession = $script:ServiceNowSession
     )
@@ -109,13 +102,7 @@ function New-ServiceNowConfigurationItem {
             Table    = 'cmdb_ci'
             Values   = $TableEntryValues
             PassThru = $true
-        }
-
-        if ($ServiceNowSession) {
-            $params.ServiceNowSession = $ServiceNowSession
-        }
-        else {
-            $params.Connection = $Connection
+            ServiceNowSession = $ServiceNowSession
         }
 
         If ( $PSCmdlet.ShouldProcess($Name, 'Create new configuration item') ) {

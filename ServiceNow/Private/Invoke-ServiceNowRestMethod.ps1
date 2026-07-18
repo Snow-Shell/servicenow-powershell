@@ -70,14 +70,11 @@ function Invoke-ServiceNowRestMethod {
         [string] $DisplayValue = 'true',
 
         [Parameter()]
-        [hashtable] $Connection,
-
-        [Parameter()]
         [hashtable] $ServiceNowSession = $script:ServiceNowSession
     )
 
     # get header/body auth values
-    $params = Get-ServiceNowAuth -C $Connection -S $ServiceNowSession -N $namespace
+    $params = Get-ServiceNowAuth -S $ServiceNowSession -N $namespace
 
     $params.Method = $Method
     $params.ContentType = 'application/json'

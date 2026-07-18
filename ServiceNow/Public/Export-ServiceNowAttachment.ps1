@@ -93,14 +93,11 @@ Function Export-ServiceNowAttachment {
         [switch] $AsValue,
 
         [Parameter()]
-        [Hashtable] $Connection,
-
-        [Parameter()]
         [hashtable] $ServiceNowSession = $script:ServiceNowSession
     )
 
     begin {
-        $authParams = Get-ServiceNowAuth -C $Connection -S $ServiceNowSession
+        $authParams = Get-ServiceNowAuth -S $ServiceNowSession
     }
 
     process	{

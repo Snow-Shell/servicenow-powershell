@@ -26,9 +26,6 @@ Function Add-ServiceNowAttachment {
     .PARAMETER PassThru
     Return the newly created attachment details
 
-    .PARAMETER Connection
-    Azure Automation Connection object containing username, password, and URL for the ServiceNow instance
-
     .PARAMETER ServiceNowSession
     ServiceNow session created by New-ServiceNowSession.  Will default to script-level variable $ServiceNowSession.
 
@@ -105,14 +102,11 @@ Function Add-ServiceNowAttachment {
         [switch] $PassThru,
 
         [Parameter()]
-        [Hashtable] $Connection,
-
-        [Parameter()]
         [hashtable] $ServiceNowSession = $script:ServiceNowSession
     )
 
     begin {
-        $auth = Get-ServiceNowAuth -C $Connection -S $ServiceNowSession
+        $auth = Get-ServiceNowAuth -S $ServiceNowSession
         $params = $auth
         $params.UseBasicParsing = $true
         $params.Method = 'POST'
@@ -120,7 +114,7 @@ Function Add-ServiceNowAttachment {
 
     process	{
 
-        $thisTable, $thisID = Invoke-TableIdLookup -T $Table -I $ID -AsSysId -C $Connection -S $ServiceNowSession
+        $thisTable, $thisID = Invoke-TableIdLookup -T $Table -I $ID -AsSysId -S $ServiceNowSession
 
         foreach ($thisFile in $File) {
 

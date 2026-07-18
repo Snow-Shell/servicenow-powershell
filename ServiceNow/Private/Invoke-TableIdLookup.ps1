@@ -35,11 +35,6 @@ function Invoke-TableIdLookup {
 
         [Parameter(ParameterSetName = 'IdSysId')]
         [Parameter(ParameterSetName = 'TableIdSysId')]
-        [Alias('C')]
-        [hashtable] $Connection,
-
-        [Parameter(ParameterSetName = 'IdSysId')]
-        [Parameter(ParameterSetName = 'TableIdSysId')]
         [Alias('S')]
         [hashtable] $ServiceNowSession
 
@@ -85,7 +80,7 @@ function Invoke-TableIdLookup {
                     Table             = $thisTable.Name
                     Filter            = @('number', '-eq', $ID)
                     Property          = 'sys_class_name', 'sys_id', 'number'
-                    Connection        = $Connection
+
                     ServiceNowSession = $ServiceNowSession
                 }
 
