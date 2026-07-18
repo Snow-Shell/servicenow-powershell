@@ -189,7 +189,7 @@
         },
         {
             "Name": "-endswith",
-            "QueryOperator": "%",
+            "QueryOperator": "ENDSWITH",
             "Description": "field ends with the value",
             "NumValues": 1
         },
