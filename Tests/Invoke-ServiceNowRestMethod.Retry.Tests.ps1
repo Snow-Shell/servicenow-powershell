@@ -7,11 +7,12 @@ Import-Module $ModulePsd -Force
 Describe 'Invoke-ServiceNowRestMethod Retry Logic' {
 
     BeforeAll {
+        $securePassword = [System.Net.NetworkCredential]::new('', 'pass').SecurePassword
         $script:testSession = @{
             Domain              = 'test.service-now.com'
             BaseUri             = 'https://test.service-now.com/api/'
             Version             = ''
-            Credential          = [PSCredential]::new('user', ('pass' | ConvertTo-SecureString -AsPlainText -Force))
+            Credential          = [PSCredential]::new('user', $securePassword)
             RetryCount          = 2
             RetryWaitSeconds    = 1
             MaxRetryAfterSeconds = 10
@@ -157,11 +158,12 @@ Describe 'Invoke-ServiceNowRestMethod Retry Logic' {
     Context 'Retry disabled when RetryCount is 0' {
 
         It 'Throws immediately when RetryCount is 0' {
+            $securePassword = [System.Net.NetworkCredential]::new('', 'pass').SecurePassword
             $noRetrySession = @{
                 Domain              = 'test.service-now.com'
                 BaseUri             = 'https://test.service-now.com/api/'
                 Version             = ''
-                Credential          = [PSCredential]::new('user', ('pass' | ConvertTo-SecureString -AsPlainText -Force))
+                Credential          = [PSCredential]::new('user', $securePassword)
                 RetryCount          = 0
                 RetryWaitSeconds    = 1
                 MaxRetryAfterSeconds = 10
@@ -198,7 +200,8 @@ Describe 'New-ServiceNowSession Retry Parameters' {
     It 'Session includes default retry settings' {
         Mock Invoke-WebRequest -ModuleName 'ServiceNow' {}
 
-        $session = New-ServiceNowSession -Url 'test.service-now.com' -Credential ([PSCredential]::new('user', ('pass' | ConvertTo-SecureString -AsPlainText -Force))) -PassThru
+        $securePassword = [System.Net.NetworkCredential]::new('', 'pass').SecurePassword
+        $session = New-ServiceNowSession -Url 'test.service-now.com' -Credential ([PSCredential]::new('user', $securePassword)) -PassThru
 
         $session.RetryCount | Should -Be 2
         $session.RetryWaitSeconds | Should -Be 5
@@ -208,7 +211,8 @@ Describe 'New-ServiceNowSession Retry Parameters' {
     It 'Session includes custom retry settings' {
         Mock Invoke-WebRequest -ModuleName 'ServiceNow' {}
 
-        $session = New-ServiceNowSession -Url 'test.service-now.com' -Credential ([PSCredential]::new('user', ('pass' | ConvertTo-SecureString -AsPlainText -Force))) -RetryCount 5 -RetryWaitSeconds 10 -MaxRetryAfterSeconds 30 -PassThru
+        $securePassword = [System.Net.NetworkCredential]::new('', 'pass').SecurePassword
+        $session = New-ServiceNowSession -Url 'test.service-now.com' -Credential ([PSCredential]::new('user', $securePassword)) -RetryCount 5 -RetryWaitSeconds 10 -MaxRetryAfterSeconds 30 -PassThru
 
         $session.RetryCount | Should -Be 5
         $session.RetryWaitSeconds | Should -Be 10
