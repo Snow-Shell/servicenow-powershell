@@ -15,10 +15,12 @@ If using OAuth, the client credential will be stored in the script scoped variab
 Base domain for your ServiceNow instance, eg. tenant.domain.com
 
 .PARAMETER Credential
-Username and password to connect.  This can be used standalone to use basic authentication or in conjunction with ClientCredential for OAuth.
+Username and password to connect.  This can be used standalone to use basic authentication or in conjunction with ClientCredential for OAuth password grant.
+Not required when using ClientCredential alone for the OAuth client_credentials grant (machine-to-machine).
 
 .PARAMETER ClientCredential
 Required for OAuth.  Credential where the username is the Client ID and the password is the Secret.
+If provided along with Credential, the OAuth password grant is used.  If provided alone, the OAuth client_credentials grant is used, which does not require user credentials and is useful for machine-to-machine authentication or when MFA is enforced for interactive users.
 
 .PARAMETER AccessToken
 Provide the access token directly if obtained outside of this module.
@@ -58,7 +60,11 @@ Use GraphQL instead of REST.
 
 .EXAMPLE
 New-ServiceNowSession -Url tenant.domain.com -Credential $mycred -ClientCredential $myClientCred
-Create a session using OAuth and save it as the default
+Create a session using OAuth password grant and save it as the default
+
+.EXAMPLE
+New-ServiceNowSession -Url tenant.domain.com -ClientCredential $myClientCred
+Create a session using the OAuth client_credentials grant (machine-to-machine, no user context) and save it as the default
 
 .EXAMPLE
 New-ServiceNowSession -Url tenant.domain.com -AccessToken 'asdfasd9f87adsfkksk3nsnd87g6s'
@@ -102,6 +108,7 @@ function New-ServiceNowSession {
         [Parameter(Mandatory, ParameterSetName = 'OAuth')]
         [Parameter(Mandatory, ParameterSetName = 'OAuthProxy')]
         [Parameter(Mandatory, ParameterSetName = 'OAuthClientCredential')]
+        [Parameter(Mandatory, ParameterSetName = 'OAuthClientCredentialProxy')]
         [System.Management.Automation.PSCredential] $ClientCredential,
 
         [Parameter(Mandatory, ParameterSetName = 'AccessToken')]
@@ -110,11 +117,13 @@ function New-ServiceNowSession {
 
         [Parameter(Mandatory, ParameterSetName = 'BasicAuthProxy')]
         [Parameter(Mandatory, ParameterSetName = 'OAuthProxy')]
+        [Parameter(Mandatory, ParameterSetName = 'OAuthClientCredentialProxy')]
         [Parameter(Mandatory, ParameterSetName = 'AccessTokenProxy')]
         [string] $Proxy,
 
         [Parameter(ParameterSetName = 'BasicAuthProxy')]
         [Parameter(ParameterSetName = 'OAuthProxy')]
+        [Parameter(ParameterSetName = 'OAuthClientCredentialProxy')]
         [Parameter(ParameterSetName = 'AccessTokenProxy')]
         [System.Management.Automation.PSCredential] $ProxyCredential,
 
@@ -171,7 +180,7 @@ function New-ServiceNowSession {
                 'client_secret' = $ClientCredential.GetNetworkCredential().Password
             }
 
-            if ($PSCmdLet.ParameterSetName -eq 'OAuthClientCredential') {
+            if ($PSCmdLet.ParameterSetName -like 'OAuthClientCredential*') {
                 # Client Credentials Grant (machine-to-machine)
                 $oauthBody['grant_type'] = 'client_credentials'
                 $grantType = 'client_credentials'
