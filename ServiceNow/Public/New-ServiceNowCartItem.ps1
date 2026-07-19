@@ -136,7 +136,15 @@ function New-ServiceNowCartItem {
             catch {
                 if ( ($_.ErrorDetails.Message | ConvertFrom-Json | Select-Object -ExpandProperty error | Select-Object -ExpandProperty message) -match 'Mandatory Variables are required' ) {
                     $catItem = Invoke-ServiceNowRestMethod -UriLeaf "/servicecatalog/items/$catalogItemID" -Namespace 'sn_sc'
-                    $mandatoryVars = $catItem.variables | Where-Object { $_.mandatory -eq $true } | Select-Object -ExpandProperty name
+                    $mandatoryVars = $catItem.variables | Where-Object {
+                        # the mandatory flag can come back as a plain boolean/string or, for some
+                        # instances/api versions, a display-value style object, eg. @{ value = 'true' }
+                        $mandatoryValue = $_.mandatory
+                        if ( $mandatoryValue -is [System.Management.Automation.PSCustomObject] ) {
+                            $mandatoryValue = $mandatoryValue.value
+                        }
+                        "$mandatoryValue" -eq 'true'
+                    } | Select-Object -ExpandProperty name
                     throw ('Failed to add item to cart. The following mandatory variables must be provided: {0}' -f ($mandatoryVars -join ', '))
                 }
                 else {

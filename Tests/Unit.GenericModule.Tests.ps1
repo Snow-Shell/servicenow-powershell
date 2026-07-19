@@ -8,14 +8,25 @@ Write-Host "moduleRoot:  $moduleRoot" -f cyan
 Write-Host "moduleName:  $moduleName" -f cyan
 Write-Host "ModulePath:  $ModulePath" -f cyan
 
-$ModuleManifestContent = Get-Content $modulePath
+$script:manifestModuleName = $moduleName
+$script:manifestFunctionsToExport = (Import-PowerShellDataFile -Path $modulePath).FunctionsToExport
 
 Describe "Generic Module Tests" -Tag UnitTest,Build {
-    # Unload the module so it's loaded fresh for testing
-    Remove-Module $ModuleName -ErrorAction SilentlyContinue
+    BeforeAll {
+        # recompute paths locally - Pester's Run phase does not share scope with
+        # top-level script code, which only executes during Discovery
+        $projectRoot = Resolve-Path "$PSScriptRoot\.."
+        $moduleRoot = Split-Path (Resolve-Path "$projectRoot\*\*.psd1")
+        $moduleName = Split-Path $moduleRoot -Leaf
+        $modulePath = Join-Path $moduleRoot "$moduleName.psd1"
 
-    # Import Module
-    $ModuleInformation = Import-Module $modulePath -Force -PassThru
+        # Unload the module so it's loaded fresh for testing
+        Remove-Module $moduleName -ErrorAction SilentlyContinue
+
+        # Import Module
+        $ModuleInformation = Import-Module $modulePath -Force -PassThru
+    }
+
     It "Module imported successfully" {
         $ModuleInformation.Name | Should -Be $moduleName
     }
@@ -40,19 +51,16 @@ Describe "Generic Module Tests" -Tag UnitTest,Build {
 
     # Evaluate FunctionsToExport
     Context FunctionsToExport {
-        $FunctionsToExportString = $ModuleManifestContent | Where-Object {$_ -match 'FunctionsToExport'}
-        $DeclaredFunctions = $FunctionsToExportString.Split(',') |
-            ForEach-Object{If ($_ -match '\w+-\w+'){$Matches[0]}}
-
         It "FunctionsToExport should not be a wildcard" {
-            $FunctionsToExportString | Should -Not -Match "\'\*\'"
+            $script:manifestFunctionsToExport | Should -Not -Contain '*'
         }
 
-        $PublishedFunctions = $ModuleInformation.ExportedFunctions.Values.name
-        ForEach ($PublicFunction in $DeclaredFunctions) {
-            It "Function  Available: $PublicFunction " {
-                $PublishedFunctions -contains $PublicFunction | Should -Be $True
-            }
+        It "Function  Available: <_> " -ForEach $script:manifestFunctionsToExport {
+            # use Pester's -ForEach (rather than a plain foreach loop) to generate these
+            # dynamic tests - a plain foreach loop variable isn't reliably captured across
+            # Pester's Discovery/Run phase boundary and every test ends up seeing the same
+            # (final or null) value
+            Get-Command -Module $script:manifestModuleName -Name $_ -ErrorAction SilentlyContinue | Should -Not -BeNullOrEmpty
         }
     }
 
