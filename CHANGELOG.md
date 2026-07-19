@@ -1,3 +1,13 @@
+## 5.0.0
+- Add support for authenticating with OAuth Client Credential Grant, [#292](https://github.com/Snow-Shell/servicenow-powershell/pull/292). Thanks @jmunroBT!
+- Add automatic retry logic for retryable HTTP errors (429, 502, 503, 504, 408, 409), [#295](https://github.com/Snow-Shell/servicenow-powershell/pull/295), [#280](https://github.com/Snow-Shell/servicenow-powershell/issues/280)
+- Add property tab completion and remove Azure Automation support (breaking change), [#293](https://github.com/Snow-Shell/servicenow-powershell/pull/293)
+- Add full service catalog cart lifecycle support with `Get-ServiceNowCart`, `New-ServiceNowCartItem`, `Remove-ServiceNowCartItem`, and `Submit-ServiceNowCart`, [#290](https://github.com/Snow-Shell/servicenow-powershell/pull/290)
+- Add additional namespace and catalog request support, [#284](https://github.com/Snow-Shell/servicenow-powershell/pull/284). Thanks @CATgwalker!
+- Fix `-endswith` filter operator to use the correct `ENDSWITH` query operator, [#294](https://github.com/Snow-Shell/servicenow-powershell/pull/294). Thanks @TriggerAu!
+- Stop forcing field names to lowercase, [#286](https://github.com/Snow-Shell/servicenow-powershell/pull/286), [#281](https://github.com/Snow-Shell/servicenow-powershell/issues/281)
+
+
 ## 4.1.0
 - Add support for access token refresh, [#277](https://github.com/Snow-Shell/servicenow-powershell/issues/277)
 
@@ -208,6 +218,7 @@ Be able to reference types from this config per table, removing the need to have
 - Add Get-ServiceNowAttachment
 - Add Get-ServiceNowAttachmentDetail
 - Add Remove-ServiceNowAttachment
+
 
 
 
