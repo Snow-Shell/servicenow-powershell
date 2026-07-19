@@ -92,7 +92,7 @@ function New-ServiceNowChangeTask {
             }
 
             'AssignedTo' {
-                $createValues.assignment_to = $AssignmentTo
+                $createValues.assigned_to = $AssignedTo
             }
         }
 

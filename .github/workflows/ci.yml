@@ -31,6 +31,42 @@ jobs:
         with:
           name: pssa-results
           path: ${{ github.workspace }}/pssa.json
-      # - name: Test with Pester
-      #   shell: pwsh
-      #   run: Invoke-Pester Unit.Tests.ps1 -Passthru | Export-CliXml -Path Unit.Tests.xml
+      - name: Install Pester module
+        shell: pwsh
+        run: |
+          Set-PSRepository PSGallery -InstallationPolicy Trusted
+          Install-Module Pester -MinimumVersion 5.0 -SkipPublisherCheck -Force -ErrorAction Stop
+      - name: Test with Pester
+        shell: pwsh
+        run: |
+          # legacy tests require a live ServiceNow instance and mandatory credentials -
+          # they aren't runnable non-interactively in CI, so exclude them here
+          $excluded = @(
+              'AddServiceNowAttachment.Tests.ps1',
+              'GetServiceNowAttachment.Tests.ps1',
+              'GetServiceNowAttachmentDetail.Tests.ps1',
+              'RemoveServiceNowAttachment.Tests.ps1',
+              'ServiceNow.Tests.ps1'
+          )
+          $testFiles = Get-ChildItem -Path './Tests' -Filter '*.Tests.ps1' |
+              Where-Object { $_.Name -notin $excluded } |
+              Select-Object -ExpandProperty FullName
+
+          $config = New-PesterConfiguration
+          $config.Run.Path = $testFiles
+          $config.Run.PassThru = $true
+          $config.Run.Exit = $false
+          $config.TestResult.Enabled = $true
+          $config.TestResult.OutputPath = '${{ github.workspace }}/pester-results.xml'
+          $config.Output.Verbosity = 'Detailed'
+
+          $result = Invoke-Pester -Configuration $config
+          if ($result.FailedCount -gt 0) {
+              Write-Error "$($result.FailedCount) Pester test(s) failed." -ErrorAction Stop
+          }
+      - name: Upload Pester results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: pester-results
+          path: ${{ github.workspace }}/pester-results.xml
