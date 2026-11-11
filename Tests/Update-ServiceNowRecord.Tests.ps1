@@ -42,6 +42,20 @@ Describe 'Update-ServiceNowRecord' {
             $result.state | Should -Be '2'
             $result.PSObject.TypeNames | Should -Contain 'ServiceNow.Incident'
         }
+
+        It 'Resolves the table of a piped asset from its sys_class_name display value' {
+            Mock Invoke-ServiceNowRestMethod -ModuleName 'ServiceNow' {
+                [PSCustomObject]@{ sys_id = 'a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6' }
+            }
+
+            # alm_asset records returned with display values carry sys_class_name 'Hardware', see #198
+            [PSCustomObject]@{ sys_class_name = 'Hardware'; sys_id = 'a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6' } |
+                Update-ServiceNowRecord -InputData @{ warranty_expiration = '2027-07-14' } -Confirm:$false
+
+            Should -Invoke Invoke-ServiceNowRestMethod -ModuleName 'ServiceNow' -Times 1 -Exactly -ParameterFilter {
+                $Method -eq 'Patch' -and $Table -eq 'alm_hardware'
+            }
+        }
     }
 
     Context 'Updating custom variable data' {

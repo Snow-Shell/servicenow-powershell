@@ -82,6 +82,27 @@
             "Type": "ServiceNow.Knowledge",
             "NumberPrefix": "kb",
             "DescriptionField": "short_description"
+        },
+        {
+            "Name": "alm_asset",
+            "ClassName": "Asset",
+            "Type": "ServiceNow.Asset",
+            "NumberPrefix": "",
+            "DescriptionField": "display_name"
+        },
+        {
+            "Name": "alm_hardware",
+            "ClassName": "Hardware",
+            "Type": "ServiceNow.HardwareAsset",
+            "NumberPrefix": "",
+            "DescriptionField": "display_name"
+        },
+        {
+            "Name": "alm_license",
+            "ClassName": "Software License",
+            "Type": "ServiceNow.SoftwareLicense",
+            "NumberPrefix": "",
+            "DescriptionField": "display_name"
         }
     ],
     "FilterOperators": [
