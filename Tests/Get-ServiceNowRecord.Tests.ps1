@@ -79,4 +79,51 @@ Describe 'Get-ServiceNowRecord' {
             (Get-Alias gsnr).ResolvedCommand.Name | Should -Be 'Get-ServiceNowRecord'
         }
     }
+
+    Context 'Asset management tables' {
+
+        It 'Resolves class name ''<ClassName>'' to table <TableName>' -TestCases @(
+            @{ ClassName = 'Asset'; TableName = 'alm_asset' }
+            @{ ClassName = 'Hardware'; TableName = 'alm_hardware' }
+            @{ ClassName = 'Software License'; TableName = 'alm_license' }
+        ) {
+            Mock Invoke-ServiceNowRestMethod -ModuleName 'ServiceNow' {
+                [PSCustomObject]@{ sys_id = 'a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6' }
+            }
+
+            Get-ServiceNowRecord -Table $ClassName | Out-Null
+
+            Should -Invoke Invoke-ServiceNowRestMethod -ModuleName 'ServiceNow' -Times 1 -Exactly -ParameterFilter {
+                $Table -eq $TableName
+            }
+        }
+
+        It 'Adds type name <TypeName> to records from <TableName>' -TestCases @(
+            @{ TableName = 'alm_asset'; TypeName = 'ServiceNow.Asset' }
+            @{ TableName = 'alm_hardware'; TypeName = 'ServiceNow.HardwareAsset' }
+            @{ TableName = 'alm_license'; TypeName = 'ServiceNow.SoftwareLicense' }
+        ) {
+            Mock Invoke-ServiceNowRestMethod -ModuleName 'ServiceNow' {
+                [PSCustomObject]@{ sys_id = 'a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6'; display_name = 'P1000001 - Muster Notebook 14' }
+            }
+
+            $result = Get-ServiceNowRecord -Table $TableName
+
+            $result.PSObject.TypeNames[0] | Should -Be $TypeName
+            Get-FormatData -TypeName $TypeName | Should -Not -BeNullOrEmpty
+        }
+
+        It 'Searches display_name when -Description is used' {
+            Mock Invoke-ServiceNowRestMethod -ModuleName 'ServiceNow' {
+                [PSCustomObject]@{ sys_id = 'a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6' }
+            }
+
+            Get-ServiceNowRecord -Table 'alm_hardware' -Description 'Notebook' -WarningVariable warnings | Out-Null
+
+            $warnings | Should -BeNullOrEmpty
+            Should -Invoke Invoke-ServiceNowRestMethod -ModuleName 'ServiceNow' -Times 1 -Exactly -ParameterFilter {
+                ($Filter | ForEach-Object { $_[0] }) -contains 'display_name'
+            }
+        }
+    }
 }
